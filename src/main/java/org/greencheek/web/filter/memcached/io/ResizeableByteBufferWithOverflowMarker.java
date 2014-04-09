@@ -8,12 +8,13 @@ import java.nio.ByteBuffer;
 public class ResizeableByteBufferWithOverflowMarker {
     static final int MAX_ARRAY_SIZE =Integer.MAX_VALUE - 8;
 
-    protected byte[] buf;
-    protected int currentCapacityLeft;
-    protected int position;
+    private byte[] buf;
+    private int currentCapacityLeft;
+    private volatile int position;
     private final int maxCapacity;
     private boolean hasSpaceToGrow = true;
-    private boolean hasOverflowed = false;
+    private volatile boolean hasOverflowed = false;
+    private volatile boolean canWrite = true;
 
 
     public ResizeableByteBufferWithOverflowMarker(int maxCapacity) {
@@ -38,10 +39,16 @@ public class ResizeableByteBufferWithOverflowMarker {
     }
 
     public void reset() {
+        canWrite = true;
+        hasOverflowed = false;
         position = 0;
         currentCapacityLeft = buf.length;
     }
 
+
+    public void close() {
+        canWrite = false;
+    }
 
     public byte[] getBuf() {
         return buf;
@@ -60,7 +67,7 @@ public class ResizeableByteBufferWithOverflowMarker {
 
 
     public void append(byte b) {
-        if(!hasOverflowed) {
+        if(!hasOverflowed && canWrite) {
             checkSizeAndGrow(1);
             if(!hasOverflowed) {
                 appendNoResize(b);
@@ -69,7 +76,7 @@ public class ResizeableByteBufferWithOverflowMarker {
     }
 
     public void append(byte[] bytes) {
-        if(!hasOverflowed) {
+        if(!hasOverflowed && canWrite) {
             int len = bytes.length;
             checkSizeAndGrow(len);
             if(!hasOverflowed) {
@@ -79,12 +86,12 @@ public class ResizeableByteBufferWithOverflowMarker {
     }
 
     public void append(byte[] b, int off, int len) {
-        if(!hasOverflowed) {
+        if(!hasOverflowed && canWrite) {
             checkSizeAndGrow(len);
             if(!hasOverflowed) {
                 System.arraycopy(b, off, buf, position, len);
-                position += len;
                 currentCapacityLeft -= len;
+                position += len;
             }
         }
     }
@@ -107,24 +114,21 @@ public class ResizeableByteBufferWithOverflowMarker {
 
 
     private void appendNoResize(byte c) {
-        buf[position++]=c;
         currentCapacityLeft--;
+        buf[position++]=c;
     }
 
     private void appendNoResize(byte[] bytes,int len) {
         System.arraycopy(bytes, 0, buf, position, len);
-        position+=len;
         currentCapacityLeft-=len;
+        position+=len;
+
     }
 
 
     private void checkSizeAndGrow(int extra) {
-        if(extra>currentCapacityLeft) {
-            if(hasSpaceToGrow) {
-                grow(extra);
-            } else {
-                hasOverflowed = true;
-            }
+        if(hasSpaceToGrow && extra>currentCapacityLeft) {
+            grow(extra);
         }
     }
 

@@ -32,7 +32,12 @@ public class ResizeableByteBufferOutputStream extends ServletOutputStream {
         this.wrappedStream.write(b);
     }
 
+    public void closeBuffer() {
+        buffer.close();
+    }
+
     public void close() throws IOException {
-        System.out.println("stream closed");
+        closeBuffer();
+        wrappedStream.close();
     }
 }

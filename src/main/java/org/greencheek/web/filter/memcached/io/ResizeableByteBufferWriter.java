@@ -33,6 +33,10 @@ public class ResizeableByteBufferWriter extends PrintWriter {
     }
 
 
+    public void closeBuffer() {
+        buffer.close();
+    }
+
     @Override
     public void write(char[] cbuf, int off, int len)  {
         try {
@@ -50,8 +54,8 @@ public class ResizeableByteBufferWriter extends PrintWriter {
 
     @Override
     public void close()  {
+        closeBuffer();
         wrappedWriter.close();
-        System.out.println("lkjlkjlkjlkj");
     }
 
 }

@@ -9,24 +9,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by dominictootell on 06/04/2014.
+ * Set of utility functions that test and parse a list of memcached hosts
  */
 public class MemcachedFactoryUtils {
 
 
-    private static class Duration {
-        private final long length;
-        private final TimeUnit unit;
-        public Duration(long length, TimeUnit unit) {
-            this.length = length;
-            this.unit = unit;
-
-        }
-
-        public long toMillis() {
-            return TimeUnit.MILLISECONDS.convert(length,unit);
-        }
-    }
 
     private final Duration DEFAULT_EXPIRY = new Duration(60,TimeUnit.MINUTES);
     private final int DEFAULT_MEMCACHED_PORT = 11211;
@@ -34,7 +21,7 @@ public class MemcachedFactoryUtils {
     private final Duration ONE_SECOND = new Duration(1,TimeUnit.SECONDS);
 
 
-    private List<InetSocketAddress> validateMemcacheHosts(Duration checkTimeout,
+    public static List<InetSocketAddress> validateMemcacheHosts(Duration checkTimeout,
                                       List<InetSocketAddress> addressesToCheck) {
         List<InetSocketAddress> okAddresses = new ArrayList<InetSocketAddress>();
         AddressChecker addressChecker = new TCPAddressChecker(checkTimeout.toMillis());
@@ -42,8 +29,7 @@ public class MemcachedFactoryUtils {
             if(addressChecker.isAvailable(addy)) {
                 okAddresses.add(addy);
             } else {
-
-//                    logger.error("Unable to connect to memcached node: {}", addy)
+//              logger.error("Unable to connect to memcached node: {}", addy)
 
             }
         }
