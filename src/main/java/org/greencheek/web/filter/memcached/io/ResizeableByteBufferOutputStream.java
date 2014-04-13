@@ -11,17 +11,15 @@ import java.nio.charset.CharsetEncoder;
  */
 public class ResizeableByteBufferOutputStream extends ServletOutputStream {
 
-    private final ResizeableByteBufferWithOverflowMarker buffer;
+    private final ResizeableByteBuffer buffer;
     private final OutputStream wrappedStream;
-    private final CharsetEncoder utf8Encoder = Charset.forName("UTF-8").newEncoder();
-    private final double maxBytesPerChar = utf8Encoder.maxBytesPerChar();
 
     public ResizeableByteBufferOutputStream(int maxCapacity, OutputStream wrappedStream) {
         this.wrappedStream = wrappedStream;
-        this.buffer = new ResizeableByteBufferWithOverflowMarker(maxCapacity);
+        this.buffer = new ResizeableByteBuffer(maxCapacity);
     }
 
-    public ResizeableByteBufferWithOverflowMarker getBuffer() {
+    public ResizeableByteBuffer getBuffer() {
         return buffer;
     }
 
@@ -32,12 +30,7 @@ public class ResizeableByteBufferOutputStream extends ServletOutputStream {
         this.wrappedStream.write(b);
     }
 
-    public void closeBuffer() {
-        buffer.close();
-    }
-
     public void close() throws IOException {
-        closeBuffer();
         wrappedStream.close();
     }
 }

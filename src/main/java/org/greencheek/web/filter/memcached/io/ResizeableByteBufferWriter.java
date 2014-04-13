@@ -1,48 +1,35 @@
 package org.greencheek.web.filter.memcached.io;
 
-import org.greencheek.web.filter.memcached.io.util.CharToByteArray;
-
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CoderResult;
-import java.util.Arrays;
 
 /**
  * Created by dominictootell on 06/04/2014.
  */
 public class ResizeableByteBufferWriter extends PrintWriter {
 
-    private final ResizeableByteBufferWithOverflowMarker buffer;
+    private final ResizeableByteBuffer buffer;
     private final PrintWriter wrappedWriter;
 
     public ResizeableByteBufferWriter(int maxCapacity, PrintWriter wrappedWriter) {
         super(wrappedWriter);
         this.wrappedWriter = wrappedWriter;
-        this.buffer = new ResizeableByteBufferWithOverflowMarker(maxCapacity);
+        this.buffer = new ResizeableByteBuffer(maxCapacity);
     }
 
-    public ResizeableByteBufferWithOverflowMarker getBuffer() {
+    public ResizeableByteBuffer getBuffer() {
         return buffer;
     }
 
 
-    public void closeBuffer() {
-        buffer.close();
-    }
+
 
     @Override
     public void write(char[] cbuf, int off, int len)  {
         try {
-            buffer.write(new String(cbuf).getBytes("UTF-8"));
+            buffer.write(new String(cbuf,off,len).getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            buffer.write(new String(cbuf).getBytes());
+            buffer.write(new String(cbuf,off,len).getBytes());
         }
         wrappedWriter.write(cbuf,off,len);
     }
@@ -54,7 +41,6 @@ public class ResizeableByteBufferWriter extends PrintWriter {
 
     @Override
     public void close()  {
-        closeBuffer();
         wrappedWriter.close();
     }
 

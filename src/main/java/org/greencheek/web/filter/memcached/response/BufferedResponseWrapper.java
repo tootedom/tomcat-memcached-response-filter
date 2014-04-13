@@ -1,11 +1,9 @@
 package org.greencheek.web.filter.memcached.response;
 
 import org.apache.catalina.connector.Constants;
-import org.apache.catalina.connector.CoyoteOutputStream;
-import org.apache.catalina.connector.CoyoteWriter;
 import org.apache.tomcat.util.res.StringManager;
+import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBufferOutputStream;
-import org.greencheek.web.filter.memcached.io.ResizeableByteBufferWithOverflowMarker;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBufferWriter;
 
 import javax.servlet.ServletOutputStream;
@@ -45,7 +43,7 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
      *
      */
 
-    private ResizeableByteBufferWithOverflowMarker bufferedMemcachedContent;
+    private ResizeableByteBuffer bufferedMemcachedContent;
 
     /**
      * The associated writer.
@@ -81,7 +79,7 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
         return outputStream;
     }
 
-    public ResizeableByteBufferWithOverflowMarker getBufferedMemcachedContent() {
+    public ResizeableByteBuffer getBufferedMemcachedContent() {
         return bufferedMemcachedContent;
     }
 

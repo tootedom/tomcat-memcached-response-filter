@@ -4,12 +4,10 @@ import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.FailureMode;
-import org.greencheek.web.filter.memcached.client.MemcachedClient;
 import org.greencheek.web.filter.memcached.client.spy.extensions.SerializingTranscoder;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.List;
 

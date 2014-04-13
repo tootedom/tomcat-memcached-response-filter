@@ -17,10 +17,7 @@ limitations under the License.
 package org.greencheek.web.filter.memcached;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 import javax.servlet.*;
@@ -29,16 +26,30 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.greencheek.web.filter.memcached.client.MemcachedClient;
+import org.greencheek.web.filter.memcached.client.FilterMemcachedClient;
+import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedClient;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
-import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedClient;
-import org.greencheek.web.filter.memcached.io.ResizeableByteBufferWithOverflowMarker;
+import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
 
 public class PublishToMemcachedFilter implements Filter {
 
+    private static final Set<String> DEFAULT_HEADERS_TO_IGNORE;
+    static {
+        Set<String> headers = new HashSet<String>(9);
+        headers.add("connection");
+        headers.add("keep-alive");
+        headers.add("proxy-authenticate");
+        headers.add("proxy-authorization");
+        headers.add("te");
+        headers.add("trailers");
+        headers.add("transfer-encoding");
+        headers.add("upgrade");
+        headers.add("set-cookie");
+        DEFAULT_HEADERS_TO_IGNORE = headers;
+    }
 	/**
 	 * Logger
 	 */
@@ -53,7 +64,7 @@ public class PublishToMemcachedFilter implements Filter {
     private volatile int maxContentSizeForMemcachedEntry = 8192*4;
 
 
-    private final MemcachedClient memcachedClient = new SpyMemcachedClient(new SpyMemcachedBuilder().build());
+    private final FilterMemcachedClient filterMemcachedClient = new SpyFilterMemcachedClient(new SpyMemcachedBuilder().build());
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -72,7 +83,6 @@ public class PublishToMemcachedFilter implements Filter {
         }
 
         try {
-            // record access for non ignored paths
             if (wrappedRes == null) {
                 chain.doFilter(request, response);
             } else {
@@ -93,25 +103,28 @@ public class PublishToMemcachedFilter implements Filter {
 
     private void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
 
-        ResizeableByteBufferWithOverflowMarker bufferedContent = servletResponse.getBufferedMemcachedContent();
-
-        if(bufferedContent!=null && !bufferedContent.hasOverflowed()) {
-          String key = createKey(servletRequest,servletResponse);
-          memcachedClient.writeToCached(key,10, Collections.EMPTY_SET,getHeaders(servletResponse.getHeaderNames(),servletResponse),servletResponse.getBufferedMemcachedContent().toByteArray());
+        ResizeableByteBuffer bufferedContent = servletResponse.getBufferedMemcachedContent();
+        boolean shouldWriteToMemcached = bufferedContent.canWrite();
+        bufferedContent.closeForWrites();
+        if(bufferedContent!=null && shouldWriteToMemcached) {
+          String key = createKey(servletRequest);
+          filterMemcachedClient.writeToCached(key,10, Collections.EMPTY_SET,getHeaders(DEFAULT_HEADERS_TO_IGNORE,servletResponse),servletResponse.getBufferedMemcachedContent());
         }
 
     }
 
-    private Map<String,Collection<String>> getHeaders(Collection<String> headerNames,BufferedResponseWrapper servletResponse) {
+    private Map<String,Collection<String>> getHeaders(Set<String> headerNamesToIngore,BufferedResponseWrapper servletResponse) {
+        Collection<String> headerNames = servletResponse.getHeaderNames();
         Map<String,Collection<String>> headers = new HashMap<String, Collection<String>>(headerNames.size());
 
         for(String key : headerNames) {
+            if(headerNamesToIngore.contains(key.toLowerCase())) continue;
             headers.put(key,servletResponse.getHeaders(key));
         }
         return headers;
     }
 
-    private String createKey(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
+    private String createKey(HttpServletRequest servletRequest) {
         String method = servletRequest.getMethod();
         String path = servletRequest.getRequestURI();
         String queryString = servletRequest.getQueryString();
@@ -140,7 +153,7 @@ public class PublishToMemcachedFilter implements Filter {
 
         private final HttpServletRequest request;
         private final BufferedResponseWrapper responseWrapper;
-        private boolean error = false;
+        private volatile boolean error = false;
 
         public SetInMemcachedListener(HttpServletRequest servletRequest, BufferedResponseWrapper servletResponse) {
             this.request = servletRequest;
@@ -156,11 +169,13 @@ public class PublishToMemcachedFilter implements Filter {
 
         @Override
         public void onTimeout(AsyncEvent asyncEvent) throws IOException {
+            error = true;
             onComplete(asyncEvent);
         }
 
         @Override
         public void onError(AsyncEvent asyncEvent) throws IOException {
+            error = true;
             onComplete(asyncEvent);
         }
 
