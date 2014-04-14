@@ -34,21 +34,24 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     private static final String HEADERS = "header";
     private static final String COOKIES = "cookie";
     private static final String SCHEME = "scheme";
-    public static final String KEY_SEPARATOR_CHAR = "$";
+    public static final String KEY_SEPARATOR_CHAR = "\\$";
     public static final String VALUE_SEPARATOR_CHAR = "_";
 
     private final boolean useCookies;
+    private final boolean useHeaders;
 
     private final String[] cookieNames;
     private final String[] headerNames;
+    private final Set<String> headerNamesSet;
     private final Set<String> cookieNameSet;
 
     private final List<CacheKeyType> keyOrder = new ArrayList<CacheKeyType>(10);
 
     public DefaultCacheKeyCreator(String keySpec) {
         String[] keys = keySpec.split(KEY_SEPARATOR_CHAR);
-        Set<String> keySet = new TreeSet<String>();
+        List<String> keySet = new ArrayList<String>();
         for(String item : keys) {
+            if(item == null || item.length()==0) continue;
             keySet.add(item);
 
             if(item.startsWith(PATH)) keyOrder.add(CacheKeyType.PATH);
@@ -67,25 +70,35 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             cookieNameSet = Collections.EMPTY_SET;
         }
         else {
-            cookieNameSet = new HashSet<String>(cookieNames.length);
+            cookieNameSet = new HashSet<String>(cookieNames.length,1.0f);
             for(String name : cookieNames) {
                 cookieNameSet.add(name);
             }
         }
 
+        if(headerNames.length==0) {
+            headerNamesSet = Collections.EMPTY_SET;
+        } else {
+            headerNamesSet = new HashSet<String>(headerNames.length,1.0f);
+            for(String name : headerNames) {
+                headerNamesSet.add(name);
+            }
+        }
+
+        useHeaders = headerNames.length>0 ? true : false;
         useCookies = cookieNames.length>0 ? true : false;
     }
 
-    private String[] parseHeaders(Set<String> keys) {
+    private String[] parseHeaders(List<String> keys) {
         return parseValues(keys,HEADERS);
     }
 
-    private String[] parseCookies(Set<String> keys) {
+    private String[] parseCookies(List<String> keys) {
         return parseValues(keys,COOKIES);
     }
 
-    private String[] parseValues(Set<String> keys, String name) {
-        Set<String> headers = new HashSet<String>(keys.size());
+    private String[] parseValues(List<String> keys, String name) {
+        List<String> headers = new ArrayList<String>();
         for(String key : keys) {
             if(key.startsWith(name)) {
                 String[] values = key.split(VALUE_SEPARATOR_CHAR);
@@ -97,6 +110,27 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         return headers.toArray(new String[headers.size()]);
     }
 
+    private Map<String,String> parseHeaders(HttpServletRequest request,
+                                            Enumeration<String> headerNames,
+                                            Set<String> namesRequested) {
+
+        Map<String,String> extractedHeaders = new HashMap<String, String>(namesRequested.size(),1.0f);
+        for(String header : namesRequested) {
+            extractedHeaders.put(header,"");
+        }
+        if(headerNames == null) return extractedHeaders;
+
+        while(headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            String lowerHeaderName = headerName.toLowerCase();
+
+            if(namesRequested.contains(lowerHeaderName)) {
+                extractedHeaders.put(lowerHeaderName,request.getHeader(headerName));
+            }
+        }
+        return extractedHeaders;
+    }
+
     @Override
     public String createCacheKey(HttpServletRequest request) {
         int headersNum = 0;
@@ -106,12 +140,17 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         if(useCookies) {
             cookies = parseCookies(request.getCookies(),cookieNameSet);
         }
+        Map<String,String> headers = new HashMap<String,String>(headerNames.length);
+        if(useHeaders) {
+            headers = parseHeaders(request,request.getHeaderNames(),headerNamesSet);
+
+        }
 
         for(CacheKeyType type : keyOrder) {
             GetRequestAttribute attributeRequest = attributes[type.index];
             switch (type) {
                 case HEADER:
-                    b.append(attributeRequest.getAttribute(request,headerNames[headersNum++]));
+                    b.append(attributeRequest.getAttribute(request,headers,headerNames[headersNum++]));
                     break;
                 case COOKIE:
                     b.append(attributeRequest.getAttribute(request,cookies,cookieNames[cookiesNum++]));
