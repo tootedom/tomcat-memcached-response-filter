@@ -1,4 +1,4 @@
-package org.greencheek.web.filter.memcached.config;
+package org.greencheek.web.filter.memcached.client.config;
 
 /**
  * Created by dominictootell on 07/04/2014.

@@ -26,8 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.greencheek.web.filter.memcached.client.FilterMemcachedClient;
-import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedClient;
+import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
+import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
@@ -36,20 +36,7 @@ import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
 public class PublishToMemcachedFilter implements Filter {
 
-    private static final Set<String> DEFAULT_HEADERS_TO_IGNORE;
-    static {
-        Set<String> headers = new HashSet<String>(9);
-        headers.add("connection");
-        headers.add("keep-alive");
-        headers.add("proxy-authenticate");
-        headers.add("proxy-authorization");
-        headers.add("te");
-        headers.add("trailers");
-        headers.add("transfer-encoding");
-        headers.add("upgrade");
-        headers.add("set-cookie");
-        DEFAULT_HEADERS_TO_IGNORE = headers;
-    }
+
 	/**
 	 * Logger
 	 */
@@ -64,7 +51,7 @@ public class PublishToMemcachedFilter implements Filter {
     private volatile int maxContentSizeForMemcachedEntry = 8192*4;
 
 
-    private final FilterMemcachedClient filterMemcachedClient = new SpyFilterMemcachedClient(new SpyMemcachedBuilder().build());
+    private final FilterMemcachedStorage filterMemcachedStorage = new SpyFilterMemcachedStorage(new SpyMemcachedBuilder().build());
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -75,7 +62,6 @@ public class PublishToMemcachedFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         BufferedResponseWrapper wrappedRes = null;
         HttpServletRequest servletRequest = null;
-        boolean isAsync = false;
         if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
             HttpServletResponse servletResponse = (HttpServletResponse) response;
             servletRequest = (HttpServletRequest) request;
@@ -108,7 +94,7 @@ public class PublishToMemcachedFilter implements Filter {
         bufferedContent.closeForWrites();
         if(bufferedContent!=null && shouldWriteToMemcached) {
           String key = createKey(servletRequest);
-          filterMemcachedClient.writeToCached(key,10, Collections.EMPTY_SET,getHeaders(DEFAULT_HEADERS_TO_IGNORE,servletResponse),servletResponse.getBufferedMemcachedContent());
+          filterMemcachedStorage.writeToCache(key, 10, Collections.EMPTY_SET, getHeaders(DEFAULT_HEADERS_TO_IGNORE, servletResponse), servletResponse.getBufferedMemcachedContent());
         }
 
     }

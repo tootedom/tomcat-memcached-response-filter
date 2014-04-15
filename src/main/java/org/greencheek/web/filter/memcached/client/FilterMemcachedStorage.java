@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Created by dominictootell on 06/04/2014.
  */
-public interface FilterMemcachedClient {
-    public void writeToCached(String key, int expiryInSeconds, Set<String> additionalStaticHeaders,
-                              Map<String,Collection<String>> responseHeaders,ResizeableByteBuffer content);
+public interface FilterMemcachedStorage {
+    public void writeToCache(String key, int expiryInSeconds, Set<String> additionalStaticHeaders,
+                             Map<String, Collection<String>> responseHeaders, ResizeableByteBuffer content);
 }

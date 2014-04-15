@@ -1,4 +1,4 @@
-package org.greencheek.web.filter.memcached.config;
+package org.greencheek.web.filter.memcached.client.config;
 
 import org.greencheek.web.filter.memcached.io.util.dns.lookup.AddressChecker;
 import org.greencheek.web.filter.memcached.io.util.dns.lookup.TCPAddressChecker;
