@@ -65,7 +65,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 //        }
     }
 
-    private Map<String,Collection<String>> getHeaders(Set<String> headerNamesToIngore,BufferedResponseWrapper servletResponse) {
+    private Map<String,Collection<String>> getHeaders(Set<String> headerNamesToIngore,
+                                                      BufferedResponseWrapper servletResponse) {
         Collection<String> headerNames = servletResponse.getHeaderNames();
         Map<String,Collection<String>> headers = new HashMap<String, Collection<String>>(headerNames.size());
 
@@ -73,6 +74,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
             if(headerNamesToIngore.contains(key.toLowerCase())) continue;
             headers.put(key,servletResponse.getHeaders(key));
         }
+
+
         return headers;
     }
 
@@ -96,6 +99,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
                 memcachedContent.append(CacheConfigGlobals.NEW_LINE);
             }
         }
+
+
 
         memcachedContent.append(CacheConfigGlobals.NEW_LINE);
         memcachedContent.append(CacheConfigGlobals.NEW_LINE);

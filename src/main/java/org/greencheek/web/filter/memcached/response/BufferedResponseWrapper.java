@@ -52,12 +52,23 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
 
     private final int memcachedContentBufferSize;
 
+    private int contentLength;
 
     public BufferedResponseWrapper(int memcachedContentBufferSize, HttpServletResponse response) {
         super(response);
 
         this.memcachedContentBufferSize = memcachedContentBufferSize;
         origResponse = response;
+    }
+
+    @Override
+    public void setContentLength(int length) {
+        this.contentLength = length;
+        origResponse.setContentLength(length);
+    }
+
+    public int getContentLength() {
+        return contentLength;
     }
 
 
