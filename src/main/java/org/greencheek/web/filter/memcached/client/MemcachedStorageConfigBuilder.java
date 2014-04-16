@@ -6,7 +6,6 @@ import org.greencheek.web.filter.memcached.client.config.Duration;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -17,6 +16,9 @@ public class MemcachedStorageConfigBuilder {
     public static Set<String> DEFAULT_ADDITIONAL_HEADERS = Collections.EMPTY_SET;
     public final int DEFAULT_EXPIRY_IN_SECONDS = 300;
     public final String DEFAULT_CACHE_KEY = "$scheme$request_method$request_uri$header_accept$header_accept-encoding";
+    public final boolean DEFAULT_STORE_PRIVATE = false;
+    public final boolean DEFAULT_FORCE_CACHE = false;
+    public final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
 
     private static final Set<String> DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     static {
@@ -39,11 +41,15 @@ public class MemcachedStorageConfigBuilder {
     private Set<String> additionalHeaders  = DEFAULT_ADDITIONAL_HEADERS;
     private int defaultMaxHeadersLengthToStore = DEFAULT_MAX_HEADERS_LENGTH_TO_STORE;
     private CacheKeyCreator cacheKeyCreator = new DefaultCacheKeyCreator(DEFAULT_CACHE_KEY);
+    private boolean storePrivate = DEFAULT_STORE_PRIVATE;
+    private boolean forceCache = DEFAULT_FORCE_CACHE;
+    private int forceCacheDuration = DEFAULT_EXPIRY_IN_SECONDS;
 
 
 
     public MemcachedStorageConfig build() {
-        return new MemcachedStorageConfig()
+        return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,cacheKeyCreator,defaultExpiryInSeconds,
+                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,forceCacheDuration);
     }
 
     public MemcachedStorageConfigBuilder setCacheKey(String cacheKey) {
@@ -74,6 +80,32 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setAdditionalCustomHeaders(Set<String> customHeaders) {
+        this.additionalHeaders = new HashSet<String>(customHeaders);
+        return this;
+    }
 
+    public MemcachedStorageConfigBuilder setAdditionalCustomHeaders(String[] customHeaders) {
+        this.additionalHeaders = new HashSet<String>(customHeaders.length);
+        for(String customHeader : customHeaders) {
+            additionalHeaders.add(customHeader);
+        }
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setStorePrivate(boolean storePrivate) {
+        this.storePrivate = storePrivate;
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setForceCache(boolean forceCache) {
+        this.forceCache = forceCache;
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setForceCacheDuration(Duration duration) {
+        this.forceCacheDuration = (int)duration.toSeconds();
+        return this;
+    }
 
 }

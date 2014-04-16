@@ -3,6 +3,8 @@ package org.greencheek.web.filter.memcached.client.spy;
 import net.spy.memcached.MemcachedClient;
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
+import org.greencheek.web.filter.memcached.client.MemcachedStorageConfig;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
@@ -15,58 +17,44 @@ import java.util.*;
  */
 public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
-    private static int DEFAULT_HEADERS_LENGTH = 8192;
-    private static Set<String> DEFAULT_ADDITIONAL_HEADERS = Collections.EMPTY_SET;
-    private final int DEFAULT_EXPIRY_IN_SECONDS = 300;
-    private static final byte[] newLine = new byte[]{(byte)'\r',(byte)'\n'};
-    private static final byte[] headerNameSeparator = new byte[]{':',' '};
 
-    private static final Set<String> DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
-    static {
-        Set<String> headers = new HashSet<String>(9);
-        headers.add("connection");
-        headers.add("keep-alive");
-        headers.add("proxy-authenticate");
-        headers.add("proxy-authorization");
-        headers.add("te");
-        headers.add("trailers");
-        headers.add("transfer-encoding");
-        headers.add("upgrade");
-        headers.add("set-cookie");
-        DEFAULT_RESPONSE_HEADERS_TO_IGNORE = headers;
-    }
-
-    private final net.spy.memcached.MemcachedClient client;
-    private final int headersLength;
-    private final CacheKeyCreator cacheKeyCreator;
-    private final int defaultExpiryInSeconds;
-    private final Map<String,String> responseHeadersToIgnore;
+    private final MemcachedClient client;
+    private final MemcachedStorageConfig storageConfig;
 
 
-
-    public SpyFilterMemcachedStorage(MemcachedClient client, CacheKeyCreator cacheKeyCreator) {
-        this(client,cacheKeyCreator,8192);
-    }
-
-    public SpyFilterMemcachedStorage(MemcachedClient client, CacheKeyCreator cacheKeyCreator, Map<String,String> headersToIgnore) {
-
-    public SpyFilterMemcachedStorage(MemcachedClient client, CacheKeyCreator cacheKeyCreator, Map<String,String> headersToIgnore) {
-        this(client,cacheKeyCreator,headersToIgnore)
-    }
-
-    public
-
-    public SpyFilterMemcachedStorage(MemcachedClient client, CacheKeyCreator cacheKeyCreator, int headersLength,
-                                     Map<String,String> headersToIgnore, int defaultExpiryInSeconds) {
-        this.headersLength = headersLength;
+    public SpyFilterMemcachedStorage(MemcachedClient client, MemcachedStorageConfig config) {
         this.client = client;
-        this.cacheKeyCreator = cacheKeyCreator;
-        this.responseHeadersToIgnore = headersToIgnore;
-        this.defaultExpiryInSeconds = defaultExpiryInSeconds;
-
+        this.storageConfig = config;
     }
 
+    @Override
     public void writeToCache(HttpServletRequest theRequest, BufferedResponseWrapper theResponse) {
+        ResizeableByteBuffer buffer = theResponse.getBufferedMemcachedContent();
+        boolean hasOverflowed = buffer.canWrite();
+        buffer.closeForWrites();
+
+        if(hasOverflowed) return;
+
+        String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
+
+
+        if(storageConfig.isForceCache()) {
+            writeToCache(key, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
+                         getHeaders(storageConfig.getResponseHeadersToIgnore(),theResponse),buffer);
+        }
+        else {
+            String cacheControlHeader = theResponse.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
+            boolean canCache = cacheControlHeader!=null && storageConfig.getPatternForNoCacheMatching().matcher(cacheControlHeader).find();
+            if(!canCache) {
+                return;
+            }
+            else {
+                writeToCache(key, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
+                             getHeaders(storageConfig.getResponseHeadersToIgnore(),theResponse),buffer);
+            }
+
+        }
+
 
 //        ResizeableByteBuffer bufferedContent = servletResponse.getBufferedMemcachedContent();
 //        boolean shouldWriteToMemcached = bufferedContent.canWrite();
@@ -77,15 +65,25 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 //        }
     }
 
-    @Override
-    public void writeToCache(String key, int expiryInSeconds, Set<String> additionalContent,
+    private Map<String,Collection<String>> getHeaders(Set<String> headerNamesToIngore,BufferedResponseWrapper servletResponse) {
+        Collection<String> headerNames = servletResponse.getHeaderNames();
+        Map<String,Collection<String>> headers = new HashMap<String, Collection<String>>(headerNames.size());
+
+        for(String key : headerNames) {
+            if(headerNamesToIngore.contains(key.toLowerCase())) continue;
+            headers.put(key,servletResponse.getHeaders(key));
+        }
+        return headers;
+    }
+
+    private void writeToCache(String key, int expiryInSeconds, Set<String> additionalContent,
                              Map<String, Collection<String>> responseHeaders, ResizeableByteBuffer content) {
         int contentLength = content.size();
-        ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength,contentLength + headersLength);
+        ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength,contentLength + storageConfig.getHeadersLength());
 
         for(String string : additionalContent) {
             addStringToContent(memcachedContent,string);
-            memcachedContent.append(newLine);
+            memcachedContent.append(CacheConfigGlobals.NEW_LINE);
         }
 
 
@@ -93,19 +91,18 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
             byte[] headerName = getBytes(entry.getKey());
             for(String value : entry.getValue()) {
                 memcachedContent.append(headerName);
-                memcachedContent.append(headerNameSeparator);
+                memcachedContent.append(CacheConfigGlobals.HEADER_NAME_SEPARATOR);
                 addStringToContent(memcachedContent, value);
-                memcachedContent.append(newLine);
+                memcachedContent.append(CacheConfigGlobals.NEW_LINE);
             }
         }
 
-        memcachedContent.append(newLine);
-        memcachedContent.append(newLine);
+        memcachedContent.append(CacheConfigGlobals.NEW_LINE);
+        memcachedContent.append(CacheConfigGlobals.NEW_LINE);
         memcachedContent.append(content.getBuf(),0,contentLength);
 
-        if(content.canWrite()) {
-            writeToMemcached(key, expiryInSeconds, memcachedContent.toByteArray());
-        }
+        writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
+
     }
 
     private void addStringToContent(ResizeableByteBuffer content, String value) {

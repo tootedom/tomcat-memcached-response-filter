@@ -66,6 +66,13 @@ public class ResizeableByteBuffer {
         return bytes;
     }
 
+    public ResizeableByteBuffer trim() {
+        final byte[] bytes = new byte[position];
+        System.arraycopy(buf,0,bytes,0,position);
+        buf = bytes;
+        return this;
+    }
+
 
     public ByteBuffer toByteBuffer() {
         return ByteBuffer.wrap(buf, 0, position);

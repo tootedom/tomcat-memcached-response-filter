@@ -8,7 +8,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 /**
  * Created by dominictootell on 09/04/2014.
  */
-public class MessageDigestHashing implements KeyHashing{
+public class MessageDigestHashing implements KeyHashing {
 
     private final String algorithm;
     private final int messageDigests;
