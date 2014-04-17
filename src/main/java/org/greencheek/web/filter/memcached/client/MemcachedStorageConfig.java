@@ -23,11 +23,13 @@ public class MemcachedStorageConfig {
     private final Pattern patternForNoCacheMatching;
     private final boolean forceCache;
     private final int forceCacheDurationInSeconds;
+    private final String httpStatusLinePrefix;
 
 
     public MemcachedStorageConfig(int headersLength, CacheKeyCreator cacheKeyCreator,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
-                                  boolean storePrivate,boolean forceCache,int forceCacheDurationInSeconds) {
+                                  boolean storePrivate,boolean forceCache,int forceCacheDurationInSeconds,
+                                  String httpStatusLinePrefix) {
         this.headersLength = headersLength;
         this.cacheKeyCreator = cacheKeyCreator;
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
@@ -43,6 +45,7 @@ public class MemcachedStorageConfig {
 
         this.forceCache = forceCache;
         this.forceCacheDurationInSeconds = forceCacheDurationInSeconds;
+        this.httpStatusLinePrefix = httpStatusLinePrefix;
     }
 
 
@@ -80,5 +83,9 @@ public class MemcachedStorageConfig {
 
     public int getForceCacheDurationInSeconds() {
         return forceCacheDurationInSeconds;
+    }
+
+    public String getHttpStatusLinePrefix() {
+        return httpStatusLinePrefix;
     }
 }

@@ -52,7 +52,7 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
 
     private final int memcachedContentBufferSize;
 
-    private int contentLength;
+    private int contentLength = Integer.MIN_VALUE;
 
     public BufferedResponseWrapper(int memcachedContentBufferSize, HttpServletResponse response) {
         super(response);

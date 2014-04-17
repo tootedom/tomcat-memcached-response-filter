@@ -19,7 +19,7 @@ public class MemcachedStorageConfigBuilder {
     public static final boolean DEFAULT_STORE_PRIVATE = false;
     public static final boolean DEFAULT_FORCE_CACHE = false;
     public static final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
-    public static final String DEFAULT_HTTP_STATUS_LINE = "HTTP/1.1";
+    public static final String DEFAULT_HTTP_STATUS_LINE = "HTTP/1.1 ";
 
     private static final Set<String> DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     static {
@@ -44,14 +44,14 @@ public class MemcachedStorageConfigBuilder {
     private CacheKeyCreator cacheKeyCreator = new DefaultCacheKeyCreator(DEFAULT_CACHE_KEY);
     private boolean storePrivate = DEFAULT_STORE_PRIVATE;
     private boolean forceCache = DEFAULT_FORCE_CACHE;
-    private int forceCacheDuration = DEFAULT_EXPIRY_IN_SECONDS;
+    private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
     private String httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
 
 
 
     public MemcachedStorageConfig build() {
         return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,cacheKeyCreator,defaultExpiryInSeconds,
-                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,forceCacheDuration);
+                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,forceCacheDuration,httpStatusLinePrefix);
     }
 
     public MemcachedStorageConfigBuilder setCacheKey(String cacheKey) {
@@ -107,6 +107,12 @@ public class MemcachedStorageConfigBuilder {
 
     public MemcachedStorageConfigBuilder setForceCacheDuration(Duration duration) {
         this.forceCacheDuration = (int)duration.toSeconds();
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setHttpStatusLinePrefix(String prefix) {
+        prefix = prefix.trim();
+        this.httpStatusLinePrefix = prefix + " ";
         return this;
     }
 

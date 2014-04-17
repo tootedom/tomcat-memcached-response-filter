@@ -35,11 +35,10 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
         if(hasOverflowed) return;
 
-        String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
 
 
         if(storageConfig.isForceCache()) {
-            writeToCache(key, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
+            writeToCache(theRequest, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
                          getHeaders(storageConfig.getResponseHeadersToIgnore(),theResponse),buffer);
         }
         else {
@@ -49,7 +48,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
                 return;
             }
             else {
-                writeToCache(key, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
+                writeToCache(theRequest, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
                              getHeaders(storageConfig.getResponseHeadersToIgnore(),theResponse),buffer);
             }
 
@@ -65,6 +64,26 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 //        }
     }
 
+    private Map<String,Collection<String>> createContentLengthHeader(Map<String,Collection<String>> headers,
+                                                                     BufferedResponseWrapper theResponse) {
+        int length = theResponse.getContentLength();
+        if(length==Integer.MIN_VALUE) {
+            length = theResponse.getBufferedMemcachedContent().size();
+        }
+
+    }
+
+    private String createHttpStatusLine(BufferedResponseWrapper theResponse) {
+        String statusLinePrefix = storageConfig.getHttpStatusLinePrefix();
+        StringBuilder statusLine = new StringBuilder(statusLinePrefix.length() + 34);
+
+        int statusCode = theResponse.getStatus();
+        statusLine.append(statusLinePrefix).append(CacheConfigGlobals.getStatusCodeText(statusCode));
+
+        return statusLine.toString();
+
+    }
+
     private Map<String,Collection<String>> getHeaders(Set<String> headerNamesToIngore,
                                                       BufferedResponseWrapper servletResponse) {
         Collection<String> headerNames = servletResponse.getHeaderNames();
@@ -76,10 +95,15 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         }
 
 
+
         return headers;
     }
 
-    private void writeToCache(String key, int expiryInSeconds, Set<String> additionalContent,
+    private String createCacheKey(HttpServletRequest theRequest) {
+        return storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
+    }
+
+    private void writeToCache(HttpServletRequest theRequest, int expiryInSeconds, Set<String> additionalContent,
                              Map<String, Collection<String>> responseHeaders, ResizeableByteBuffer content) {
         int contentLength = content.size();
         ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength,contentLength + storageConfig.getHeadersLength());
@@ -100,13 +124,15 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
             }
         }
 
-
-
         memcachedContent.append(CacheConfigGlobals.NEW_LINE);
         memcachedContent.append(CacheConfigGlobals.NEW_LINE);
         memcachedContent.append(content.getBuf(),0,contentLength);
 
-        writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
+
+        if(memcachedContent.canWrite()) {
+            String key = createCacheKey(theRequest);
+            writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
+        }
 
     }
 
