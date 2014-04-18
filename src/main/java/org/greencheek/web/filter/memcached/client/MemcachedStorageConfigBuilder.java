@@ -23,6 +23,8 @@ public class MemcachedStorageConfigBuilder {
     public static final boolean DEFAULT_FORCE_CACHE = false;
     public static final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
     public static final byte[] DEFAULT_HTTP_STATUS_LINE = new byte[]{'H','T','T','P','/','1','.','1',' '};
+    public static final MaxAgeParser DEFAULT_MAX_AGE_PARSER = new DefaultMaxAgeParser();
+
 //    public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
 
 //    public static final MemcachedKeyConfig DEFAULT_KEY_CONFIG = new MemcachedKeyConfig(new DefaultCacheKeyCreator(DEFAULT_CACHE_KEY),DEFAULT_MESSAGE_HASHING);
@@ -43,33 +45,6 @@ public class MemcachedStorageConfigBuilder {
         DEFAULT_RESPONSE_HEADERS_TO_IGNORE = Collections.unmodifiableSet(headers);
     }
 
-    private static final Set<String> DEFAULT_REQUEST_METHODS_TO_CACHE;
-    static {
-        Set<String> methods = new HashSet<String>(9);
-        methods.addAll(permutate("GET"));
-        DEFAULT_REQUEST_METHODS_TO_CACHE = methods;
-    }
-
-
-    public static Set<String> permutate( String s )
-    {
-        Set<String> listPermutations = new HashSet<String>();
-
-        char[] array = s.toLowerCase().toCharArray();
-        int iterations = (1 << array.length) - 1;
-
-        for( int i = 0; i <= iterations; i++ )
-        {
-            for( int j = 0; j < array.length; j++ )
-                array[j] = (i & (1<<j)) != 0
-                        ? Character.toUpperCase( array[j] )
-                        : Character.toLowerCase( array[j] );
-            listPermutations.add(new String(array));
-        }
-        return listPermutations;
-    }
-
-
 
     private Set<String> responseHeadersToIgnore = DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     private int defaultExpiryInSeconds = DEFAULT_EXPIRY_IN_SECONDS;
@@ -79,6 +54,8 @@ public class MemcachedStorageConfigBuilder {
     private boolean forceCache = DEFAULT_FORCE_CACHE;
     private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
     private byte[] httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
+    private MaxAgeParser maxAgeParser = DEFAULT_MAX_AGE_PARSER;
+    private boolean canCacheWithNoCacheControl = true;
 
     private MemcachedKeyConfig keyConfig;
 
@@ -89,8 +66,8 @@ public class MemcachedStorageConfigBuilder {
 
     public MemcachedStorageConfig build() {
         return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,keyConfig,defaultExpiryInSeconds,
-                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,forceCacheDuration,httpStatusLinePrefix
-                );
+                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,
+                forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl);
     }
 
     public MemcachedStorageConfigBuilder setKeyConfig(MemcachedKeyConfig keyConfig) {
@@ -156,4 +133,13 @@ public class MemcachedStorageConfigBuilder {
     }
 
 
+    public MemcachedStorageConfigBuilder setMaxAgeParser(MaxAgeParser maxAgeParser) {
+        this.maxAgeParser = maxAgeParser;
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setCanCacheWithNoCacheControl(boolean canCacheWithNoCacheControl) {
+        this.canCacheWithNoCacheControl = canCacheWithNoCacheControl;
+        return this;
+    }
 }

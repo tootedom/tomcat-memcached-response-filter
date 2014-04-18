@@ -26,13 +26,15 @@ public class MemcachedStorageConfig {
     private final boolean forceCache;
     private final int forceCacheDurationInSeconds;
     private final byte[] httpStatusLinePrefix;
+    private final MaxAgeParser maxAgeParser;
+    private final boolean canCacheWithNoCacheControlHeader;
 
 
 
     public MemcachedStorageConfig(int headersLength, MemcachedKeyConfig cacheKeyCreator,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   boolean storePrivate,boolean forceCache,int forceCacheDurationInSeconds,
-                                  byte[] httpStatusLinePrefix
+                                  byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader
                                   ) {
         this.headersLength = headersLength;
         this.cacheKeyCreator = cacheKeyCreator;
@@ -50,6 +52,8 @@ public class MemcachedStorageConfig {
         this.forceCache = forceCache;
         this.forceCacheDurationInSeconds = forceCacheDurationInSeconds;
         this.httpStatusLinePrefix = httpStatusLinePrefix;
+        this.maxAgeParser = maxAgeParser;
+        this.canCacheWithNoCacheControlHeader = canCacheWithNoCacheControlHeader;
     }
 
 
@@ -94,5 +98,11 @@ public class MemcachedStorageConfig {
     }
 
 
+    public MaxAgeParser getMaxAgeParser() {
+        return maxAgeParser;
+    }
 
+    public boolean isCanCacheWithNoCacheControlHeader() {
+        return canCacheWithNoCacheControlHeader;
+    }
 }

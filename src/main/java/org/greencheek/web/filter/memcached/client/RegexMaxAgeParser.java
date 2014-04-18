@@ -9,10 +9,10 @@ import java.util.regex.Pattern;
  */
 public class RegexMaxAgeParser implements MaxAgeParser {
     private static final Pattern MAX_AGE_PATTERN = Pattern.compile("max-age=(\\d+)");
-    private static final String MAX_AGE_STR = "max-age=";
 
     @Override
     public int maxAge(String header, int defaultExpiry) {
+        if(header==null) return defaultExpiry;
         Matcher m = MAX_AGE_PATTERN.matcher(header);
         if(m.find()) {
            return Integer.parseInt(m.group(1));

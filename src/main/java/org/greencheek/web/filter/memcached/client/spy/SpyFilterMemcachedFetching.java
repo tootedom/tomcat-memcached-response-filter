@@ -33,7 +33,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
     @Override
     public CachedResponse getCachedContent(HttpServletRequest theRequest) {
         String cacheControlHeader = theRequest.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
-        if(cacheControlHeader == null || cacheControlHeader.contains(CacheConfigGlobals.NO_CACHE_CLIENT_VALUE)) {
+        if(cacheControlHeader != null && cacheControlHeader.contains(CacheConfigGlobals.NO_CACHE_CLIENT_VALUE)) {
             return CachedResponse.MISS;
         } else {
             String key = config.getKeyConfig().createCacheKey(theRequest);
@@ -57,6 +57,34 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         }
     }
 
+    private int parseStatusCode(byte[] content,int offset, int length) {
+        int finalPosition = offset + length;
+        for(int i = 0;i < length;i++) {
+            if(content[offset++]!=32) continue;
+            else break;
+        }
+
+        while(offset<finalPosition) {
+            if(content[offset] > 47 && content[offset] < 58) break;
+            else offset++;
+        }
+
+
+        if(offset+3<finalPosition) {
+            char[] status = new char[3];
+            for(int i=0;i<3;i++) {
+                status[i] = (char)content[offset+i];
+            }
+            try {
+                return Integer.parseInt(new String(status));
+            } catch(NumberFormatException e) {
+                return 200;
+            }
+        } else {
+            return 200;
+        }
+    }
+
     public CachedResponse parseCachedResponse(byte[] content) {
         Map<String,String> headers = new HashMap<String,String>();
         int offset = 0;
@@ -64,6 +92,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         byte prevMinTwo = -1;
         byte prev = -1;
         int colon = -1;
+        int statusCode = 200;
         for(int i=0;i<content.length;i++) {
             if(content[i] == 58) {
                 colon = i+2;
@@ -75,10 +104,16 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
                     offset = i+2;
                     break;
                 } else {
-                    String key = toString(content, offset, colon-2 - offset);
-                    String value = toString(content, colon, (i-1 - colon));
-                    headers.put(key, value);
+                    if (colon != -1) {
+                        String key = toString(content, offset, colon - 2 - offset);
+                        String value = toString(content, colon, (i - 1 - colon));
+                        headers.put(key, value);
+                    } else {
+                        statusCode = parseStatusCode(content,offset,colon-2);
+                    }
+
                     offset = i+1;
+                    colon = -1;
                 }
             }
 
@@ -88,7 +123,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         }
 
         if(headers.size()>0) {
-            return new CachedResponse(true, headers, content, offset);
+            return new CachedResponse(true,statusCode, headers, content, offset-1);
         } else {
             return CachedResponse.MISS;
         }

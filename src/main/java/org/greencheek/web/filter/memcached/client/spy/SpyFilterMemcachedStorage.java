@@ -42,42 +42,28 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         }
         else {
             String cacheControlHeader = theResponse.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
-            boolean canCache = cacheControlHeader==null || !storageConfig.getPatternForNoCacheMatching().matcher(cacheControlHeader).find();
-            if(!canCache) {
-                return;
-            }
-            else {
-                writeToCache(theRequest,theResponse, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
-                             getHeaders(storageConfig.getResponseHeadersToIgnore(),theResponse),buffer);
-            }
-
-        }
-
-    }
-
-    private int parseCacheControlMaxAge(String header) {
-        int index = header.indexOf("max-age=");
-        if(index == -1) {
-            return storageConfig.getDefaultExpiryInSeconds();
-        } else {
-            index = index + 8;
-            int spaceIndex = header.indexOf(" ",index);
-            if(spaceIndex==-1) {
-                String time = header.substring(index,spaceIndex);
-                try {
-                    return Integer.parseInt(time);
-                } catch(NumberFormatException e) {
-                    return storageConfig.getDefaultExpiryInSeconds();
+            if (cacheControlHeader == null) {
+                if (!storageConfig.isCanCacheWithNoCacheControlHeader()) {
+                    return;
+                } else {
+                    writeToCache(theRequest, theResponse,
+                            storageConfig.getDefaultExpiryInSeconds(),
+                            storageConfig.getCustomHeaders(), getHeaders(storageConfig.getResponseHeadersToIgnore(), theResponse),
+                            buffer);
                 }
             } else {
-                String time = header.substring(index,header.length());
-                try {
-                    return Integer.parseInt(time);
-                } catch(NumberFormatException e) {
-                    return storageConfig.getDefaultExpiryInSeconds();
+                boolean canCache = !storageConfig.getPatternForNoCacheMatching().matcher(cacheControlHeader).find();
+                if (!canCache) {
+                    return;
+                } else {
+                    writeToCache(theRequest, theResponse,
+                            storageConfig.getMaxAgeParser().maxAge(cacheControlHeader, storageConfig.getDefaultExpiryInSeconds()),
+                            storageConfig.getCustomHeaders(), getHeaders(storageConfig.getResponseHeadersToIgnore(), theResponse),
+                            buffer);
                 }
             }
         }
+
     }
 
     /**
@@ -110,10 +96,14 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
     private void addContentTypeHeader(BufferedResponseWrapper theResponse,ResizeableByteBuffer buffer) {
         String contentType = theResponse.getContentType();
-        if(contentType == null || contentType.length()>0) {
-            buffer.append(CacheConfigGlobals.CONTENT_TYPE_HEADER_AS_BYTES);
-            buffer.append(CacheConfigGlobals.HEADER_NAME_SEPARATOR);
+        buffer.append(CacheConfigGlobals.CONTENT_TYPE_HEADER_AS_BYTES);
+        buffer.append(CacheConfigGlobals.HEADER_NAME_SEPARATOR);
+
+        if(contentType == null || contentType.length()==0) {
             buffer.append(CacheConfigGlobals.DEFAULT_CONTENT_TYPE_HEADER_VALUE_AS_BYTES);
+            buffer.append(CacheConfigGlobals.NEW_LINE);
+        } else {
+            buffer.append(getBytes(contentType));
             buffer.append(CacheConfigGlobals.NEW_LINE);
         }
     }

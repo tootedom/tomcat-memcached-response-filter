@@ -17,20 +17,22 @@ limitations under the License.
 package org.greencheek.web.filter.memcached;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
 
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.spy.memcached.MemcachedClient;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
-import org.greencheek.web.filter.memcached.client.MemcachedKeyConfigBuilder;
-import org.greencheek.web.filter.memcached.client.MemcachedStorageConfigBuilder;
+import org.greencheek.web.filter.memcached.client.*;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
+import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
+import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
@@ -51,23 +53,54 @@ public class PublishToMemcachedFilter implements Filter {
 
     private volatile int maxContentSizeForMemcachedEntry = 8192*4;
 
-
-
-    private final FilterMemcachedStorage filterMemcachedStorage = new SpyFilterMemcachedStorage(new SpyMemcachedBuilder().build(), new MemcachedStorageConfigBuilder(new MemcachedKeyConfigBuilder().build()).build());
+    private final MemcachedClient client = new SpyMemcachedBuilder().build();
+    private final MemcachedKeyConfig keyConfig = new MemcachedKeyConfigBuilder().build();
+    private final FilterMemcachedFetching filterMemcachedFetching = new SpyFilterMemcachedFetching(client,new MemcachedFetchingConfigBulder(keyConfig).build());
+    private final FilterMemcachedStorage filterMemcachedStorage = new SpyFilterMemcachedStorage(client,new MemcachedStorageConfigBuilder(keyConfig).build());
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
 
     }
 
+    public void sendCachedResponse(CachedResponse cachedResponse,HttpServletResponse response) {
+        Map<String,String> headers = cachedResponse.getHeaders();
+        for(Map.Entry<String,String> header : headers.entrySet()) {
+            response.addHeader(header.getKey(),header.getValue());
+        }
+
+        response.setStatus(cachedResponse.getStatusCode());
+        response.addHeader("X-Cache","HIT");
+
+        byte[] content = cachedResponse.getContent();
+        try {
+            response.getOutputStream().write(content,cachedResponse.getContentOffset(),content.length-cachedResponse.getContentOffset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         BufferedResponseWrapper wrappedRes = null;
         HttpServletRequest servletRequest = null;
+
+
+
         if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
             HttpServletResponse servletResponse = (HttpServletResponse) response;
             servletRequest = (HttpServletRequest) request;
-            wrappedRes = new BufferedResponseWrapper(maxContentSizeForMemcachedEntry,servletResponse);
+            if(CacheConfigGlobals.DEFAULT_REQUEST_METHODS_TO_CACHE.contains(servletRequest.getMethod())) {
+                CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest);
+                if(cacheResponse.isCacheHit())
+                {
+                    sendCachedResponse(cacheResponse,servletResponse);
+                    return;
+                }
+                else {
+                    wrappedRes = new BufferedResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
+                }
+            }
         }
 
         try {

@@ -9,6 +9,7 @@ public class DefaultMaxAgeParser implements MaxAgeParser {
 
     @Override
     public int maxAge(String header, int defaultExpiry) {
+        if(header==null) return defaultExpiry;
         int index = header.indexOf(MAX_AGE_KEY);
         if(index == -1) {
             return defaultExpiry;

@@ -6,7 +6,9 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by dominictootell on 16/04/2014.
@@ -116,5 +118,32 @@ public class CacheConfigGlobals {
         log[i] = (byte)(num+CHAR_ZERO);
 
         return log;
+    }
+
+
+    public static final Set<String> DEFAULT_REQUEST_METHODS_TO_CACHE;
+    static {
+        Set<String> methods = new HashSet<String>(9);
+        methods.addAll(permutate("GET"));
+        DEFAULT_REQUEST_METHODS_TO_CACHE = methods;
+    }
+
+
+    public static Set<String> permutate( String s )
+    {
+        Set<String> listPermutations = new HashSet<String>();
+
+        char[] array = s.toLowerCase().toCharArray();
+        int iterations = (1 << array.length) - 1;
+
+        for( int i = 0; i <= iterations; i++ )
+        {
+            for( int j = 0; j < array.length; j++ )
+                array[j] = (i & (1<<j)) != 0
+                        ? Character.toUpperCase( array[j] )
+                        : Character.toLowerCase( array[j] );
+            listPermutations.add(new String(array));
+        }
+        return listPermutations;
     }
 }
