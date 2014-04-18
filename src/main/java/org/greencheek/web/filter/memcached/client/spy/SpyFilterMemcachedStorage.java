@@ -55,6 +55,31 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
     }
 
+    private int parseCacheControlMaxAge(String header) {
+        int index = header.indexOf("max-age=");
+        if(index == -1) {
+            return storageConfig.getDefaultExpiryInSeconds();
+        } else {
+            index = index + 8;
+            int spaceIndex = header.indexOf(" ",index);
+            if(spaceIndex==-1) {
+                String time = header.substring(index,spaceIndex);
+                try {
+                    return Integer.parseInt(time);
+                } catch(NumberFormatException e) {
+                    return storageConfig.getDefaultExpiryInSeconds();
+                }
+            } else {
+                String time = header.substring(index,header.length());
+                try {
+                    return Integer.parseInt(time);
+                } catch(NumberFormatException e) {
+                    return storageConfig.getDefaultExpiryInSeconds();
+                }
+            }
+        }
+    }
+
     /**
      * Adds a "Content-Length" header to the buffer
      *
@@ -107,10 +132,6 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         return headers;
     }
 
-    private String createCacheKey(HttpServletRequest theRequest) {
-        String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
-        return storageConfig.getKeyHashing().hash(key);
-    }
 
     private void writeToCache(HttpServletRequest theRequest,BufferedResponseWrapper theResponse,
                               int expiryInSeconds, Set<String> additionalContent,
@@ -140,7 +161,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
 
         if(memcachedContent.canWrite()) {
-            String key = createCacheKey(theRequest);
+            String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
             writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
         }
 

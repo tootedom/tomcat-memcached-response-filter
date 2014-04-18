@@ -3,6 +3,7 @@ package org.greencheek.web.filter.memcached.client;
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -13,10 +14,10 @@ public class MemcachedStorageConfig {
 
     public static final Pattern NO_STORE_CACHE_PRIVATE_CACHE_RESPONSE_HEADER = Pattern.compile("no-store|no-cache");
     public static final Pattern NO_STORE_NO_PRIVATE_CACHE_RESPONSE_HEADER = Pattern.compile("no-store|no-cache|private");
-    public static final String REQUEST_NO_STORE_REQUEST_VALUE = "no-cache";
+
 
     private final int headersLength;
-    private final CacheKeyCreator cacheKeyCreator;
+    private final MemcachedKeyConfig cacheKeyCreator;
     private final int defaultExpiryInSeconds;
     private final Set<String> responseHeadersToIgnore;
     private final Set<String> customHeaders;
@@ -25,13 +26,14 @@ public class MemcachedStorageConfig {
     private final boolean forceCache;
     private final int forceCacheDurationInSeconds;
     private final byte[] httpStatusLinePrefix;
-    private final KeyHashing keyHashing;
 
 
-    public MemcachedStorageConfig(int headersLength, CacheKeyCreator cacheKeyCreator,
+
+    public MemcachedStorageConfig(int headersLength, MemcachedKeyConfig cacheKeyCreator,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   boolean storePrivate,boolean forceCache,int forceCacheDurationInSeconds,
-                                  byte[] httpStatusLinePrefix,KeyHashing keyHashing) {
+                                  byte[] httpStatusLinePrefix
+                                  ) {
         this.headersLength = headersLength;
         this.cacheKeyCreator = cacheKeyCreator;
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
@@ -48,7 +50,6 @@ public class MemcachedStorageConfig {
         this.forceCache = forceCache;
         this.forceCacheDurationInSeconds = forceCacheDurationInSeconds;
         this.httpStatusLinePrefix = httpStatusLinePrefix;
-        this.keyHashing = keyHashing;
     }
 
 
@@ -56,7 +57,7 @@ public class MemcachedStorageConfig {
         return headersLength;
     }
 
-    public CacheKeyCreator getCacheKeyCreator() {
+    public MemcachedKeyConfig getCacheKeyCreator() {
         return cacheKeyCreator;
     }
 
@@ -92,7 +93,6 @@ public class MemcachedStorageConfig {
         return httpStatusLinePrefix;
     }
 
-    public KeyHashing getKeyHashing() {
-        return keyHashing;
-    }
+
+
 }

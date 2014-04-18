@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
+import org.greencheek.web.filter.memcached.client.MemcachedKeyConfigBuilder;
 import org.greencheek.web.filter.memcached.client.MemcachedStorageConfigBuilder;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
@@ -51,7 +52,8 @@ public class PublishToMemcachedFilter implements Filter {
     private volatile int maxContentSizeForMemcachedEntry = 8192*4;
 
 
-    private final FilterMemcachedStorage filterMemcachedStorage = new SpyFilterMemcachedStorage(new SpyMemcachedBuilder().build(), new MemcachedStorageConfigBuilder().build());
+
+    private final FilterMemcachedStorage filterMemcachedStorage = new SpyFilterMemcachedStorage(new SpyMemcachedBuilder().build(), new MemcachedStorageConfigBuilder(new MemcachedKeyConfigBuilder().build()).build());
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
