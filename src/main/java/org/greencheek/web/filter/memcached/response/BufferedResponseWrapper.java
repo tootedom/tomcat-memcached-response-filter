@@ -42,13 +42,12 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
     /**
      *
      */
-
-    private ResizeableByteBuffer bufferedMemcachedContent;
+    private volatile ResizeableByteBuffer bufferedMemcachedContent;
 
     /**
      * The associated writer.
      */
-    protected ResizeableByteBufferWriter writer;
+    protected PrintWriter writer;
 
     private final int memcachedContentBufferSize;
 
@@ -84,7 +83,6 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
         usingOutputStream = true;
         if (outputStream == null) {
             outputStream = new ResizeableByteBufferOutputStream(memcachedContentBufferSize, origResponse.getOutputStream());
-            System.out.println("setting buffer");
             bufferedMemcachedContent = outputStream.getBuffer();
         }
         return outputStream;
@@ -121,9 +119,9 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
 
         usingWriter = true;
         if (writer == null) {
-            writer = new ResizeableByteBufferWriter(memcachedContentBufferSize, origResponse.getWriter());
-            System.out.println("setting buffer");
-            bufferedMemcachedContent = writer.getBuffer();
+            ResizeableByteBufferWriter bufferedWriter = new ResizeableByteBufferWriter(memcachedContentBufferSize, origResponse.getWriter());
+            writer = new PrintWriter(bufferedWriter);
+            bufferedMemcachedContent = bufferedWriter.getBuffer();
         }
         return writer;
 

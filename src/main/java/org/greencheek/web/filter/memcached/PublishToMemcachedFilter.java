@@ -30,7 +30,6 @@ import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.MemcachedStorageConfigBuilder;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
-import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
@@ -89,37 +88,7 @@ public class PublishToMemcachedFilter implements Filter {
     }
 
     private void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
-
-        ResizeableByteBuffer bufferedContent = servletResponse.getBufferedMemcachedContent();
-        boolean shouldWriteToMemcached = bufferedContent.canWrite();
-        bufferedContent.closeForWrites();
-        if(bufferedContent!=null && shouldWriteToMemcached) {
-          String key = createKey(servletRequest);
-//          filterMemcachedStorage.writeToCache(key, 10, Collections.EMPTY_SET, getHeaders(DEFAULT_HEADERS_TO_IGNORE, servletResponse), servletResponse.getBufferedMemcachedContent());
-        }
-
-    }
-
-
-
-    private String createKey(HttpServletRequest servletRequest) {
-        String method = servletRequest.getMethod();
-        String path = servletRequest.getRequestURI();
-        String queryString = servletRequest.getQueryString();
-
-        StringBuilder requestedResource = null;
-        // Reconstruct original requesting URL
-        if (queryString != null) {
-            requestedResource = new StringBuilder(path.length() + queryString.length() + 1);
-            requestedResource.append(path);
-            requestedResource.append('?');
-            requestedResource.append(queryString);
-        } else {
-            requestedResource = new StringBuilder(path.length());
-            requestedResource.append(path);
-        }
-
-        return requestedResource.toString();
+        filterMemcachedStorage.writeToCache(servletRequest,servletResponse);
     }
 
     @Override

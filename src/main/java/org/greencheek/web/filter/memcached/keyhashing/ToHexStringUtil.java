@@ -10,7 +10,7 @@ public class ToHexStringUtil {
         char[] out = new char[length << 1];
 
         for(int i=0,j=0;i<length;i++) {
-            out[j] = chars[(0xF0 & data[i]) >>> 4];
+            out[j++] = chars[(0xF0 & data[i]) >>> 4];
             out[j++] = chars[0x0F & data[i]];
         }
         return new String(out);

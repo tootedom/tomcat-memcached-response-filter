@@ -14,11 +14,18 @@ import java.util.Map;
 public class CacheConfigGlobals {
     public static final String CACHE_CONTROL_HEADER = "Cache-Control";
     public static final String CONTENT_LENGTH_HEADER = "Content-Length";
+    public static final String CONTENT_TYPE_HEADER = "Content-Type";
+    public static final String DEFAULT_CONTENT_TYPE_HEADER_VALUE = "application/octet-stream";
+    public static final byte[] DEFAULT_CONTENT_TYPE_HEADER_VALUE_AS_BYTES = getBytes(DEFAULT_CONTENT_TYPE_HEADER_VALUE);
+    public static final byte[] CONTENT_TYPE_HEADER_AS_BYTES = getBytes(CONTENT_TYPE_HEADER);
     public static final byte[] CONTENT_LENGTH_HEADER_AS_BYTES = getBytes(CONTENT_LENGTH_HEADER);
     public static final String NO_CACHE_CLIENT_VALUE = "no-cache";
     public static final byte[] NEW_LINE = new byte[]{(byte)'\r',(byte)'\n'};
     public static final byte[] HEADER_NAME_SEPARATOR = new byte[]{':',' '};
     public static final TIntObjectMap<byte[]> STATUS_CODES;
+
+    public static final char CHAR_ZERO = '0';
+
 
     static {
         TIntObjectMap<byte[]> codes = new TIntObjectHashMap<byte[]>(48,1.0f);
@@ -84,5 +91,30 @@ public class CacheConfigGlobals {
         } catch (UnsupportedEncodingException e) {
             return content.getBytes();
         }
+    }
+
+    /**
+     * Converts a positive int to its ASCII representation
+     *
+     * @param num
+     * @return the byte array of representing the ascii
+     */
+    public static byte[] toByteArray(int num) {
+        if(num<10) {
+            return new byte[]{(byte)(num+CHAR_ZERO)};
+        }
+
+        int len = (int)(Math.log10(num));
+        byte[] log = new byte[len+1];
+        int i=len;
+        do {
+            long n = (num % 10)+CHAR_ZERO;
+            log[i--] = (byte)n;
+            num /=10;
+
+        } while(num>9);
+        log[i] = (byte)(num+CHAR_ZERO);
+
+        return log;
     }
 }

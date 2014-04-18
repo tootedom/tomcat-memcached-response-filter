@@ -20,7 +20,7 @@ public class SpyMemcachedBuilder {
 
     public SpyMemcachedBuilder() {
         builder.setHashAlg(DefaultHashAlgorithm.KETAMA_HASH);
-        builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY);
+        builder.setProtocol(ConnectionFactoryBuilder.Protocol.TEXT);
         builder.setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE);
         builder.setFailureMode(FailureMode.Redistribute);
         builder.setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT);

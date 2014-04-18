@@ -4,6 +4,8 @@ import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.cachekey.DefaultCacheKeyCreator;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.client.config.Duration;
+import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
+import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -21,6 +23,7 @@ public class MemcachedStorageConfigBuilder {
     public static final boolean DEFAULT_FORCE_CACHE = false;
     public static final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
     public static final byte[] DEFAULT_HTTP_STATUS_LINE = new byte[]{'H','T','T','P','/','1','.','1',' '};
+    public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
 
     private static final Set<String> DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     static {
@@ -34,6 +37,7 @@ public class MemcachedStorageConfigBuilder {
         headers.add("transfer-encoding");
         headers.add("upgrade");
         headers.add("set-cookie");
+        headers.add("date");
         DEFAULT_RESPONSE_HEADERS_TO_IGNORE = Collections.unmodifiableSet(headers);
     }
 
@@ -47,12 +51,14 @@ public class MemcachedStorageConfigBuilder {
     private boolean forceCache = DEFAULT_FORCE_CACHE;
     private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
     private byte[] httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
+    private KeyHashing keyHashingFunction = DEFAULT_MESSAGE_HASHING;
 
 
 
     public MemcachedStorageConfig build() {
         return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,cacheKeyCreator,defaultExpiryInSeconds,
-                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,forceCacheDuration,httpStatusLinePrefix);
+                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,forceCacheDuration,httpStatusLinePrefix,
+                keyHashingFunction);
     }
 
     public MemcachedStorageConfigBuilder setCacheKey(String cacheKey) {
@@ -117,4 +123,8 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setKeyHashingFunction(MessageDigestHashing keyHashingFunction) {
+        this.keyHashingFunction = keyHashingFunction;
+        return this;
+    }
 }

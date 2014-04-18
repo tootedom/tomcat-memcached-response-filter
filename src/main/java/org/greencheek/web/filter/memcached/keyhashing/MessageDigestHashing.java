@@ -10,15 +10,17 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class MessageDigestHashing implements KeyHashing {
 
-    private final String algorithm;
-    private final int messageDigests;
     private final boolean upperCase;
 
     private final ToHexString byteToHexStringConverter;
     private final ArrayBlockingQueue<MessageDigest> digesters;
 
+    public MessageDigestHashing() {
+        this(KeyHashing.SHA526);
+    }
+
     public MessageDigestHashing(String algorithm) {
-        this(KeyHashing.SHA526,Runtime.getRuntime().availableProcessors()*2);
+        this(algorithm,Runtime.getRuntime().availableProcessors()*2);
     }
 
     public MessageDigestHashing(String algorithm,int messageDigests) {
@@ -26,8 +28,6 @@ public class MessageDigestHashing implements KeyHashing {
     }
 
     public MessageDigestHashing(String algorithm,int messageDigests,boolean toUpper) {
-        this.algorithm = algorithm;
-        this.messageDigests = messageDigests;
         this.upperCase = toUpper;
 
         if(upperCase) {

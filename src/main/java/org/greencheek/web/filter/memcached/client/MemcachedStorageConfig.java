@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.client;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
+import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -24,12 +25,13 @@ public class MemcachedStorageConfig {
     private final boolean forceCache;
     private final int forceCacheDurationInSeconds;
     private final byte[] httpStatusLinePrefix;
+    private final KeyHashing keyHashing;
 
 
     public MemcachedStorageConfig(int headersLength, CacheKeyCreator cacheKeyCreator,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   boolean storePrivate,boolean forceCache,int forceCacheDurationInSeconds,
-                                  byte[] httpStatusLinePrefix) {
+                                  byte[] httpStatusLinePrefix,KeyHashing keyHashing) {
         this.headersLength = headersLength;
         this.cacheKeyCreator = cacheKeyCreator;
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
@@ -46,6 +48,7 @@ public class MemcachedStorageConfig {
         this.forceCache = forceCache;
         this.forceCacheDurationInSeconds = forceCacheDurationInSeconds;
         this.httpStatusLinePrefix = httpStatusLinePrefix;
+        this.keyHashing = keyHashing;
     }
 
 
@@ -87,5 +90,9 @@ public class MemcachedStorageConfig {
 
     public byte[] getHttpStatusLinePrefix() {
         return httpStatusLinePrefix;
+    }
+
+    public KeyHashing getKeyHashing() {
+        return keyHashing;
     }
 }
