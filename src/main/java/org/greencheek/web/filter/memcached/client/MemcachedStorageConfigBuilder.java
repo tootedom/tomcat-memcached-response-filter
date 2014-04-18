@@ -2,6 +2,7 @@ package org.greencheek.web.filter.memcached.client;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.cachekey.DefaultCacheKeyCreator;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.client.config.Duration;
 
 import java.util.Collections;
@@ -19,7 +20,7 @@ public class MemcachedStorageConfigBuilder {
     public static final boolean DEFAULT_STORE_PRIVATE = false;
     public static final boolean DEFAULT_FORCE_CACHE = false;
     public static final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
-    public static final String DEFAULT_HTTP_STATUS_LINE = "HTTP/1.1 ";
+    public static final byte[] DEFAULT_HTTP_STATUS_LINE = new byte[]{'H','T','T','P','/','1','.','1',' '};
 
     private static final Set<String> DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     static {
@@ -45,7 +46,7 @@ public class MemcachedStorageConfigBuilder {
     private boolean storePrivate = DEFAULT_STORE_PRIVATE;
     private boolean forceCache = DEFAULT_FORCE_CACHE;
     private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
-    private String httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
+    private byte[] httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
 
 
 
@@ -112,7 +113,7 @@ public class MemcachedStorageConfigBuilder {
 
     public MemcachedStorageConfigBuilder setHttpStatusLinePrefix(String prefix) {
         prefix = prefix.trim();
-        this.httpStatusLinePrefix = prefix + " ";
+        this.httpStatusLinePrefix = CacheConfigGlobals.getBytes(prefix);
         return this;
     }
 

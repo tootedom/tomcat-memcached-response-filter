@@ -4,6 +4,7 @@ import gnu.trove.decorator.TIntObjectMapDecorator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,67 +13,76 @@ import java.util.Map;
  */
 public class CacheConfigGlobals {
     public static final String CACHE_CONTROL_HEADER = "Cache-Control";
-    public static final String CONTENT_TYPE_HEADER = "Content-Length";
+    public static final String CONTENT_LENGTH_HEADER = "Content-Length";
+    public static final byte[] CONTENT_LENGTH_HEADER_AS_BYTES = getBytes(CONTENT_LENGTH_HEADER);
     public static final String NO_CACHE_CLIENT_VALUE = "no-cache";
     public static final byte[] NEW_LINE = new byte[]{(byte)'\r',(byte)'\n'};
     public static final byte[] HEADER_NAME_SEPARATOR = new byte[]{':',' '};
-    public static final TIntObjectMap<String> STATUS_CODES;
+    public static final TIntObjectMap<byte[]> STATUS_CODES;
 
     static {
-        TIntObjectMap<String> codes = new TIntObjectHashMap<String>(48,1.0f);
-        codes.put(100,"100 Continue");
-        codes.put(101,"101 Switching Protocols");
-        codes.put(102,"102 Processing");
-        codes.put(200,"200 OK");
-        codes.put(201,"201 Created");
-        codes.put(202,"202 Accepted");
-        codes.put(203,"203 Non Authoritative Information");
-        codes.put(204,"204 No Content");
-        codes.put(205,"205 Reset Content");
-        codes.put(206,"206 Partial Content");
-        codes.put(207,"207 Multi-Status");
-        codes.put(300,"300 Multiple Choices");
-        codes.put(301,"301 Moved Permanently");
-        codes.put(302,"302 Found");
-        codes.put(303,"303 See Other");
-        codes.put(304,"304 Not Modified");
-        codes.put(305,"305 Use Proxy");
-        codes.put(307,"307 Temporary Redirect");
-        codes.put(400,"400 Bad Request");
-        codes.put(401,"401 Unauthorized");
-        codes.put(402,"402 Payment Required");
-        codes.put(403,"403 Forbidden");
-        codes.put(404,"404 Not Found");
-        codes.put(405,"405 Method Not Allowed");
-        codes.put(406,"406 Not Acceptable");
-        codes.put(407,"407 Proxy Authentication Required");
-        codes.put(408,"408 Request Timeout");
-        codes.put(409,"409 Conflict");
-        codes.put(410,"410 Gone");
-        codes.put(411,"411 Length Required");
-        codes.put(412,"412 Precondition Failed");
-        codes.put(413,"413 Request Too Long");
-        codes.put(414,"414 Request-URI Too Long");
-        codes.put(415,"415 Unsupported Media Type");
-        codes.put(416,"416 Requested Range Not Satisfiable");
-        codes.put(417,"417 Expectation Failed");
-        codes.put(419,"419 Insufficient Space On Resource");
-        codes.put(420,"420 Method Failure");
-        codes.put(422,"422 Unprocessable Entity");
-        codes.put(423,"423 Locked");
-        codes.put(424,"424 Failed Dependency");
-        codes.put(500,"500 Internal Server Error");
-        codes.put(501,"501 Not Implemented");
-        codes.put(502,"502 Bad Gateway");
-        codes.put(503,"503 Service Unavailable");
-        codes.put(504,"504 Gateway Timeout");
-        codes.put(505,"505 Http Version Not Supported");
-        codes.put(507,"507 Insufficient Storage");
+        TIntObjectMap<byte[]> codes = new TIntObjectHashMap<byte[]>(48,1.0f);
+        codes.put(100,getBytes("100 Continue"));
+        codes.put(101,getBytes("101 Switching Protocols"));
+        codes.put(102,getBytes("102 Processing"));
+        codes.put(200,getBytes("200 OK"));
+        codes.put(201,getBytes("201 Created"));
+        codes.put(202,getBytes("202 Accepted"));
+        codes.put(203,getBytes("203 Non Authoritative Information"));
+        codes.put(204,getBytes("204 No Content"));
+        codes.put(205,getBytes("205 Reset Content"));
+        codes.put(206,getBytes("206 Partial Content"));
+        codes.put(207,getBytes("207 Multi-Status"));
+        codes.put(300,getBytes("300 Multiple Choices"));
+        codes.put(301,getBytes("301 Moved Permanently"));
+        codes.put(302,getBytes("302 Found"));
+        codes.put(303,getBytes("303 See Other"));
+        codes.put(304,getBytes("304 Not Modified"));
+        codes.put(305,getBytes("305 Use Proxy"));
+        codes.put(307,getBytes("307 Temporary Redirect"));
+        codes.put(400,getBytes("400 Bad Request"));
+        codes.put(401,getBytes("401 Unauthorized"));
+        codes.put(402,getBytes("402 Payment Required"));
+        codes.put(403,getBytes("403 Forbidden"));
+        codes.put(404,getBytes("404 Not Found"));
+        codes.put(405,getBytes("405 Method Not Allowed"));
+        codes.put(406,getBytes("406 Not Acceptable"));
+        codes.put(407,getBytes("407 Proxy Authentication Required"));
+        codes.put(408,getBytes("408 Request Timeout"));
+        codes.put(409,getBytes("409 Conflict"));
+        codes.put(410,getBytes("410 Gone"));
+        codes.put(411,getBytes("411 Length Required"));
+        codes.put(412,getBytes("412 Precondition Failed"));
+        codes.put(413,getBytes("413 Request Too Long"));
+        codes.put(414,getBytes("414 Request-URI Too Long"));
+        codes.put(415,getBytes("415 Unsupported Media Type"));
+        codes.put(416,getBytes("416 Requested Range Not Satisfiable"));
+        codes.put(417,getBytes("417 Expectation Failed"));
+        codes.put(419,getBytes("419 Insufficient Space On Resource"));
+        codes.put(420,getBytes("420 Method Failure"));
+        codes.put(422,getBytes("422 Unprocessable Entity"));
+        codes.put(423,getBytes("423 Locked"));
+        codes.put(424,getBytes("424 Failed Dependency"));
+        codes.put(500,getBytes("500 Internal Server Error"));
+        codes.put(501,getBytes("501 Not Implemented"));
+        codes.put(502,getBytes("502 Bad Gateway"));
+        codes.put(503,getBytes("503 Service Unavailable"));
+        codes.put(504,getBytes("504 Gateway Timeout"));
+        codes.put(505,getBytes("505 Http Version Not Supported"));
+        codes.put(507,getBytes("507 Insufficient Storage"));
         STATUS_CODES = codes;
     }
 
 
-    public static String getStatusCodeText(int code) {
+    public static byte[] getStatusCodeText(int code) {
         return STATUS_CODES.get(code);
+    }
+
+    public static byte[] getBytes(String content) {
+        try {
+            return content.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return content.getBytes();
+        }
     }
 }

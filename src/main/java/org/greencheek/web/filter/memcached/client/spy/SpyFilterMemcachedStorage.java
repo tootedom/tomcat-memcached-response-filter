@@ -64,16 +64,19 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 //        }
     }
 
-    private Map<String,Collection<String>> createContentLengthHeader(Map<String,Collection<String>> headers,
-                                                                     BufferedResponseWrapper theResponse) {
+    private void addContentLengthHeader(BufferedResponseWrapper theResponse,ResizeableByteBuffer buffer) {
         int length = theResponse.getContentLength();
+        String len;
         if(length==Integer.MIN_VALUE) {
-            length = theResponse.getBufferedMemcachedContent().size();
+            len = Integer.toString(theResponse.getBufferedMemcachedContent().size());
+        } else {
+            len = Integer.toString(length);
         }
+        headers.put(CacheConfigGlobals.CONTENT_LENGTH_HEADER,Collections.singletonList(len));
 
     }
 
-    private String createHttpStatusLine(BufferedResponseWrapper theResponse) {
+    private void addHttpStatusLine(BufferedResponseWrapper theResponse, ResizeableByteBuffer buffer) {
         String statusLinePrefix = storageConfig.getHttpStatusLinePrefix();
         StringBuilder statusLine = new StringBuilder(statusLinePrefix.length() + 34);
 
