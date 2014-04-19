@@ -1,6 +1,6 @@
-package org.greencheek.web.filter.memcached.client;
+package org.greencheek.web.filter.memcached.client.config;
 
-import org.greencheek.web.filter.memcached.client.config.Duration;
+import org.greencheek.web.filter.memcached.domain.Duration;
 
 /**
  * Created by dominictootell on 18/04/2014.

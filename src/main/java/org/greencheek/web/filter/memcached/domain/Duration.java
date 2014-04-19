@@ -1,4 +1,4 @@
-package org.greencheek.web.filter.memcached.client.config;
+package org.greencheek.web.filter.memcached.domain;
 
 import java.util.concurrent.TimeUnit;
 

@@ -3,18 +3,14 @@ package org.greencheek.web.filter.memcached.client.spy;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.GetFuture;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedFetching;
-import org.greencheek.web.filter.memcached.client.MemcachedFetchingConfig;
-import org.greencheek.web.filter.memcached.client.MemcachedStorageConfig;
+import org.greencheek.web.filter.memcached.client.config.MemcachedFetchingConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**

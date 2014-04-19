@@ -1,9 +1,8 @@
 package org.greencheek.web.filter.memcached.client.spy;
 
 import net.spy.memcached.MemcachedClient;
-import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
-import org.greencheek.web.filter.memcached.client.MemcachedStorageConfig;
+import org.greencheek.web.filter.memcached.client.config.MemcachedStorageConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
@@ -52,7 +51,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
                             buffer);
                 }
             } else {
-                boolean canCache = !storageConfig.getPatternForNoCacheMatching().matcher(cacheControlHeader).find();
+                boolean canCache = storageConfig.getCacheResponseDecider().isCacheable(cacheControlHeader);
                 if (!canCache) {
                     return;
                 } else {

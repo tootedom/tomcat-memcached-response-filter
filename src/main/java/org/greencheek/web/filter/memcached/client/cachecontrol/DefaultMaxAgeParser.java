@@ -1,4 +1,4 @@
-package org.greencheek.web.filter.memcached.client;
+package org.greencheek.web.filter.memcached.client.cachecontrol;
 
 /**
  * Created by dominictootell on 18/04/2014.

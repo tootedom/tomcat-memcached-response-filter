@@ -25,16 +25,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.spy.memcached.MemcachedClient;
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
+
 import org.greencheek.web.filter.memcached.client.*;
-import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
+import org.greencheek.web.filter.memcached.client.config.*;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class PublishToMemcachedFilter implements Filter {
@@ -43,7 +44,7 @@ public class PublishToMemcachedFilter implements Filter {
 	/**
 	 * Logger
 	 */
-	private static final Log log = LogFactory.getLog(org.greencheek.web.filter.memcached.PublishToMemcachedFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(org.greencheek.web.filter.memcached.PublishToMemcachedFilter.class);
 
 	/**
 	 * Has this component been started yet?
@@ -84,8 +85,6 @@ public class PublishToMemcachedFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         BufferedResponseWrapper wrappedRes = null;
         HttpServletRequest servletRequest = null;
-
-
 
         if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
             HttpServletResponse servletResponse = (HttpServletResponse) response;

@@ -1,11 +1,10 @@
-package org.greencheek.web.filter.memcached.client;
+package org.greencheek.web.filter.memcached.client.config;
 
-import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
-import org.greencheek.web.filter.memcached.cachekey.DefaultCacheKeyCreator;
-import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
-import org.greencheek.web.filter.memcached.client.config.Duration;
-import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
-import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
+import org.greencheek.web.filter.memcached.client.cachecontrol.CacheControlResponseDecider;
+import org.greencheek.web.filter.memcached.client.cachecontrol.DefaultMaxAgeParser;
+import org.greencheek.web.filter.memcached.client.cachecontrol.MaxAgeParser;
+import org.greencheek.web.filter.memcached.client.cachecontrol.StringContainsCacheControlResponseDecider;
+import org.greencheek.web.filter.memcached.domain.Duration;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,16 +17,13 @@ public class MemcachedStorageConfigBuilder {
     public static int DEFAULT_MAX_HEADERS_LENGTH_TO_STORE = 8192;
     public static Set<String> DEFAULT_ADDITIONAL_HEADERS = Collections.EMPTY_SET;
     public static final int DEFAULT_EXPIRY_IN_SECONDS = 300;
-//    public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$request_uri$header_accept$header_accept-encoding";
     public static final boolean DEFAULT_STORE_PRIVATE = false;
     public static final boolean DEFAULT_FORCE_CACHE = false;
     public static final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
     public static final byte[] DEFAULT_HTTP_STATUS_LINE = new byte[]{'H','T','T','P','/','1','.','1',' '};
     public static final MaxAgeParser DEFAULT_MAX_AGE_PARSER = new DefaultMaxAgeParser();
+    public static final CacheControlResponseDecider DEFAULT_CACHE_RESPONSE_DECIDER = new StringContainsCacheControlResponseDecider(DEFAULT_STORE_PRIVATE);
 
-//    public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
-
-//    public static final MemcachedKeyConfig DEFAULT_KEY_CONFIG = new MemcachedKeyConfig(new DefaultCacheKeyCreator(DEFAULT_CACHE_KEY),DEFAULT_MESSAGE_HASHING);
 
     private static final Set<String> DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     static {
@@ -56,6 +52,7 @@ public class MemcachedStorageConfigBuilder {
     private byte[] httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
     private MaxAgeParser maxAgeParser = DEFAULT_MAX_AGE_PARSER;
     private boolean canCacheWithNoCacheControl = true;
+    private CacheControlResponseDecider cacheResponseDecider = DEFAULT_CACHE_RESPONSE_DECIDER;
 
     private MemcachedKeyConfig keyConfig;
 
@@ -66,7 +63,7 @@ public class MemcachedStorageConfigBuilder {
 
     public MemcachedStorageConfig build() {
         return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,keyConfig,defaultExpiryInSeconds,
-                additionalHeaders,responseHeadersToIgnore,storePrivate,forceCache,
+                additionalHeaders,responseHeadersToIgnore,cacheResponseDecider,forceCache,
                 forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl);
     }
 
@@ -112,7 +109,7 @@ public class MemcachedStorageConfigBuilder {
     }
 
     public MemcachedStorageConfigBuilder setStorePrivate(boolean storePrivate) {
-        this.storePrivate = storePrivate;
+        this.cacheResponseDecider = new StringContainsCacheControlResponseDecider(storePrivate);
         return this;
     }
 
@@ -142,4 +139,6 @@ public class MemcachedStorageConfigBuilder {
         this.canCacheWithNoCacheControl = canCacheWithNoCacheControl;
         return this;
     }
+
+
 }

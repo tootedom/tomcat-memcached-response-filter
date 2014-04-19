@@ -20,33 +20,26 @@
 	<dependencies>
 
 
-		<dependency>
-			<groupId>${catalina.groupId}</groupId>
-			<artifactId>tomcat-catalina</artifactId>
-			<version>${catalina.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
-		
-		<!-- Jmocking, for tomcat request mock -->
-		<dependency>
-			<groupId>org.jmock</groupId>
-			<artifactId>jmock</artifactId>
-			<version>2.5.1</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- JMock for mocking tomcat request class -->
-		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-			<version>2.2.2</version>
-			<scope>test</scope>
-		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>${catalina.groupId}</groupId>-->
+			<!--<artifactId>tomcat-catalina</artifactId>-->
+			<!--<version>${catalina.version}</version>-->
+			<!--<scope>provided</scope>-->
+		<!--</dependency>-->
+
+
+		<!--<dependency>-->
+			<!--<groupId>javax.servlet</groupId>-->
+			<!--<artifactId>servlet-api</artifactId>-->
+			<!--<version>2.5</version>-->
+			<!--<scope>provided</scope>-->
+		<!--</dependency>-->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>net.spy</groupId>
             <artifactId>spymemcached</artifactId>
@@ -59,6 +52,28 @@
             <version>3.0.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.7</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <!-- Jmocking, for tomcat request mock -->
+        <dependency>
+            <groupId>org.jmock</groupId>
+            <artifactId>jmock</artifactId>
+            <version>2.5.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JMock for mocking tomcat request class -->
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>2.2.2</version>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.objenesis</groupId>
 			<artifactId>objenesis</artifactId>

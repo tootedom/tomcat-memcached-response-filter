@@ -1,9 +1,8 @@
-package org.greencheek.web.filter.memcached.client;
+package org.greencheek.web.filter.memcached.client.config;
 
-import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
-import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
+import org.greencheek.web.filter.memcached.client.cachecontrol.CacheControlResponseDecider;
+import org.greencheek.web.filter.memcached.client.cachecontrol.MaxAgeParser;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -12,17 +11,12 @@ import java.util.regex.Pattern;
  */
 public class MemcachedStorageConfig {
 
-    public static final Pattern NO_STORE_CACHE_PRIVATE_CACHE_RESPONSE_HEADER = Pattern.compile("no-store|no-cache");
-    public static final Pattern NO_STORE_NO_PRIVATE_CACHE_RESPONSE_HEADER = Pattern.compile("no-store|no-cache|private");
-
-
     private final int headersLength;
     private final MemcachedKeyConfig cacheKeyCreator;
     private final int defaultExpiryInSeconds;
     private final Set<String> responseHeadersToIgnore;
     private final Set<String> customHeaders;
-    private final boolean storePrivate;
-    private final Pattern patternForNoCacheMatching;
+    private final CacheControlResponseDecider cacheResponseDecider;
     private final boolean forceCache;
     private final int forceCacheDurationInSeconds;
     private final byte[] httpStatusLinePrefix;
@@ -33,7 +27,7 @@ public class MemcachedStorageConfig {
 
     public MemcachedStorageConfig(int headersLength, MemcachedKeyConfig cacheKeyCreator,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
-                                  boolean storePrivate,boolean forceCache,int forceCacheDurationInSeconds,
+                                  CacheControlResponseDecider cacheResponseDecider,boolean forceCache,int forceCacheDurationInSeconds,
                                   byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader
                                   ) {
         this.headersLength = headersLength;
@@ -41,14 +35,7 @@ public class MemcachedStorageConfig {
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
         this.customHeaders = customHeaders;
         this.responseHeadersToIgnore = responseHeadersToIgnore;
-        this.storePrivate = storePrivate;
-
-        if(storePrivate) {
-            patternForNoCacheMatching = NO_STORE_CACHE_PRIVATE_CACHE_RESPONSE_HEADER;
-        } else {
-            patternForNoCacheMatching = NO_STORE_NO_PRIVATE_CACHE_RESPONSE_HEADER;
-        }
-
+        this.cacheResponseDecider = cacheResponseDecider;
         this.forceCache = forceCache;
         this.forceCacheDurationInSeconds = forceCacheDurationInSeconds;
         this.httpStatusLinePrefix = httpStatusLinePrefix;
@@ -77,12 +64,8 @@ public class MemcachedStorageConfig {
         return customHeaders;
     }
 
-    public boolean isStorePrivate() {
-        return storePrivate;
-    }
-
-    public Pattern getPatternForNoCacheMatching() {
-        return patternForNoCacheMatching;
+    public CacheControlResponseDecider getCacheResponseDecider() {
+        return cacheResponseDecider;
     }
 
     public boolean isForceCache() {
