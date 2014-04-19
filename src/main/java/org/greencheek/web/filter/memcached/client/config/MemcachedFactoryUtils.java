@@ -22,9 +22,9 @@ import java.util.concurrent.TimeoutException;
  */
 public class MemcachedFactoryUtils {
     private static Logger logger = LoggerFactory.getLogger(MemcachedFactoryUtils.class);
-    private static final int DEFAULT_MEMCACHED_PORT = 11211;
-    private static final Duration DEFAULT_DNS_TIMEOUT = new Duration(3,TimeUnit.SECONDS);
-    private static final Duration ONE_SECOND = new Duration(1,TimeUnit.SECONDS);
+    public static final int DEFAULT_MEMCACHED_PORT = 11211;
+    public static final Duration DEFAULT_DNS_TIMEOUT = new Duration(3,TimeUnit.SECONDS);
+    public static final Duration ONE_SECOND = new Duration(1,TimeUnit.SECONDS);
 
 
     private static List<InetSocketAddress> validateMemcacheHosts(List<InetSocketAddress> addressesToCheck) {
@@ -45,7 +45,7 @@ public class MemcachedFactoryUtils {
         return okAddresses;
     }
 
-    private List<InetSocketAddress> returnSocketAddressesForHostNames(List<MemcachedHost> nodes) {
+    private static List<InetSocketAddress> returnSocketAddressesForHostNames(List<MemcachedHost> nodes) {
         return returnSocketAddressesForHostNames(nodes,DEFAULT_DNS_TIMEOUT);
     }
 
@@ -58,7 +58,7 @@ public class MemcachedFactoryUtils {
      * @param dnsLookupTimeout The amount of time to wait for a dns lookup to take.
      * @return
      */
-    private List<InetSocketAddress> returnSocketAddressesForHostNames(List<MemcachedHost> nodes,
+    private static List<InetSocketAddress> returnSocketAddressesForHostNames(List<MemcachedHost> nodes,
                                                                       Duration dnsLookupTimeout) {
         LookupService addressLookupService = LookupService.create();
 
@@ -108,7 +108,7 @@ public class MemcachedFactoryUtils {
      * @param urls
      * @return
      */
-    private List<MemcachedHost> parseMemcachedNodeList(String urls) {
+    private static List<MemcachedHost> parseMemcachedNodeList(String urls) {
         if (urls == null) return Collections.EMPTY_LIST;
         String hostUrls = urls.trim();
         List<MemcachedHost> memcachedNodes = new ArrayList<MemcachedHost>(4);
@@ -144,13 +144,13 @@ public class MemcachedFactoryUtils {
      * @param hosts
      * @return
      */
-    public List<InetSocketAddress> getAddressableMemcachedHosts(String hosts) {
+    public static List<InetSocketAddress> getAddressableMemcachedHosts(String hosts) {
         List<MemcachedHost> memcachedHosts = parseMemcachedNodeList(hosts);
         List<InetSocketAddress> resolvedMemcachedHosts = returnSocketAddressesForHostNames(memcachedHosts);
         return validateMemcacheHosts(resolvedMemcachedHosts);
     }
 
-    public List<InetSocketAddress> getAddressableMemcachedHosts(Duration dnsLookuptimeout, Duration pingCheckTimeout,
+    public static List<InetSocketAddress> getAddressableMemcachedHosts(Duration dnsLookuptimeout, Duration pingCheckTimeout,
                                                                 String hosts) {
         List<MemcachedHost> memcachedHosts = parseMemcachedNodeList(hosts);
         List<InetSocketAddress> resolvedMemcachedHosts = returnSocketAddressesForHostNames(memcachedHosts,dnsLookuptimeout);

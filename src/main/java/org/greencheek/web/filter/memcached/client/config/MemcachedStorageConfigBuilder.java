@@ -9,6 +9,7 @@ import org.greencheek.web.filter.memcached.domain.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by dominictootell on 15/04/2014.
@@ -77,8 +78,32 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setDefaultExpiry(String expiryInSeconds) {
+        if (expiryInSeconds == null) return this;
+
+        expiryInSeconds = expiryInSeconds.trim();
+        if (expiryInSeconds.length() > 0) {
+            try {
+                this.defaultExpiryInSeconds = (int)new Duration(Integer.parseInt(expiryInSeconds), TimeUnit.SECONDS).toSeconds();
+            } catch (NumberFormatException e) {
+
+            }
+        }
+        return this;
+    }
+
     public MemcachedStorageConfigBuilder setMaxHeadersSize(int lengthInBytes) {
         this.defaultMaxHeadersLengthToStore = lengthInBytes;
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setMaxHeadersSize(String lengthInBytes) {
+
+        try {
+            this.defaultMaxHeadersLengthToStore = Integer.parseInt(lengthInBytes);
+        } catch(NumberFormatException e) {
+
+        }
         return this;
     }
 
@@ -86,6 +111,23 @@ public class MemcachedStorageConfigBuilder {
         this.responseHeadersToIgnore = new HashSet<String>(headersToIgnore);
         return this;
     }
+
+    public MemcachedStorageConfigBuilder setResponseHeadersToIgnore(String headers) {
+        if(headers==null) return this;
+        String[] headerList =  headers.split(",");
+
+        Set<String> headersToIgnore = new HashSet<String>(headerList.length);
+        for(String header : headerList) {
+            String s = header.trim();
+            if(s.length()>0) {
+                headersToIgnore.add(s);
+            }
+        }
+
+        this.responseHeadersToIgnore = headersToIgnore;
+        return this;
+    }
+
 
     public MemcachedStorageConfigBuilder setResponseHeaderToIgnore(String[] headersToIgnore) {
         this.responseHeadersToIgnore = new HashSet<String>(headersToIgnore.length);
@@ -108,6 +150,11 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setStorePrivate(String storePrivate) {
+        this.cacheResponseDecider = new StringContainsCacheControlResponseDecider(Boolean.parseBoolean(storePrivate));
+        return this;
+    }
+
     public MemcachedStorageConfigBuilder setStorePrivate(boolean storePrivate) {
         this.cacheResponseDecider = new StringContainsCacheControlResponseDecider(storePrivate);
         return this;
@@ -115,6 +162,11 @@ public class MemcachedStorageConfigBuilder {
 
     public MemcachedStorageConfigBuilder setForceCache(boolean forceCache) {
         this.forceCache = forceCache;
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setForceCache(String forceCache) {
+        this.forceCache = Boolean.parseBoolean(forceCache);
         return this;
     }
 
@@ -139,6 +191,7 @@ public class MemcachedStorageConfigBuilder {
         this.canCacheWithNoCacheControl = canCacheWithNoCacheControl;
         return this;
     }
+
 
 
 }

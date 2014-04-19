@@ -40,6 +40,17 @@ import org.slf4j.LoggerFactory;
 
 public class PublishToMemcachedFilter implements Filter {
 
+    public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
+    public final static String MEMCACHED_HOSTS_PARAM = "memcachedhosts";
+    public final static String MEMCACHED_KEY_PARAM = "memcached-key";
+    public final static String MEMCACHED_HEADERS_TO_IGNORE = "memcached-ignore-headers";
+    public final static String MEMCACHED_RESPONSE_BODY_SIZE = "memcached-maxcacheable-bodysize";
+    public final static String MEMCACHED_HEADER_SIZE = "memcached-header-size";
+    public final static String MEMCACHED_GET_TIMEOUT = "memcached-get-timeout-seconds";
+    public final static String MEMCACHED_CACHE_PRIVATE = "memcached-cache-private";
+    public final static String MEMCACHED_FORCE_CACHE = "memcached-force-cache";
+    public final static String MEMCACHED_EXPIRY = "memcached-expiry";
+    public final static String MEMCACHED_FORCE_EXPIRY = "memcached-forced-expiry";
 
 	/**
 	 * Logger
@@ -49,19 +60,61 @@ public class PublishToMemcachedFilter implements Filter {
 	/**
 	 * Has this component been started yet?
 	 */
-	protected boolean started = false; 
 
+    private volatile int maxContentSizeForMemcachedEntry = DEFAULT_MAX_CACHEABLE_RESPONSE_BODY;
 
-    private volatile int maxContentSizeForMemcachedEntry = 8192*4;
+    private MemcachedClient client;
+    private FilterMemcachedFetching filterMemcachedFetching;
+    private FilterMemcachedStorage filterMemcachedStorage;
 
-    private final MemcachedClient client = new SpyMemcachedBuilder().build();
-    private final MemcachedKeyConfig keyConfig = new MemcachedKeyConfigBuilder().build();
-    private final FilterMemcachedFetching filterMemcachedFetching = new SpyFilterMemcachedFetching(client,new MemcachedFetchingConfigBulder(keyConfig).build());
-    private final FilterMemcachedStorage filterMemcachedStorage = new SpyFilterMemcachedStorage(client,new MemcachedStorageConfigBuilder(keyConfig).build());
+    private volatile boolean isEnabled = false;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
+        MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
+        String hosts = filterConfig.getInitParameter(MEMCACHED_HOSTS_PARAM);
+        builder.setMemcachedHosts(hosts);
 
+        client = builder.build();
+
+        if(client==null) {
+            return;
+        }
+
+
+        String key = filterConfig.getInitParameter(MEMCACHED_KEY_PARAM);
+        if(key!=null) {
+            key = key.trim();
+            if(key.length()>0) {
+                keyConfigBuilder.setCacheKey(key);
+            }
+        }
+
+        MemcachedKeyConfig keyConfig = keyConfigBuilder.build();
+
+        MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder(keyConfig);
+
+        storageConfigBuilder.setResponseHeadersToIgnore(filterConfig.getInitParameter(MEMCACHED_HEADERS_TO_IGNORE));
+        storageConfigBuilder.setMaxHeadersSize(filterConfig.getInitParameter(MEMCACHED_HEADER_SIZE));
+        storageConfigBuilder.setStorePrivate(filterConfig.getInitParameter(MEMCACHED_CACHE_PRIVATE));
+        storageConfigBuilder.setForceCache(filterConfig.getInitParameter(MEMCACHED_FORCE_CACHE));
+        storageConfigBuilder.setDefaultExpiry(filterConfig.getInitParameter(MEMCACHED_EXPIRY));
+
+        MemcachedFetchingConfigBulder fetchingConfigBuilder = new MemcachedFetchingConfigBulder(keyConfig);
+
+        fetchingConfigBuilder.setCacheGetTimeout(filterConfig.getInitParameter(MEMCACHED_GET_TIMEOUT));
+
+        filterMemcachedFetching = new SpyFilterMemcachedFetching(client,fetchingConfigBuilder.build());
+        filterMemcachedStorage = new SpyFilterMemcachedStorage(client,storageConfigBuilder.build());
+
+        try {
+            maxContentSizeForMemcachedEntry = Integer.parseInt(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_SIZE));
+        } catch(NumberFormatException e) {
+
+        }
+
+        isEnabled = true;
     }
 
     public void sendCachedResponse(CachedResponse cachedResponse,HttpServletResponse response) {
@@ -83,39 +136,42 @@ public class PublishToMemcachedFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        BufferedResponseWrapper wrappedRes = null;
-        HttpServletRequest servletRequest = null;
 
-        if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-            HttpServletResponse servletResponse = (HttpServletResponse) response;
-            servletRequest = (HttpServletRequest) request;
-            if(CacheConfigGlobals.DEFAULT_REQUEST_METHODS_TO_CACHE.contains(servletRequest.getMethod())) {
-                CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest);
-                if(cacheResponse.isCacheHit())
-                {
-                    sendCachedResponse(cacheResponse,servletResponse);
-                    return;
-                }
-                else {
-                    wrappedRes = new BufferedResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
+        if(!isEnabled) {
+            chain.doFilter(request, response);
+        } else {
+            BufferedResponseWrapper wrappedRes = null;
+            HttpServletRequest servletRequest = null;
+
+            if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+                HttpServletResponse servletResponse = (HttpServletResponse) response;
+                servletRequest = (HttpServletRequest) request;
+                if (CacheConfigGlobals.DEFAULT_REQUEST_METHODS_TO_CACHE.contains(servletRequest.getMethod())) {
+                    CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest);
+                    if (cacheResponse.isCacheHit()) {
+                        sendCachedResponse(cacheResponse, servletResponse);
+                        return;
+                    } else {
+                        wrappedRes = new BufferedResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
+                    }
                 }
             }
-        }
 
-        try {
-            if (wrappedRes == null) {
-                chain.doFilter(request, response);
-            } else {
-                BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(servletRequest,wrappedRes);
-                chain.doFilter(requestWrapper, wrappedRes);
-            }
-        } finally {
-            if(wrappedRes!=null) {
-                final AsyncContext asyncContext = servletRequest.getAsyncContext();
-                if(asyncContext!=null) {
-                    asyncContext.addListener(new SetInMemcachedListener(servletRequest, wrappedRes));
+            try {
+                if (wrappedRes == null) {
+                    chain.doFilter(request, response);
                 } else {
-                    storeResponseInMemcached(servletRequest, wrappedRes);
+                    BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(servletRequest, wrappedRes);
+                    chain.doFilter(requestWrapper, wrappedRes);
+                }
+            } finally {
+                if (wrappedRes != null) {
+                    final AsyncContext asyncContext = servletRequest.getAsyncContext();
+                    if (asyncContext != null) {
+                        asyncContext.addListener(new SetInMemcachedListener(servletRequest, wrappedRes));
+                    } else {
+                        storeResponseInMemcached(servletRequest, wrappedRes);
+                    }
                 }
             }
         }

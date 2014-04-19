@@ -1,7 +1,6 @@
 package org.greencheek.web.filter.memcached.response;
 
-import org.apache.catalina.connector.Constants;
-import org.apache.tomcat.util.res.StringManager;
+
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBufferOutputStream;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBufferWriter;
@@ -15,12 +14,6 @@ import java.util.Locale;
 
 public class BufferedResponseWrapper extends HttpServletResponseWrapper {
     protected HttpServletResponse origResponse = null;
-
-    /**
-     * The string manager for this package.
-     */
-    protected static final StringManager sm =
-            StringManager.getManager(Constants.Package);
 
     /**
      * Using output stream flag.
@@ -76,8 +69,7 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
             throws IOException {
 
         if (usingWriter) {
-            throw new IllegalStateException
-                    (sm.getString("coyoteResponse.getOutputStream.ise"));
+            throw new IllegalStateException("Outputstream already being used");
         }
 
         usingOutputStream = true;
@@ -113,8 +105,7 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
             throws IOException {
 
         if (usingOutputStream) {
-            throw new IllegalStateException
-                    (sm.getString("coyoteResponse.getWriter.ise"));
+            throw new IllegalStateException("Writer already being used");
         }
 
         usingWriter = true;
