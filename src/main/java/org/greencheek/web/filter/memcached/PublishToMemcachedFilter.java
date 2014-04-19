@@ -17,6 +17,7 @@ limitations under the License.
 package org.greencheek.web.filter.memcached;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -31,6 +32,8 @@ import org.greencheek.web.filter.memcached.client.config.*;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
+import org.greencheek.web.filter.memcached.dataformatting.DateHeaderFormatter;
+import org.greencheek.web.filter.memcached.dataformatting.QueueBasedDateFormatter;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
@@ -64,6 +67,7 @@ public class PublishToMemcachedFilter implements Filter {
 
     private volatile int maxContentSizeForMemcachedEntry = DEFAULT_MAX_CACHEABLE_RESPONSE_BODY;
 
+    private DateHeaderFormatter dateHeaderFormatter = new QueueBasedDateFormatter();
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
     private FilterMemcachedStorage filterMemcachedStorage;
@@ -119,9 +123,12 @@ public class PublishToMemcachedFilter implements Filter {
     }
 
     public void sendCachedResponse(CachedResponse cachedResponse,HttpServletResponse response) {
-        Map<String,String> headers = cachedResponse.getHeaders();
-        for(Map.Entry<String,String> header : headers.entrySet()) {
-            response.addHeader(header.getKey(),header.getValue());
+        Map<String,Collection<String>> headers = cachedResponse.getHeaders();
+        for(Map.Entry<String,Collection<String>> header : headers.entrySet()) {
+            String key = header.getKey();
+            for(String value : header.getValue()) {
+                response.addHeader(key, value);
+            }
         }
 
         response.setStatus(cachedResponse.getStatusCode());
@@ -136,7 +143,7 @@ public class PublishToMemcachedFilter implements Filter {
     }
 
     BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse) {
-        return new Servlet2BufferedResponseWrapper(size,originalResponse);
+        return new Servlet2BufferedResponseWrapper(dateHeaderFormatter,size,originalResponse);
     }
 
     @Override

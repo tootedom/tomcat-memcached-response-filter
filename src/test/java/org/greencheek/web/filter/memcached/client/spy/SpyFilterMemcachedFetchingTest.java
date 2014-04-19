@@ -4,6 +4,7 @@ import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -30,11 +31,11 @@ public class SpyFilterMemcachedFetchingTest {
 
         System.out.println(response.getHeaders());
 
-        Map<String,String> content = response.getHeaders();
+        Map<String,Collection<String>> content = response.getHeaders();
 
         assertTrue(content.containsKey("Content-Type"));
 
-        assertEquals("text/plain",content.get("Content-Type"));
+        assertTrue(content.get("Content-Type").contains("text/plain"));
     }
 
     @Test
@@ -56,13 +57,13 @@ public class SpyFilterMemcachedFetchingTest {
 
         System.out.println(response.getHeaders());
 
-        Map<String,String> content = response.getHeaders();
+        Map<String,Collection<String>> content = response.getHeaders();
 
         assertTrue(content.containsKey("Content-Type"));
         assertTrue(content.containsKey("Content-Length"));
 
-        assertEquals("text/plain",content.get("Content-Type"));
-        assertEquals("10",content.get("Content-Length"));
+        assertTrue(content.get("Content-Type").contains("text/plain"));
+        assertTrue(content.get("Content-Length").contains("10"));
     }
 
     @Test

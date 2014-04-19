@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached.domain;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -12,11 +13,11 @@ public class CachedResponse {
 
     private final boolean hit;
     private final int statusCode;
-    private final Map<String,String> headers;
+    private final Map<String,Collection<String>> headers;
     private final byte[] content;
     private final int contentOffset;
 
-    public CachedResponse(boolean hit, int statusCode, Map<String,String> headers,
+    public CachedResponse(boolean hit, int statusCode, Map<String,Collection<String>> headers,
                           byte[] content, int offset) {
         this.hit = hit;
         this.statusCode = statusCode;
@@ -39,7 +40,7 @@ public class CachedResponse {
 
 
 
-    public Map<String,String> getHeaders() {
+    public Map<String,Collection<String>> getHeaders() {
         return headers;
     }
 

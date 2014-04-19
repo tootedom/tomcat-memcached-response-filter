@@ -1,5 +1,7 @@
 package org.greencheek.web.filter.memcached.response;
 
+import org.greencheek.web.filter.memcached.dataformatting.DateHeaderFormatter;
+
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
@@ -13,10 +15,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
 
     public int status = 200;
-    public ConcurrentHashMap<String,List<String>> headers = new ConcurrentHashMap<String, List<String>>(4);
-
-    public Servlet2BufferedResponseWrapper(int memcachedContentBufferSize, HttpServletResponse response) {
+    public final ConcurrentHashMap<String,List<String>> headers = new ConcurrentHashMap<String, List<String>>(4);
+    public final DateHeaderFormatter dateHeaderFormatter;
+    public Servlet2BufferedResponseWrapper(DateHeaderFormatter dateFormatter,
+                                           int memcachedContentBufferSize, HttpServletResponse response) {
         super(memcachedContentBufferSize, response);
+        this.dateHeaderFormatter = dateFormatter;
     }
 
     public void setStatus(int sc) {
@@ -43,6 +47,7 @@ public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
         List<String> values = new CopyOnWriteArrayList<String>();
         values.add(value);
         headers.put(name,values);
+        super.setHeader(name, value);
     }
 
     public void addHeader(String name, String value) {
@@ -54,6 +59,7 @@ public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
         } else {
             values.add(value);
         }
+        super.addHeader(name, value);
     }
 
     public String getHeader(String name)
@@ -69,6 +75,19 @@ public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
             return b.toString();
         }
         return null;
+    }
+
+    public void addIntHeader(String name, int value) {
+        addHeader(name, "" + value);
+    }
+
+    public void addDateHeader(String name, long date) {
+        String dateString = dateHeaderFormatter.toDate(date);
+        addHeader(name,dateString);
+    }
+
+    public Collection<String> getHeaders(String name) {
+        return headers.get(name);
     }
 
     public Collection<String> getHeaderNames() {

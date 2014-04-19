@@ -9,6 +9,8 @@ import org.greencheek.web.filter.memcached.domain.CachedResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -90,7 +92,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
     }
 
     public CachedResponse parseCachedResponse(byte[] content) {
-        Map<String,String> headers = new HashMap<String,String>();
+        Map<String,Collection<String>> headers = new HashMap<String,Collection<String>>();
         int offset = 0;
         byte prevMinOne = -1;
         byte prevMinTwo = -1;
@@ -111,7 +113,13 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
                     if (colon != -1) {
                         String key = toString(content, offset, colon - 2 - offset);
                         String value = toString(content, colon, (i - 1 - colon));
-                        headers.put(key, value);
+                        Collection<String> existing = headers.get(key);
+                        if(existing==null) {
+                            existing = new ArrayList<String>(1);
+                            headers.put(key,existing);
+                        }
+                        existing.add(value);
+
                     } else {
                         statusCode = parseStatusCode(content,offset,colon-2);
                     }

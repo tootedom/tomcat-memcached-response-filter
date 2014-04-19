@@ -125,6 +125,12 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
     }
 
     @Override
+    public Collection<String> getHeaders(String name) {
+        return super.getHeaders(name);
+    }
+
+
+    @Override
     public Collection<String> getHeaderNames() {
         return super.getHeaderNames();
     }
