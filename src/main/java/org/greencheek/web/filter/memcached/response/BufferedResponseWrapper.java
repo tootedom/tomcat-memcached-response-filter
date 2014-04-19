@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 public class BufferedResponseWrapper extends HttpServletResponseWrapper {
@@ -116,6 +117,21 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
         }
         return writer;
 
+    }
+
+    @Override
+    public String getHeader(String name) {
+       return super.getHeader(name);
+    }
+
+    @Override
+    public Collection<String> getHeaderNames() {
+        return super.getHeaderNames();
+    }
+
+    @Override
+    public int getStatus() {
+        return super.getStatus();
     }
 
 }

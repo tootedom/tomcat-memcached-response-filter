@@ -34,6 +34,7 @@ import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
+import org.greencheek.web.filter.memcached.response.Servlet2BufferedResponseWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,6 +135,10 @@ public class PublishToMemcachedFilter implements Filter {
         }
     }
 
+    BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse) {
+        return new Servlet2BufferedResponseWrapper(size,originalResponse);
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
@@ -152,13 +157,15 @@ public class PublishToMemcachedFilter implements Filter {
                         sendCachedResponse(cacheResponse, servletResponse);
                         return;
                     } else {
-                        wrappedRes = new BufferedResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
+                        wrappedRes = createResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
                     }
                 }
             }
 
             try {
                 if (wrappedRes == null) {
+                    wrappedRes.addDateHeader("MyDate",System.currentTimeMillis());
+                    wrappedRes.addIntHeader("MyDate",10);
                     chain.doFilter(request, response);
                 } else {
                     BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(servletRequest, wrappedRes);
@@ -166,18 +173,17 @@ public class PublishToMemcachedFilter implements Filter {
                 }
             } finally {
                 if (wrappedRes != null) {
-                    final AsyncContext asyncContext = servletRequest.getAsyncContext();
-                    if (asyncContext != null) {
-                        asyncContext.addListener(new SetInMemcachedListener(servletRequest, wrappedRes));
-                    } else {
-                        storeResponseInMemcached(servletRequest, wrappedRes);
-                    }
+                    postFilter(servletRequest,wrappedRes);
                 }
             }
         }
     }
 
-    private void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
+    public void postFilter(HttpServletRequest servletRequest,BufferedResponseWrapper theResponse) {
+        storeResponseInMemcached(servletRequest, theResponse);
+    }
+
+    void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
         filterMemcachedStorage.writeToCache(servletRequest,servletResponse);
     }
 
@@ -186,38 +192,5 @@ public class PublishToMemcachedFilter implements Filter {
 
     }
 
-    class SetInMemcachedListener implements AsyncListener {
 
-        private final HttpServletRequest request;
-        private final BufferedResponseWrapper responseWrapper;
-        private volatile boolean error = false;
-
-        public SetInMemcachedListener(HttpServletRequest servletRequest, BufferedResponseWrapper servletResponse) {
-            this.request = servletRequest;
-            this.responseWrapper = servletResponse;
-        }
-
-        @Override
-        public void onComplete(AsyncEvent asyncEvent) throws IOException {
-            if (!error) {
-                storeResponseInMemcached(request, responseWrapper);
-            }
-        }
-
-        @Override
-        public void onTimeout(AsyncEvent asyncEvent) throws IOException {
-            error = true;
-            onComplete(asyncEvent);
-        }
-
-        @Override
-        public void onError(AsyncEvent asyncEvent) throws IOException {
-            error = true;
-            onComplete(asyncEvent);
-        }
-
-        @Override
-        public void onStartAsync(AsyncEvent asyncEvent) throws IOException {
-        }
-    }
 }
