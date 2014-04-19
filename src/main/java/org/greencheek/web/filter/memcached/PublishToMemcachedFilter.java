@@ -164,10 +164,11 @@ public class PublishToMemcachedFilter implements Filter {
 
             try {
                 if (wrappedRes == null) {
-                    wrappedRes.addDateHeader("MyDate",System.currentTimeMillis());
-                    wrappedRes.addIntHeader("MyDate",10);
                     chain.doFilter(request, response);
                 } else {
+                    wrappedRes.addDateHeader("MyDate",System.currentTimeMillis());
+                    wrappedRes.addIntHeader("MyDate2",10);
+                    wrappedRes.addIntHeader("MyDate2",20);
                     BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(servletRequest, wrappedRes);
                     chain.doFilter(requestWrapper, wrappedRes);
                 }

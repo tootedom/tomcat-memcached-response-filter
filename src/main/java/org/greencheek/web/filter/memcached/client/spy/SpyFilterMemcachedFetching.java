@@ -98,7 +98,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         int colon = -1;
         int statusCode = 200;
         for(int i=0;i<content.length;i++) {
-            if(content[i] == 58) {
+            if(content[i] == 58 && colon==-1) {
                 colon = i+2;
                 continue;
             }
