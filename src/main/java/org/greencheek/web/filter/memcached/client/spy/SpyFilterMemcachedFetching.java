@@ -29,7 +29,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
     @Override
     public CachedResponse getCachedContent(HttpServletRequest theRequest) {
         String cacheControlHeader = theRequest.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
-        if(cacheControlHeader != null && cacheControlHeader.contains(CacheConfigGlobals.NO_CACHE_CLIENT_VALUE)) {
+        if(cacheControlHeader != null && hasClientCacheBuster(config.getNoCacheHeaders(),cacheControlHeader)) {
             return CachedResponse.MISS;
         } else {
             String key = config.getKeyConfig().createCacheKey(theRequest);
@@ -42,7 +42,15 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         }
     }
 
-    public byte[] get(String key) {
+    private boolean hasClientCacheBuster(String[] values,String headerValues) {
+        if(values.length == 0) return false;
+        for(String val : values) {
+            if(headerValues.contains(val)) return true;
+        }
+        return false;
+    }
+
+    private byte[] get(String key) {
         GetFuture<Object> future = client.asyncGet(key);
 
         try {

@@ -7,11 +7,13 @@ public class MemcachedFetchingConfig {
 
     private final long cacheGetTimeoutInMillis;
     private final MemcachedKeyConfig keyConfig;
+    private final String[] noCacheHeaders;
 
     public MemcachedFetchingConfig(MemcachedKeyConfig keyConfig,
-                                   long cacheGetTimeout) {
+                                   long cacheGetTimeout, String[] noCacheHeaders) {
         this.keyConfig = keyConfig;
         this.cacheGetTimeoutInMillis = cacheGetTimeout;
+        this.noCacheHeaders = noCacheHeaders;
     }
 
     public MemcachedKeyConfig getKeyConfig() {
@@ -20,5 +22,9 @@ public class MemcachedFetchingConfig {
 
     public long getCacheGetTimeoutInMillis() {
         return cacheGetTimeoutInMillis;
+    }
+
+    public String[] getNoCacheHeaders() {
+        return noCacheHeaders;
     }
 }

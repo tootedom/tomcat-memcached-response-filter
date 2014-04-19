@@ -15,6 +15,7 @@ public class MemcachedFetchingConfigBulder {
 
 
     private MemcachedKeyConfig keyConfig;
+    private String[] noCacheClientValues = CacheConfigGlobals.NO_CACHE_CLIENT_VALUE;
 
 
     public MemcachedFetchingConfigBulder(MemcachedKeyConfig keyConfig) {
@@ -22,7 +23,7 @@ public class MemcachedFetchingConfigBulder {
     }
 
     public MemcachedFetchingConfig build() {
-        return new MemcachedFetchingConfig(keyConfig,cacheGetTimeout);
+        return new MemcachedFetchingConfig(keyConfig,cacheGetTimeout,noCacheClientValues);
     }
 
     public MemcachedFetchingConfigBulder setKeyConfig(MemcachedKeyConfig keyConfig) {
@@ -44,6 +45,15 @@ public class MemcachedFetchingConfigBulder {
             } catch (NumberFormatException e) {
 
             }
+        }
+        return this;
+    }
+
+    public MemcachedFetchingConfigBulder noCacheClientValues(String values) {
+        if(values == null || values.trim().length() == 0) {
+            noCacheClientValues = new String[0];
+        } else {
+            noCacheClientValues = values.split(",");
         }
         return this;
     }

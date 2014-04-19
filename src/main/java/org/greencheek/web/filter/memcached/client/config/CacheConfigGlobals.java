@@ -21,7 +21,7 @@ public class CacheConfigGlobals {
     public static final byte[] DEFAULT_CONTENT_TYPE_HEADER_VALUE_AS_BYTES = getBytes(DEFAULT_CONTENT_TYPE_HEADER_VALUE);
     public static final byte[] CONTENT_TYPE_HEADER_AS_BYTES = getBytes(CONTENT_TYPE_HEADER);
     public static final byte[] CONTENT_LENGTH_HEADER_AS_BYTES = getBytes(CONTENT_LENGTH_HEADER);
-    public static final String NO_CACHE_CLIENT_VALUE = "no-cache";
+    public static final String[] NO_CACHE_CLIENT_VALUE = new String[]{"no-cache"};
     public static final byte[] NEW_LINE = new byte[]{(byte)'\r',(byte)'\n'};
     public static final byte[] HEADER_NAME_SEPARATOR = new byte[]{':',' '};
     public static final TIntObjectMap<byte[]> STATUS_CODES;
