@@ -24,7 +24,7 @@
         <developer>
             <id>tootedom</id>
             <name>Dominic Tootell</name>
-            <email>dominic.tootell@relateit.io</email>
+            <email>dominic.tootell@gmail.com</email>
             <organization>greencheek.org</organization>
             <organizationUrl>https://github.com/tootedom</organizationUrl>
             <url>https://github.com/tootedom</url>
@@ -56,21 +56,6 @@
 
 	<dependencies>
 
-
-		<!--<dependency>-->
-			<!--<groupId>${catalina.groupId}</groupId>-->
-			<!--<artifactId>tomcat-catalina</artifactId>-->
-			<!--<version>${catalina.version}</version>-->
-			<!--<scope>provided</scope>-->
-		<!--</dependency>-->
-
-
-		<!--<dependency>-->
-			<!--<groupId>javax.servlet</groupId>-->
-			<!--<artifactId>servlet-api</artifactId>-->
-			<!--<version>2.5</version>-->
-			<!--<scope>provided</scope>-->
-		<!--</dependency>-->
         <dependency>
             <groupId>net.spy</groupId>
             <artifactId>spymemcached</artifactId>
