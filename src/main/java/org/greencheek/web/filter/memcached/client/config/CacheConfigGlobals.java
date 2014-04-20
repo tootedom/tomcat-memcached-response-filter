@@ -14,6 +14,8 @@ import java.util.Set;
  * Created by dominictootell on 16/04/2014.
  */
 public class CacheConfigGlobals {
+
+
     public static final String CACHE_CONTROL_HEADER = "Cache-Control";
     public static final String CONTENT_LENGTH_HEADER = "Content-Length";
     public static final String CONTENT_TYPE_HEADER = "Content-Type";

@@ -44,8 +44,12 @@ import org.slf4j.LoggerFactory;
 
 public class PublishToMemcachedFilter implements Filter {
 
+    public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";
+    public final static String DEFAULT_CACHE_MISS_HEADER_VALUE = "MISS";
+    public final static String DEFAULT_CACHE_HIT_HEADER_VALUE = "HIT";
     public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
-    public final static String MEMCACHED_HOSTS_PARAM = "memcachedhosts";
+
+    public final static String MEMCACHED_HOSTS_PARAM = "memcached-hosts";
     public final static String MEMCACHED_KEY_PARAM = "memcached-key";
     public final static String MEMCACHED_HEADERS_TO_IGNORE = "memcached-ignore-headers";
     public final static String MEMCACHED_RESPONSE_BODY_SIZE = "memcached-maxcacheable-bodysize";
@@ -55,6 +59,9 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_FORCE_CACHE = "memcached-force-cache";
     public final static String MEMCACHED_EXPIRY = "memcached-expiry";
     public final static String MEMCACHED_FORCE_EXPIRY = "memcached-forced-expiry";
+    public final static String MEMCACHED_CACHE_STATUS_HEADER_NAME = "memcached-cachestatus-header";
+    public final static String MEMCACHED_CACHE_STATUS_HIT_VALUE = "memcached-cachestatus-hit";
+    public final static String MEMCACHED_CACHE_STATUS_MISS_VALUE = "memcached-cachestatus-miss";
 
 	/**
 	 * Logger
@@ -71,6 +78,9 @@ public class PublishToMemcachedFilter implements Filter {
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
     private FilterMemcachedStorage filterMemcachedStorage;
+    private String cacheHitHeader = DEFAULT_CACHE_STATUS_HEADER_NAME;
+    private String cacheHitValue = DEFAULT_CACHE_HIT_HEADER_VALUE;
+    private String cacheMissValue = DEFAULT_CACHE_MISS_HEADER_VALUE;
 
     private volatile boolean isEnabled = false;
 
@@ -119,6 +129,21 @@ public class PublishToMemcachedFilter implements Filter {
 
         }
 
+        String cacheHeaderName = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_HEADER_NAME);
+        if(cacheHeaderName!=null && cacheHeaderName.trim().length()>0) {
+            cacheHitHeader = cacheHeaderName.trim();
+        }
+
+        String cacheHitValue = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_HIT_VALUE);
+        if(cacheHitValue !=null && cacheHitValue.trim().length()>0) {
+            this.cacheHitValue = cacheHitValue;
+        }
+
+        String cacheMissValue = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_MISS_VALUE);
+        if(cacheMissValue !=null && cacheMissValue.trim().length()>0) {
+            this.cacheMissValue = cacheMissValue;
+        }
+
         isEnabled = true;
     }
 
@@ -132,7 +157,7 @@ public class PublishToMemcachedFilter implements Filter {
         }
 
         response.setStatus(cachedResponse.getStatusCode());
-        response.addHeader("X-Cache","HIT");
+        response.addHeader(this.cacheHitHeader,this.cacheHitValue);
 
         byte[] content = cachedResponse.getContent();
         try {
@@ -169,6 +194,7 @@ public class PublishToMemcachedFilter implements Filter {
                 }
             }
 
+
             try {
                 if (wrappedRes == null) {
                     chain.doFilter(request, response);
@@ -179,6 +205,7 @@ public class PublishToMemcachedFilter implements Filter {
             } finally {
                 if (wrappedRes != null) {
                     postFilter(servletRequest,wrappedRes);
+                    wrappedRes.addHeader(this.cacheHitHeader,this.cacheMissValue);
                 }
             }
         }
@@ -194,7 +221,9 @@ public class PublishToMemcachedFilter implements Filter {
 
     @Override
     public void destroy() {
-
+        if(client!=null) {
+            client.shutdown();
+        }
     }
 
 

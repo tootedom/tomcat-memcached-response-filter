@@ -21,8 +21,8 @@ public class StringContainsCacheControlResponseDecider implements CacheControlRe
     @Override
     public boolean isCacheable(String cacheControlHeader) {
         for(String matcher : stringsToMatch) {
-            if(cacheControlHeader.contains(matcher)) return true;
+            if(cacheControlHeader.contains(matcher)) return false;
         }
-        return false;
+        return true;
     }
 }
