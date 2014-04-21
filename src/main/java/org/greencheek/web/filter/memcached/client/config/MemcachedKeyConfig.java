@@ -11,11 +11,9 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class MemcachedKeyConfig {
     private final CacheKeyCreator cacheKeyCreator;
-    private final KeyHashing keyHashing;
 
-    public MemcachedKeyConfig(CacheKeyCreator cacheKeyCreator,final KeyHashing keyHashing) {
+    public MemcachedKeyConfig(CacheKeyCreator cacheKeyCreator) {
         this.cacheKeyCreator = cacheKeyCreator;
-        this.keyHashing = keyHashing;
     }
 
     /**
@@ -24,7 +22,6 @@ public class MemcachedKeyConfig {
      * @return
      */
     public CacheKey createCacheKey(HttpServletRequest theRequest) {
-        CacheKey key = cacheKeyCreator.createCacheKey(theRequest);
-        return new CacheKey(key.isFullyPopulated(),keyHashing.hash(key.getKey()));
+        return cacheKeyCreator.createCacheKey(theRequest);
     }
 }

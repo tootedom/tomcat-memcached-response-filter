@@ -11,16 +11,18 @@ import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 public class MemcachedKeyConfigBuilder {
     public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
 
-    private CacheKeyCreator cacheKeyCreator = new DefaultCacheKeyCreator(CacheConfigGlobals.DEFAULT_CACHE_KEY);
     private KeyHashing keyHashingFunction = DEFAULT_MESSAGE_HASHING;
+    private String cacheKey = CacheConfigGlobals.DEFAULT_CACHE_KEY;
 
 
     public MemcachedKeyConfig build() {
-        return new MemcachedKeyConfig(cacheKeyCreator,keyHashingFunction);
+        return new MemcachedKeyConfig(new DefaultCacheKeyCreator(cacheKey,keyHashingFunction));
     }
 
     public MemcachedKeyConfigBuilder setCacheKey(String cacheKey) {
-        this.cacheKeyCreator = new DefaultCacheKeyCreator(cacheKey);
+        if(cacheKey!=null && cacheKey.trim().length()>0) {
+            this.cacheKey = cacheKey;
+        }
         return this;
     }
 

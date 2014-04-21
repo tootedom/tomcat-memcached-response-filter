@@ -1,5 +1,8 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
+import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
+import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,10 +48,16 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     private final String[] headerNames;
     private final Set<String> headerNamesSet;
     private final Set<String> cookieNameSet;
+    private final KeyHashing keyHashingUtil;
 
     private final List<CacheKeyType> keyOrder = new ArrayList<CacheKeyType>(10);
 
     public DefaultCacheKeyCreator(String keySpec) {
+        this(keySpec,new MessageDigestHashing());
+    }
+
+    public DefaultCacheKeyCreator(String keySpec, KeyHashing keyHashingUtil) {
+        this.keyHashingUtil = keyHashingUtil;
         String[] keys = keySpec.split(KEY_SEPARATOR_CHAR);
         List<String> keySet = new ArrayList<String>();
         for(String item : keys) {
@@ -88,6 +97,10 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
         useHeaders = headerNames.length>0 ? true : false;
         useCookies = cookieNames.length>0 ? true : false;
+    }
+
+    public KeyHashing getKeyHashingUtil() {
+        return keyHashingUtil;
     }
 
     private String[] parseHeaders(List<String> keys) {
@@ -172,7 +185,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             }
 
         }
-        return new CacheKey(enabled,b.toString());
+        return new CacheKey(enabled,keyHashingUtil.hash(b.toString()));
     }
 
 
