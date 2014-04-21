@@ -9,10 +9,9 @@ import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
  * Created by dominictootell on 18/04/2014.
  */
 public class MemcachedKeyConfigBuilder {
-    public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$request_uri$header_accept$header_accept-encoding";
     public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
 
-    private CacheKeyCreator cacheKeyCreator = new DefaultCacheKeyCreator(DEFAULT_CACHE_KEY);
+    private CacheKeyCreator cacheKeyCreator = new DefaultCacheKeyCreator(CacheConfigGlobals.DEFAULT_CACHE_KEY);
     private KeyHashing keyHashingFunction = DEFAULT_MESSAGE_HASHING;
 
 

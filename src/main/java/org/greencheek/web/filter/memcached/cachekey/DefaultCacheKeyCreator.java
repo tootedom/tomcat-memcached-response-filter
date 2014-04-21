@@ -2,6 +2,7 @@ package org.greencheek.web.filter.memcached.cachekey;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
@@ -132,13 +133,17 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     }
 
     @Override
-    public String createCacheKey(HttpServletRequest request) {
+    public CacheKey createCacheKey(HttpServletRequest request) {
+        String key;
+        boolean enabled = true;
+
         int headersNum = 0;
         int cookiesNum = 0;
         StringBuilder b = new StringBuilder(keyOrder.size()*10);
         Map<String,String> cookies = new HashMap<String,String>(cookieNames.length);
         if(useCookies) {
             cookies = parseCookies(request.getCookies(),cookieNameSet);
+
         }
         Map<String,String> headers = new HashMap<String,String>(headerNames.length);
         if(useHeaders) {
@@ -148,25 +153,32 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
         for(CacheKeyType type : keyOrder) {
             GetRequestAttribute attributeRequest = attributes[type.index];
+            CacheKeyElement element;
             switch (type) {
                 case HEADER:
-                    b.append(attributeRequest.getAttribute(request,headers,headerNames[headersNum++]));
+                    element = attributeRequest.getAttribute(request,headers,headerNames[headersNum++]);
+                    b.append(element.getElement());
                     break;
                 case COOKIE:
-                    b.append(attributeRequest.getAttribute(request,cookies,cookieNames[cookiesNum++]));
+                    element = attributeRequest.getAttribute(request,cookies,cookieNames[cookiesNum++]);
+                    b.append(element.getElement());
                     break;
                 default:
-                    b.append(attributeRequest.getAttribute(request));
+                    element = attributeRequest.getAttribute(request);
+                    b.append(element.getElement());
+            }
+            if(!element.isAvailable()) {
+                enabled = false;
             }
 
         }
-        return b.toString();
+        return new CacheKey(enabled,b.toString());
     }
-
 
 
     private Map<String,String> parseCookies(Cookie[] cookies,Set<String> cookieNames) {
         Map<String,String> cookieValues = new HashMap<String,String>(cookieNames.size());
+        if(cookies == null) return cookieValues;
         for(String cookieName : cookieNames) {
             cookieValues.put(cookieName,"");
         }

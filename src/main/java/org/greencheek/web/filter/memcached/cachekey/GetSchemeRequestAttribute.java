@@ -9,7 +9,8 @@ public class GetSchemeRequestAttribute implements GetRequestAttribute {
     public static final GetSchemeRequestAttribute INSTANCE = new GetSchemeRequestAttribute();
 
     @Override
-    public String getAttribute(HttpServletRequest request, Object... extra) {
-        return request.getScheme();
+    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
+        String scheme = request.getScheme();
+        return new CacheKeyElement(scheme,true);
     }
 }

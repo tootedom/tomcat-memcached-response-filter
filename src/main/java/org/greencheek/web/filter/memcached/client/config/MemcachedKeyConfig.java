@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached.client.config;
 
+import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 
@@ -22,8 +23,8 @@ public class MemcachedKeyConfig {
      * @param theRequest
      * @return
      */
-    public String createCacheKey(HttpServletRequest theRequest) {
-        String key = cacheKeyCreator.createCacheKey(theRequest);
-        return keyHashing.hash(key);
+    public CacheKey createCacheKey(HttpServletRequest theRequest) {
+        CacheKey key = cacheKeyCreator.createCacheKey(theRequest);
+        return new CacheKey(key.isFullyPopulated(),keyHashing.hash(key.getKey()));
     }
 }

@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 public class GetPathRequestAttribute implements GetRequestAttribute {
     public static final GetPathRequestAttribute INSTANCE = new GetPathRequestAttribute();
     @Override
-    public String getAttribute(HttpServletRequest request, Object... extra) {
-        return request.getRequestURI();
+    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
+        return new CacheKeyElement(request.getRequestURI(),true);
     }
 }

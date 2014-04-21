@@ -9,7 +9,7 @@ public class GetQueryStringRequestAttribute implements GetRequestAttribute {
     public static final GetQueryStringRequestAttribute INSTANCE = new GetQueryStringRequestAttribute();
 
     @Override
-    public String getAttribute(HttpServletRequest request, Object... extra) {
-        return request.getQueryString();
+    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
+        return new CacheKeyElement(request.getQueryString(),true);
     }
 }

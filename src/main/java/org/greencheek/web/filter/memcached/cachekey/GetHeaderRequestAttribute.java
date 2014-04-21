@@ -11,8 +11,9 @@ public class GetHeaderRequestAttribute implements GetRequestAttribute {
     public static final GetHeaderRequestAttribute INSTANCE = new GetHeaderRequestAttribute();
 
     @Override
-    public String getAttribute(HttpServletRequest request, Object... extra) {
+    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
         Map<String,String> headers = (Map<String,String>)extra[0];
-        return headers.get(extra[1].toString());
+        String header = headers.get(extra[1].toString());
+        return new CacheKeyElement(header,header==null ? false : true);
     }
 }

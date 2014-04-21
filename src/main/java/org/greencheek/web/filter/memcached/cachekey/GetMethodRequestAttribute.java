@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 public class GetMethodRequestAttribute implements GetRequestAttribute {
     public static final GetMethodRequestAttribute INSTANCE = new GetMethodRequestAttribute();
     @Override
-    public String getAttribute(HttpServletRequest request, Object... extra) {
-        return request.getMethod();
+    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
+        return new CacheKeyElement(request.getMethod(),true);
     }
 }

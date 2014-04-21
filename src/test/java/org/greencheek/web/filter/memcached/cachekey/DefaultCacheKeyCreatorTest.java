@@ -33,7 +33,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getRequestURI()).thenReturn(path);
         when(request.getQueryString()).thenReturn(queryString);
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getRequestURI()).thenReturn(path);
         when(request.getQueryString()).thenReturn(queryString);
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getQueryString()).thenReturn(queryString);
         when(request.getMethod()).thenReturn("PUT");
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
 
     @Test
@@ -78,7 +78,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getMethod()).thenReturn("PUT");
         when(request.getScheme()).thenReturn("https");
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
 
     @Test
@@ -92,7 +92,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getRequestURI()).thenReturn(path);
         when(request.getQueryString()).thenReturn(queryString);
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
 
     @Test
@@ -108,7 +108,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
 
     @Test
@@ -127,7 +127,7 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
         when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
@@ -135,7 +135,7 @@ public class DefaultCacheKeyCreatorTest {
 
         expected = "10text/plain";
         this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Length$header_Content-Type");
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
 
     }
 
@@ -160,7 +160,7 @@ public class DefaultCacheKeyCreatorTest {
 
         String expected = "text/plaincookie1=value1; Domain=www.test1.com; Max-Age=10; Path=/path110cookie3=value3; Version=1; Domain=www.test3.com; Max-Age=55; Path=/path3; Secure; HttpOnly";
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
 
 
     }
@@ -194,7 +194,7 @@ public class DefaultCacheKeyCreatorTest {
 
         String expected = "GEThttps/path/valuebob=xxx&fred=yyyygzip,deflatetext/plaincookie2=value2; Version=1; Comment=blahblah; Domain=www.test2.com; Max-Age=167; Path=/path2";
 
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
 
 
     }

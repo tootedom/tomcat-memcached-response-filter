@@ -2,6 +2,7 @@ package org.greencheek.web.filter.memcached.client.spy;
 
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.GetFuture;
+import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.config.MemcachedFetchingConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
@@ -34,8 +35,10 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         if(cacheControlHeader != null && hasClientCacheBuster(config.getNoCacheHeaders(),cacheControlHeader)) {
             return CachedResponse.MISS;
         } else {
-            String key = config.getKeyConfig().createCacheKey(theRequest);
-            byte[] content = get(key);
+            CacheKey key = config.getKeyConfig().createCacheKey(theRequest);
+            if(!key.isFullyPopulated()) return CachedResponse.MISS;
+
+            byte[] content = get(key.getKey());
             if(content == null) {
                 return CachedResponse.MISS;
             } else {

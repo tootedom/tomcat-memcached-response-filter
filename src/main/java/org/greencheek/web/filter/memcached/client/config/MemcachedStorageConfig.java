@@ -99,7 +99,7 @@ public class MemcachedStorageConfig {
         return canCacheWithNoCacheControlHeader;
     }
 
-    public boolean canCache(int statusCode) {
+    public boolean canStatusCodeBeCached(int statusCode) {
         return cacheableResponseCodes.contains(statusCode);
     }
 }

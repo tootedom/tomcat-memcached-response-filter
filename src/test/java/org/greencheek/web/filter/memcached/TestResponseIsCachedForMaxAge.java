@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached;
 
+import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
@@ -52,6 +53,12 @@ public class TestResponseIsCachedForMaxAge {
         testMaxAge();
     }
 
+    @Test
+    public void testServlet3NoCachingOccurringForExplicateNoCache() {
+        server.setupServlet3Filter("localhost:" + memcached.getPort());
+        testNoCaching();
+    }
+
     private void testMaxAge() {
         String url = server.setupServlet("/maxage/*","maxageservlet","org.greencheek.web.filter.memcached.servlets.MaxAgeServlet",false);
         assertTrue(server.startTomcat());
@@ -75,8 +82,41 @@ public class TestResponseIsCachedForMaxAge {
         }
     }
 
+    private void testNoCaching() {
+        String url = server.setupServlet("/maxage/*","maxageservlet","org.greencheek.web.filter.memcached.servlets.MaxAgeServlet",false);
+        assertTrue(server.startTomcat());
+        url = server.replacePort(url) + "?maxage=3";
+        System.out.println(url);
+        try {
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url,true));
+            Thread.sleep(1000);
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(url,true));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(url,true));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url,true));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url,true));
+            // The cache is for 3 seconds.  Wait for 5 and issue the request again.
+            Thread.sleep(2000);
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+
+
+        } catch (Exception e) {
+            fail(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private String getCacheHeader(String url) throws Exception {
-        Request r = server.getHttpClient().prepareGet(url).build();
+        return getCacheHeader(url,false);
+    }
+
+
+    private String getCacheHeader(String url,boolean nocache) throws Exception {
+        AsyncHttpClient.BoundRequestBuilder builder = server.getHttpClient().prepareGet(url);
+        if(nocache) {
+            builder.addHeader("Cache-Control","no-cache");
+        }
+        Request r = builder.build();
+
         Response cachedResponse = server.getHttpClient().executeRequest(r).get();
         return cachedResponse.getHeader(CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME);
 

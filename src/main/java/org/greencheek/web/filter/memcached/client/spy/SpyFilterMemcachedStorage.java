@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.client.spy;
 
 import net.spy.memcached.MemcachedClient;
+import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.config.MemcachedStorageConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
@@ -133,8 +134,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
     private void writeToCache(HttpServletRequest theRequest,BufferedResponseWrapper theResponse,
                               int expiryInSeconds, Set<String> additionalContent,
-                             Map<String,Collection<String>> responseHeaders, ResizeableByteBuffer content) {
-        if(!storageConfig.canCache(theResponse.getStatus())) {
+                              Map<String,Collection<String>> responseHeaders, ResizeableByteBuffer content) {
+        if(!storageConfig.canStatusCodeBeCached(theResponse.getStatus())) {
             return;
         }
 
@@ -165,8 +166,10 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
 
         if(memcachedContent.canWrite()) {
-            String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
-            writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
+            CacheKey key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
+            if(key.isFullyPopulated()) {
+                writeToMemcached(key.getKey(), expiryInSeconds, memcachedContent.trim().getBuf());
+            }
         }
 
     }

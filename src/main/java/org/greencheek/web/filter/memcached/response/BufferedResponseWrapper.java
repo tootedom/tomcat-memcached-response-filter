@@ -6,12 +6,15 @@ import org.greencheek.web.filter.memcached.io.ResizeableByteBufferOutputStream;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBufferWriter;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BufferedResponseWrapper extends HttpServletResponseWrapper {
     protected HttpServletResponse origResponse = null;

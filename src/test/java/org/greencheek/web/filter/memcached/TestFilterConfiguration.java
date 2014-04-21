@@ -1,11 +1,14 @@
 package org.greencheek.web.filter.memcached;
 
+import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import com.ning.http.client.cookie.Cookie;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.dateformatting.DateHeaderFormatter;
 import org.greencheek.web.filter.memcached.dateformatting.QueueBasedDateFormatter;
 import org.greencheek.web.filter.memcached.servlets.AddIntHeaderServlet;
+import org.greencheek.web.filter.memcached.servlets.JSESSIONIDServlet;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonFactory;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonWrapper;
 import org.junit.After;
@@ -14,6 +17,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,14 +86,66 @@ public class TestFilterConfiguration {
         testDateHeader(url);
     }
 
+    @Test
+    public void testCachingOnJSESSIONIDCookie() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$request_uri$cookie_jsessionid");
+        }};
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),null,filterInitParams);
+        String url = server.setupServlet("/date/*","date","org.greencheek.web.filter.memcached.servlets.JSESSIONIDServlet",true);
+
+        assertTrue(server.startTomcat());
+        url = server.replacePort(url);
+        Response response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+        System.out.println(getCookieString(response,"JSESSIONID"));
+        System.out.println(response.getHeader(JSESSIONIDServlet.HEADER));
+
+        List<Cookie> cookies = response.getCookies();
+        response = executeGetRequest(url,cookies);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+
+        response = executeGetRequest(url,cookies);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+
+        response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+
+        System.out.println(getCookieString(response,"JSESSIONID"));
+        System.out.println(response.getHeader(JSESSIONIDServlet.HEADER));
+
+
+    }
+
+
+
     private String getCacheHeader(Response response) {
         return response.getHeader(CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME);
 
     }
 
-    private Response getCacheHeader(String url) throws Exception {
+    private Response executeGetRequest(String url) throws Exception {
         Request r = server.getHttpClient().prepareGet(url).build();
         return server.getHttpClient().executeRequest(r).get();
+    }
+
+    private Response executeGetRequest(String url,List<Cookie> cookies) throws Exception {
+        AsyncHttpClient.BoundRequestBuilder rBuilder = server.getHttpClient().prepareGet(url);
+        for(Cookie c : cookies) {
+            rBuilder.addCookie(c);
+        }
+        Request r = rBuilder.build();
+        return server.getHttpClient().executeRequest(r).get();
+    }
+
+
+    private String getCookieString(Response response, String key) {
+        for(Cookie c : response.getCookies()) {
+            if(c.getName().equalsIgnoreCase(key)) {
+                return c.getValue();
+            }
+        }
+        return "";
     }
 
     private String getTime(Response response) {
@@ -110,13 +166,13 @@ public class TestFilterConfiguration {
         url = server.replacePort(url);
         System.out.println(url);
         try {
-            Response response = getCacheHeader(url);
+            Response response = executeGetRequest(url);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time = getTime(response);
             assertEquals(""+AddIntHeaderServlet.VALUE,response.getHeader(AddIntHeaderServlet.HEADER));
 
             Thread.sleep(1000);
-            response = getCacheHeader(url);
+            response = executeGetRequest(url);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
             String time2 = getTime(response);
             assertEquals(time,time2);
@@ -124,7 +180,7 @@ public class TestFilterConfiguration {
 
             // wait for 5 seconds (expiry is 3)
             Thread.sleep(5000);
-            response = getCacheHeader(url);
+            response = executeGetRequest(url);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time3 = getTime(response);
             assertNotEquals(time,time3);
@@ -145,14 +201,14 @@ public class TestFilterConfiguration {
         System.out.println(url);
         DateHeaderFormatter formatter = new QueueBasedDateFormatter();
         try {
-            Response response = getCacheHeader(url);
+            Response response = executeGetRequest(url);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time = getTime(response);
             String formattedDate = formatter.toDate(Long.parseLong(time));
             assertEquals(formattedDate,response.getHeader("X-Now"));
 
             Thread.sleep(1000);
-            response = getCacheHeader(url);
+            response = executeGetRequest(url);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
             String time2 = getTime(response);
             assertEquals(time,time2);
@@ -161,7 +217,7 @@ public class TestFilterConfiguration {
 
             // wait for 5 seconds (expiry is 3)
             Thread.sleep(5000);
-            response = getCacheHeader(url);
+            response = executeGetRequest(url);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time3 = getTime(response);
             assertNotEquals(time, time3);

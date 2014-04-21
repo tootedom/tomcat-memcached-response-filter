@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 public class GetPathAndQueryRequestAttribute implements GetRequestAttribute {
     public static final GetPathAndQueryRequestAttribute INSTANCE = new GetPathAndQueryRequestAttribute();
     @Override
-    public String getAttribute(HttpServletRequest request, Object... extra) {
-        return request.getRequestURI() + request.getQueryString();
+    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
+        return new CacheKeyElement(request.getRequestURI() + request.getQueryString(),true);
     }
 }
