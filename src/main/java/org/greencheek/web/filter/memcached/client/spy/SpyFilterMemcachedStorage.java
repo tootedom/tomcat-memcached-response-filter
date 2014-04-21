@@ -6,6 +6,8 @@ import org.greencheek.web.filter.memcached.client.config.MemcachedStorageConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -16,6 +18,7 @@ import java.util.*;
  */
 public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
+    private static final Logger logger = LoggerFactory.getLogger(SpyFilterMemcachedStorage.class);
 
     private final MemcachedClient client;
     private final MemcachedStorageConfig storageConfig;
@@ -180,7 +183,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         try {
             client.set(key, expiryInSeconds, content);
         } catch (Exception e) {
-            // need a logger
+            logger.warn("Unable to write to memcached",e);
         }
     }
 }

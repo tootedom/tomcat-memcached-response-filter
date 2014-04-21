@@ -12,7 +12,9 @@ import org.apache.catalina.deploy.FilterMap;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.naming.resources.VirtualDirContext;
 
+import javax.servlet.ServletRegistration;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +24,7 @@ import java.util.Map;
  */
 public class EmbeddedTomcatServer {
     private final static String mWorkingDir = System.getProperty("java.io.tmpdir");
+    private final static File  docBase = new File(mWorkingDir);
     private final static String DEFAULT_FILTER_PATTER = "/*";
     private final static String DEFAULT_SERVLET2_FILTER = "org.greencheek.web.filter.memcached.PublishToMemcachedFilter";
     private final static String DEFAULT_SERVLET3_FILTER = "org.greencheek.web.filter.memcached.Servlet3PublishToMemcachedFilter";
@@ -66,7 +69,7 @@ public class EmbeddedTomcatServer {
     }
 
     public void setupServlet3Filter(String memcachedUrl,String url,Map<String,String> filterConfig) {
-        setupFilter(memcachedUrl,"memcached-s3filter",DEFAULT_SERVLET3_FILTER,url,false, filterConfig);
+        setupFilter(memcachedUrl,"memcached-s3filter",DEFAULT_SERVLET3_FILTER,url,true, filterConfig);
     }
 
 
@@ -75,9 +78,11 @@ public class EmbeddedTomcatServer {
     }
 
     public String setupServlet(String url, String name, String className, boolean async) {
-        Wrapper wrapper = tomcat.addServlet(contextName,name,className);
+
+        Wrapper wrapper = tomcat.addServlet(ctx,name,className);
         wrapper.setAsyncSupported(async);
         wrapper.addMapping(url);
+
         String httpUrl =  "http://localhost:{PORT}";
         if(contextName.startsWith("/")) {
             httpUrl += contextName;
@@ -119,7 +124,6 @@ public class EmbeddedTomcatServer {
            }
         }
         filter.setAsyncSupported(async ? "true" : "false");
-
         ctx.addFilterDef(filter);
         ctx.addFilterMap(filterMapping);
     }
@@ -135,6 +139,11 @@ public class EmbeddedTomcatServer {
         FilterMap filterMap = new FilterMap();
         filterMap.setFilterName(filterName);
         filterMap.addURLPattern(urlPattern);
+        filterMap.setDispatcher("ASYNC");
+        filterMap.setDispatcher("REQUEST");
+        filterMap.setDispatcher("FORWARD");
+
+        System.out.println(Arrays.toString(filterMap.getDispatcherNames()));
         return filterMap;
     }
 
@@ -146,10 +155,11 @@ public class EmbeddedTomcatServer {
         tomcat.setBaseDir(mWorkingDir);
         tomcat.getHost().setAppBase(mWorkingDir);
         tomcat.getHost().setAutoDeploy(true);
-        tomcat.getHost().setDeployOnStartup(true);
 
-        ctx = tomcat.addContext(tomcat.getHost(),context,"/");
+        ctx = tomcat.addContext(tomcat.getHost(),context,contextName.replace("/",""),docBase.getAbsolutePath());
 
+        ctx.setCrossContext(true);
+        ctx.setPath(contextName);
         ((StandardContext)ctx).setProcessTlds(false);  // disable tld processing.. we don't use any
         ctx.addParameter("com.sun.faces.forceLoadConfiguration","false");
 
@@ -158,6 +168,7 @@ public class EmbeddedTomcatServer {
         VirtualDirContext resources = new VirtualDirContext();
         resources.setExtraResourcePaths("/WEB-INF/classes=" + additionWebInfClasses);
         ctx.setResources(resources);
+
 
 
 //

@@ -1,4 +1,4 @@
-package org.greencheek.web.filter.memcached.dataformatting;
+package org.greencheek.web.filter.memcached.dateformatting;
 
 /**
  * Created by dominictootell on 19/04/2014.

@@ -54,20 +54,18 @@ public class TestResponseIsCachedForMaxAge {
     private void testMaxAge() {
         String url = server.setupServlet("/maxage/*","maxageservlet","org.greencheek.web.filter.memcached.servlets.MaxAgeServlet",false);
         assertTrue(server.startTomcat());
-        url = server.replacePort(url);
+        url = server.replacePort(url) + "?maxage=3";
         System.out.println(url);
-        Request r = server.getHttpClient().prepareGet(url).build();
         try {
-            Response response = server.getHttpClient().executeRequest(r).get();
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,response.getHeader(PublishToMemcachedFilter.DEFAULT_CACHE_STATUS_HEADER_NAME));
-
-
+            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url));
             Thread.sleep(1000);
-            r = server.getHttpClient().prepareGet(url).build();
-            Response cachedResponse = server.getHttpClient().executeRequest(r).get();
-
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,cachedResponse.getHeader(PublishToMemcachedFilter.DEFAULT_CACHE_STATUS_HEADER_NAME));
-
+            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+            // The cache is for 3 seconds.  Wait for 5 and issue the request again.
+            Thread.sleep(5000);
+            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url));
 
 
         } catch (Exception e) {
@@ -76,4 +74,10 @@ public class TestResponseIsCachedForMaxAge {
         }
     }
 
+    private String getCacheHeader(String url) throws Exception {
+        Request r = server.getHttpClient().prepareGet(url).build();
+        Response cachedResponse = server.getHttpClient().executeRequest(r).get();
+        return cachedResponse.getHeader(PublishToMemcachedFilter.DEFAULT_CACHE_STATUS_HEADER_NAME);
+
+    }
 }

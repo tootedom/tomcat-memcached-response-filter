@@ -32,8 +32,8 @@ import org.greencheek.web.filter.memcached.client.config.*;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
-import org.greencheek.web.filter.memcached.dataformatting.DateHeaderFormatter;
-import org.greencheek.web.filter.memcached.dataformatting.QueueBasedDateFormatter;
+import org.greencheek.web.filter.memcached.dateformatting.DateHeaderFormatter;
+import org.greencheek.web.filter.memcached.dateformatting.QueueBasedDateFormatter;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
@@ -204,8 +204,7 @@ public class PublishToMemcachedFilter implements Filter {
                 }
             } finally {
                 if (wrappedRes != null) {
-                    postFilter(servletRequest,wrappedRes);
-                    wrappedRes.addHeader(this.cacheHitHeader,this.cacheMissValue);
+                    postFilter(servletRequest, wrappedRes);
                 }
             }
         }
@@ -213,10 +212,12 @@ public class PublishToMemcachedFilter implements Filter {
 
     public void postFilter(HttpServletRequest servletRequest,BufferedResponseWrapper theResponse) {
         storeResponseInMemcached(servletRequest, theResponse);
+
     }
 
     void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
         filterMemcachedStorage.writeToCache(servletRequest,servletResponse);
+        servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);
     }
 
     @Override

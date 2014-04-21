@@ -1,6 +1,6 @@
 package org.greencheek.web.filter.memcached.response;
 
-import org.greencheek.web.filter.memcached.dataformatting.DateHeaderFormatter;
+import org.greencheek.web.filter.memcached.dateformatting.DateHeaderFormatter;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
