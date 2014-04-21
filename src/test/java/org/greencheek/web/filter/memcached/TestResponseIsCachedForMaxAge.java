@@ -2,6 +2,7 @@ package org.greencheek.web.filter.memcached;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonFactory;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonWrapper;
 import org.junit.After;
@@ -47,7 +48,7 @@ public class TestResponseIsCachedForMaxAge {
 
     @Test
     public void testServlet3MaxAge() {
-        server.setupServlet3Filter("localhost:"+memcached.getPort());
+        server.setupServlet3Filter("localhost:" + memcached.getPort());
         testMaxAge();
     }
 
@@ -57,15 +58,15 @@ public class TestResponseIsCachedForMaxAge {
         url = server.replacePort(url) + "?maxage=3";
         System.out.println(url);
         try {
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url));
             Thread.sleep(1000);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(url));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(url));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(url));
             // The cache is for 3 seconds.  Wait for 5 and issue the request again.
             Thread.sleep(5000);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(url));
 
 
         } catch (Exception e) {
@@ -77,7 +78,7 @@ public class TestResponseIsCachedForMaxAge {
     private String getCacheHeader(String url) throws Exception {
         Request r = server.getHttpClient().prepareGet(url).build();
         Response cachedResponse = server.getHttpClient().executeRequest(r).get();
-        return cachedResponse.getHeader(PublishToMemcachedFilter.DEFAULT_CACHE_STATUS_HEADER_NAME);
+        return cachedResponse.getHeader(CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME);
 
     }
 }

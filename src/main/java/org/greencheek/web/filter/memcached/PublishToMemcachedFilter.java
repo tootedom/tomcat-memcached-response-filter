@@ -44,9 +44,7 @@ import org.slf4j.LoggerFactory;
 
 public class PublishToMemcachedFilter implements Filter {
 
-    public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";
-    public final static String DEFAULT_CACHE_MISS_HEADER_VALUE = "MISS";
-    public final static String DEFAULT_CACHE_HIT_HEADER_VALUE = "HIT";
+
     public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
 
     public final static String MEMCACHED_HOSTS_PARAM = "memcached-hosts";
@@ -62,6 +60,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_CACHE_STATUS_HEADER_NAME = "memcached-cachestatus-header";
     public final static String MEMCACHED_CACHE_STATUS_HIT_VALUE = "memcached-cachestatus-hit";
     public final static String MEMCACHED_CACHE_STATUS_MISS_VALUE = "memcached-cachestatus-miss";
+    public final static String MEMCACHED_STATUS_CODES_TO_CACHE = "memcached-cacheablestatuscodes";
 
 	/**
 	 * Logger
@@ -78,9 +77,9 @@ public class PublishToMemcachedFilter implements Filter {
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
     private FilterMemcachedStorage filterMemcachedStorage;
-    private String cacheHitHeader = DEFAULT_CACHE_STATUS_HEADER_NAME;
-    private String cacheHitValue = DEFAULT_CACHE_HIT_HEADER_VALUE;
-    private String cacheMissValue = DEFAULT_CACHE_MISS_HEADER_VALUE;
+    private String cacheHitHeader = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
+    private String cacheHitValue = CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE;
+    private String cacheMissValue = CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE;
 
     private volatile boolean isEnabled = false;
 
@@ -115,13 +114,12 @@ public class PublishToMemcachedFilter implements Filter {
         storageConfigBuilder.setStorePrivate(filterConfig.getInitParameter(MEMCACHED_CACHE_PRIVATE));
         storageConfigBuilder.setForceCache(filterConfig.getInitParameter(MEMCACHED_FORCE_CACHE));
         storageConfigBuilder.setDefaultExpiry(filterConfig.getInitParameter(MEMCACHED_EXPIRY));
+        storageConfigBuilder.setCacheableResponseCodes(filterConfig.getInitParameter(MEMCACHED_STATUS_CODES_TO_CACHE));
 
         MemcachedFetchingConfigBulder fetchingConfigBuilder = new MemcachedFetchingConfigBulder(keyConfig);
 
         fetchingConfigBuilder.setCacheGetTimeout(filterConfig.getInitParameter(MEMCACHED_GET_TIMEOUT));
 
-        filterMemcachedFetching = new SpyFilterMemcachedFetching(client,fetchingConfigBuilder.build());
-        filterMemcachedStorage = new SpyFilterMemcachedStorage(client,storageConfigBuilder.build());
 
         try {
             maxContentSizeForMemcachedEntry = Integer.parseInt(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_SIZE));
@@ -132,6 +130,7 @@ public class PublishToMemcachedFilter implements Filter {
         String cacheHeaderName = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_HEADER_NAME);
         if(cacheHeaderName!=null && cacheHeaderName.trim().length()>0) {
             cacheHitHeader = cacheHeaderName.trim();
+            storageConfigBuilder.setCacheStatusHeaderName(cacheHitHeader);
         }
 
         String cacheHitValue = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_HIT_VALUE);
@@ -143,6 +142,9 @@ public class PublishToMemcachedFilter implements Filter {
         if(cacheMissValue !=null && cacheMissValue.trim().length()>0) {
             this.cacheMissValue = cacheMissValue;
         }
+
+        filterMemcachedFetching = new SpyFilterMemcachedFetching(client,fetchingConfigBuilder.build());
+        filterMemcachedStorage = new SpyFilterMemcachedStorage(client,storageConfigBuilder.build());
 
         isEnabled = true;
     }

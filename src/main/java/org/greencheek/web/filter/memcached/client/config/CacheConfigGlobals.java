@@ -17,6 +17,10 @@ import java.util.Set;
  */
 public class CacheConfigGlobals {
 
+    public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";
+    public final static String DEFAULT_CACHE_MISS_HEADER_VALUE = "MISS";
+    public final static String DEFAULT_CACHE_HIT_HEADER_VALUE = "HIT";
+    public final static String DEFAULT_CACHEABLE_RESPONSE_CODES = "200, 203, 204, 205, 300, 301, 410";
 
     public static final String CACHE_CONTROL_HEADER = "Cache-Control";
     public static final String CONTENT_LENGTH_HEADER = "Content-Length";
@@ -34,9 +38,7 @@ public class CacheConfigGlobals {
     public static final char CHAR_ZERO = '0';
 
     static {
-        TIntSet cacheableResponseCodes = new TIntHashSet(7,1.0f);
-        cacheableResponseCodes.addAll(new int[]{200, 203, 204, 205, 300, 301, 410});
-        CACHEABLE_RESPONSE_CODES = cacheableResponseCodes;
+        CACHEABLE_RESPONSE_CODES = commaSeparatedIntStringToIntSet(DEFAULT_CACHEABLE_RESPONSE_CODES);
     }
 
     static {
@@ -155,5 +157,22 @@ public class CacheConfigGlobals {
             listPermutations.add(new String(array));
         }
         return listPermutations;
+    }
+
+    public static TIntSet commaSeparatedIntStringToIntSet(String ints) {
+        if(ints==null) return new TIntHashSet(1);
+
+        String[] listOfCodes = ints.split(",");
+        if(listOfCodes==null || listOfCodes.length==0) return new TIntHashSet(1);
+
+        TIntSet statusCodes = new TIntHashSet(listOfCodes.length,1.0f);
+        for(String s : listOfCodes) {
+            try {
+                statusCodes.add(Integer.parseInt(s.trim()));
+            } catch(NumberFormatException e) {
+
+            }
+        }
+        return statusCodes;
     }
 }

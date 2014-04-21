@@ -4,6 +4,7 @@ import gnu.trove.set.TIntSet;
 import org.greencheek.web.filter.memcached.client.cachecontrol.CacheControlResponseDecider;
 import org.greencheek.web.filter.memcached.client.cachecontrol.MaxAgeParser;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -31,13 +32,14 @@ public class MemcachedStorageConfig {
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   CacheControlResponseDecider cacheResponseDecider,boolean forceCache,int forceCacheDurationInSeconds,
                                   byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader,
-                                  TIntSet cacheableResponseCodes
+                                  TIntSet cacheableResponseCodes,String cacheStatusHeaderName
                                   ) {
         this.headersLength = headersLength;
         this.cacheKeyCreator = cacheKeyCreator;
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
         this.customHeaders = customHeaders;
-        this.responseHeadersToIgnore = responseHeadersToIgnore;
+        this.responseHeadersToIgnore = new HashSet<String>(responseHeadersToIgnore);
+        this.responseHeadersToIgnore.add(cacheStatusHeaderName.toLowerCase());
         this.cacheResponseDecider = cacheResponseDecider;
         this.forceCache = forceCache;
         this.forceCacheDurationInSeconds = forceCacheDurationInSeconds;

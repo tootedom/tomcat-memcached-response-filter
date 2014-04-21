@@ -2,6 +2,7 @@ package org.greencheek.web.filter.memcached;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonFactory;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonWrapper;
 import org.junit.After;
@@ -54,7 +55,7 @@ public class TestAsyncServletCanBeCached {
     }
 
     private String getCacheHeader(Response response) {
-        return response.getHeader(PublishToMemcachedFilter.DEFAULT_CACHE_STATUS_HEADER_NAME);
+        return response.getHeader(CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME);
 
     }
 
@@ -83,19 +84,19 @@ public class TestAsyncServletCanBeCached {
 
         try {
             Response response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time = getTime(response);
             Thread.sleep(1000);
             response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
             String time2 = getTime(response);
             assertEquals(time,time2);
             // wait for 5 seconds (expiry is 3)
             Thread.sleep(5000);
             response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time3 = getTime(response);
-            assertNotEquals(time,time3);
+            assertNotEquals(time, time3);
 
 
 

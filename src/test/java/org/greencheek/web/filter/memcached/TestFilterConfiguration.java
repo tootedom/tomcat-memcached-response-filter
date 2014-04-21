@@ -2,6 +2,7 @@ package org.greencheek.web.filter.memcached;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.dateformatting.DateHeaderFormatter;
 import org.greencheek.web.filter.memcached.dateformatting.QueueBasedDateFormatter;
 import org.greencheek.web.filter.memcached.servlets.AddIntHeaderServlet;
@@ -82,7 +83,7 @@ public class TestFilterConfiguration {
     }
 
     private String getCacheHeader(Response response) {
-        return response.getHeader(PublishToMemcachedFilter.DEFAULT_CACHE_STATUS_HEADER_NAME);
+        return response.getHeader(CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME);
 
     }
 
@@ -110,13 +111,13 @@ public class TestFilterConfiguration {
         System.out.println(url);
         try {
             Response response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time = getTime(response);
             assertEquals(""+AddIntHeaderServlet.VALUE,response.getHeader(AddIntHeaderServlet.HEADER));
 
             Thread.sleep(1000);
             response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
             String time2 = getTime(response);
             assertEquals(time,time2);
             assertEquals(""+AddIntHeaderServlet.VALUE,response.getHeader(AddIntHeaderServlet.HEADER));
@@ -124,7 +125,7 @@ public class TestFilterConfiguration {
             // wait for 5 seconds (expiry is 3)
             Thread.sleep(5000);
             response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time3 = getTime(response);
             assertNotEquals(time,time3);
             assertEquals(""+AddIntHeaderServlet.VALUE,response.getHeader(AddIntHeaderServlet.HEADER));
@@ -145,14 +146,14 @@ public class TestFilterConfiguration {
         DateHeaderFormatter formatter = new QueueBasedDateFormatter();
         try {
             Response response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time = getTime(response);
             String formattedDate = formatter.toDate(Long.parseLong(time));
             assertEquals(formattedDate,response.getHeader("X-Now"));
 
             Thread.sleep(1000);
             response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
             String time2 = getTime(response);
             assertEquals(time,time2);
             formattedDate = formatter.toDate(Long.parseLong(time2));
@@ -161,7 +162,7 @@ public class TestFilterConfiguration {
             // wait for 5 seconds (expiry is 3)
             Thread.sleep(5000);
             response = getCacheHeader(url);
-            assertEquals(PublishToMemcachedFilter.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+            assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
             String time3 = getTime(response);
             assertNotEquals(time, time3);
             formattedDate = formatter.toDate(Long.parseLong(time3));

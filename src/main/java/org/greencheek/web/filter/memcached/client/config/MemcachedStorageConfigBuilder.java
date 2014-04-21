@@ -60,6 +60,7 @@ public class MemcachedStorageConfigBuilder {
     private boolean canCacheWithNoCacheControl = DEFAULT_CAN_CACHE_WITH_NO_CACHE_CONTROL;
     private CacheControlResponseDecider cacheResponseDecider = DEFAULT_CACHE_RESPONSE_DECIDER;
     private TIntSet cacheableResponseCodes = CacheConfigGlobals.CACHEABLE_RESPONSE_CODES;
+    private String cacheStatusHeaderName = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
 
     private MemcachedKeyConfig keyConfig;
 
@@ -72,7 +73,7 @@ public class MemcachedStorageConfigBuilder {
         return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,keyConfig,defaultExpiryInSeconds,
                 additionalHeaders,responseHeadersToIgnore,cacheResponseDecider,forceCache,
                 forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl,
-                cacheableResponseCodes);
+                cacheableResponseCodes,cacheStatusHeaderName);
     }
 
     public MemcachedStorageConfigBuilder setKeyConfig(MemcachedKeyConfig keyConfig) {
@@ -199,9 +200,38 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
-    public MemcachedStorageConfigBuilder setCachableResponseCodes(int... statusCodes) {
+    public MemcachedStorageConfigBuilder setCacheableResponseCodes(String codes) {
+        if(codes==null) {
+            return this;
+        }
+        codes = codes.trim();
+        if(codes.length()==0) return this;
+
+        String[] listOfCodes = codes.split(",");
+        if(listOfCodes==null || listOfCodes.length==0) return this;
+
+        TIntSet statusCodes = new TIntHashSet(listOfCodes.length,1.0f);
+        for(String s : listOfCodes) {
+            try {
+                statusCodes.add(Integer.parseInt(s.trim()));
+            } catch(NumberFormatException e) {
+
+            }
+        }
+
+        if(statusCodes.size()==0) return this;
+        this.cacheableResponseCodes = statusCodes;
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setCacheableResponseCodes(int... statusCodes) {
         cacheableResponseCodes = new TIntHashSet(statusCodes.length,1.0f);
         cacheableResponseCodes.addAll(statusCodes);
+        return this;
+    }
+
+    public MemcachedStorageConfigBuilder setCacheStatusHeaderName(String name) {
+        cacheStatusHeaderName = name;
         return this;
     }
 
