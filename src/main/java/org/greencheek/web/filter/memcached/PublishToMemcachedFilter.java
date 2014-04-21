@@ -192,6 +192,7 @@ public class PublishToMemcachedFilter implements Filter {
                         wrappedRes = createResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
                     }
                 }
+                servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);
             }
 
 
@@ -212,12 +213,10 @@ public class PublishToMemcachedFilter implements Filter {
 
     public void postFilter(HttpServletRequest servletRequest,BufferedResponseWrapper theResponse) {
         storeResponseInMemcached(servletRequest, theResponse);
-
     }
 
     void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
         filterMemcachedStorage.writeToCache(servletRequest,servletResponse);
-        servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);
     }
 
     @Override

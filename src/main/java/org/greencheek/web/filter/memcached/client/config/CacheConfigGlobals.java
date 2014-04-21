@@ -3,6 +3,8 @@ package org.greencheek.web.filter.memcached.client.config;
 import gnu.trove.decorator.TIntObjectMapDecorator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -27,9 +29,15 @@ public class CacheConfigGlobals {
     public static final byte[] NEW_LINE = new byte[]{(byte)'\r',(byte)'\n'};
     public static final byte[] HEADER_NAME_SEPARATOR = new byte[]{':',' '};
     public static final TIntObjectMap<byte[]> STATUS_CODES;
+    public static final TIntSet CACHEABLE_RESPONSE_CODES;
 
     public static final char CHAR_ZERO = '0';
 
+    static {
+        TIntSet cacheableResponseCodes = new TIntHashSet(7,1.0f);
+        cacheableResponseCodes.addAll(new int[]{200, 203, 204, 205, 300, 301, 410});
+        CACHEABLE_RESPONSE_CODES = cacheableResponseCodes;
+    }
 
     static {
         TIntObjectMap<byte[]> codes = new TIntObjectHashMap<byte[]>(48,1.0f);

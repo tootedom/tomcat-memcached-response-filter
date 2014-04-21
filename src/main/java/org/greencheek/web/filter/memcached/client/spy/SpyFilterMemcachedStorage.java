@@ -134,6 +134,10 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
     private void writeToCache(HttpServletRequest theRequest,BufferedResponseWrapper theResponse,
                               int expiryInSeconds, Set<String> additionalContent,
                              Map<String,Collection<String>> responseHeaders, ResizeableByteBuffer content) {
+        if(!storageConfig.canCache(theResponse.getStatus())) {
+            return;
+        }
+
         int contentLength = content.size();
         ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength,contentLength + storageConfig.getHeadersLength());
 

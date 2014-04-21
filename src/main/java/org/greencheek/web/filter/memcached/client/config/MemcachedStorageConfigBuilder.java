@@ -1,5 +1,7 @@
 package org.greencheek.web.filter.memcached.client.config;
 
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 import org.greencheek.web.filter.memcached.client.cachecontrol.CacheControlResponseDecider;
 import org.greencheek.web.filter.memcached.client.cachecontrol.DefaultMaxAgeParser;
 import org.greencheek.web.filter.memcached.client.cachecontrol.MaxAgeParser;
@@ -23,6 +25,7 @@ public class MemcachedStorageConfigBuilder {
     public static final int DEFAULT_FORCE_CACHE_DURATION = DEFAULT_EXPIRY_IN_SECONDS;
     public static final byte[] DEFAULT_HTTP_STATUS_LINE = new byte[]{'H','T','T','P','/','1','.','1',' '};
     public static final MaxAgeParser DEFAULT_MAX_AGE_PARSER = new DefaultMaxAgeParser();
+    public static final boolean DEFAULT_CAN_CACHE_WITH_NO_CACHE_CONTROL = true;
     public static final CacheControlResponseDecider DEFAULT_CACHE_RESPONSE_DECIDER = new StringContainsCacheControlResponseDecider(DEFAULT_STORE_PRIVATE);
 
 
@@ -43,6 +46,8 @@ public class MemcachedStorageConfigBuilder {
     }
 
 
+
+
     private Set<String> responseHeadersToIgnore = DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     private int defaultExpiryInSeconds = DEFAULT_EXPIRY_IN_SECONDS;
     private Set<String> additionalHeaders  = DEFAULT_ADDITIONAL_HEADERS;
@@ -52,8 +57,9 @@ public class MemcachedStorageConfigBuilder {
     private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
     private byte[] httpStatusLinePrefix = DEFAULT_HTTP_STATUS_LINE;
     private MaxAgeParser maxAgeParser = DEFAULT_MAX_AGE_PARSER;
-    private boolean canCacheWithNoCacheControl = true;
+    private boolean canCacheWithNoCacheControl = DEFAULT_CAN_CACHE_WITH_NO_CACHE_CONTROL;
     private CacheControlResponseDecider cacheResponseDecider = DEFAULT_CACHE_RESPONSE_DECIDER;
+    private TIntSet cacheableResponseCodes = CacheConfigGlobals.CACHEABLE_RESPONSE_CODES;
 
     private MemcachedKeyConfig keyConfig;
 
@@ -65,7 +71,8 @@ public class MemcachedStorageConfigBuilder {
     public MemcachedStorageConfig build() {
         return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,keyConfig,defaultExpiryInSeconds,
                 additionalHeaders,responseHeadersToIgnore,cacheResponseDecider,forceCache,
-                forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl);
+                forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl,
+                cacheableResponseCodes);
     }
 
     public MemcachedStorageConfigBuilder setKeyConfig(MemcachedKeyConfig keyConfig) {
@@ -192,6 +199,10 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
-
+    public MemcachedStorageConfigBuilder setCachableResponseCodes(int... statusCodes) {
+        cacheableResponseCodes = new TIntHashSet(statusCodes.length,1.0f);
+        cacheableResponseCodes.addAll(statusCodes);
+        return this;
+    }
 
 }

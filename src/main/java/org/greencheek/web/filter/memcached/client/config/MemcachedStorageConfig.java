@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached.client.config;
 
+import gnu.trove.set.TIntSet;
 import org.greencheek.web.filter.memcached.client.cachecontrol.CacheControlResponseDecider;
 import org.greencheek.web.filter.memcached.client.cachecontrol.MaxAgeParser;
 
@@ -22,13 +23,15 @@ public class MemcachedStorageConfig {
     private final byte[] httpStatusLinePrefix;
     private final MaxAgeParser maxAgeParser;
     private final boolean canCacheWithNoCacheControlHeader;
+    private final TIntSet cacheableResponseCodes;
 
 
 
     public MemcachedStorageConfig(int headersLength, MemcachedKeyConfig cacheKeyCreator,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   CacheControlResponseDecider cacheResponseDecider,boolean forceCache,int forceCacheDurationInSeconds,
-                                  byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader
+                                  byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader,
+                                  TIntSet cacheableResponseCodes
                                   ) {
         this.headersLength = headersLength;
         this.cacheKeyCreator = cacheKeyCreator;
@@ -41,6 +44,11 @@ public class MemcachedStorageConfig {
         this.httpStatusLinePrefix = httpStatusLinePrefix;
         this.maxAgeParser = maxAgeParser;
         this.canCacheWithNoCacheControlHeader = canCacheWithNoCacheControlHeader;
+        if(cacheableResponseCodes==null) {
+            this.cacheableResponseCodes = CacheConfigGlobals.CACHEABLE_RESPONSE_CODES;
+        } else {
+            this.cacheableResponseCodes = cacheableResponseCodes;
+        }
     }
 
 
@@ -87,5 +95,9 @@ public class MemcachedStorageConfig {
 
     public boolean isCanCacheWithNoCacheControlHeader() {
         return canCacheWithNoCacheControlHeader;
+    }
+
+    public boolean canCache(int statusCode) {
+        return cacheableResponseCodes.contains(statusCode);
     }
 }
