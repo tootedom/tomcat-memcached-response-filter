@@ -2,6 +2,8 @@ package org.greencheek.web.filter.memcached.cachekey;
 
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
+import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
+import org.greencheek.web.filter.memcached.util.SplitByChar;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -40,15 +42,18 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     private static final String SCHEME = "scheme";
     public static final String KEY_SEPARATOR_CHAR = "\\$";
     public static final String VALUE_SEPARATOR_CHAR = "_";
+    public static final String VALUE_OPTIONAL_SEPARATOR_CHAR = "?";
+    public static final String VALUE_SORTED_CHAR = "s";
 
     private final boolean useCookies;
     private final boolean useHeaders;
 
-    private final String[] cookieNames;
-    private final String[] headerNames;
+    private final MultiValuedKey[] cookieNames;
+    private final MultiValuedKey[] headerNames;
     private final Set<String> headerNamesSet;
     private final Set<String> cookieNameSet;
     private final KeyHashing keyHashingUtil;
+    private final SplitByChar splitter = new CustomSplitByChar();
 
     private final List<CacheKeyType> keyOrder = new ArrayList<CacheKeyType>(10);
 
@@ -58,6 +63,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
     public DefaultCacheKeyCreator(String keySpec, KeyHashing keyHashingUtil) {
         this.keyHashingUtil = keyHashingUtil;
+        keySpec = keySpec.toLowerCase();
         String[] keys = keySpec.split(KEY_SEPARATOR_CHAR);
         List<String> keySet = new ArrayList<String>();
         for(String item : keys) {
@@ -81,8 +87,8 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         }
         else {
             cookieNameSet = new HashSet<String>(cookieNames.length,1.0f);
-            for(String name : cookieNames) {
-                cookieNameSet.add(name);
+            for(MultiValuedKey name : cookieNames) {
+                cookieNameSet.add(name.getValue());
             }
         }
 
@@ -90,8 +96,8 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             headerNamesSet = Collections.EMPTY_SET;
         } else {
             headerNamesSet = new HashSet<String>(headerNames.length,1.0f);
-            for(String name : headerNames) {
-                headerNamesSet.add(name);
+            for(MultiValuedKey name : headerNames) {
+                headerNamesSet.add(name.getValue());
             }
         }
 
@@ -103,27 +109,73 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         return keyHashingUtil;
     }
 
-    private String[] parseHeaders(List<String> keys) {
+    /**
+     * Return a list of header names that have been been specified
+     * in the cache key
+     * @param keys
+     * @return
+     */
+    private MultiValuedKey[] parseHeaders(List<String> keys) {
         return parseValues(keys,HEADERS);
     }
 
-    private String[] parseCookies(List<String> keys) {
+    /**
+     * Returns a list of cookie names that have been specified in the
+     * cache key
+     * @param keys
+     * @return
+     */
+    private MultiValuedKey[] parseCookies(List<String> keys) {
         return parseValues(keys,COOKIES);
     }
 
-    private String[] parseValues(List<String> keys, String name) {
-        List<String> headers = new ArrayList<String>();
+    private MultiValuedKey[] parseValues(List<String> keys, String name) {
+        List<MultiValuedKey> headers = new ArrayList<MultiValuedKey>();
         for(String key : keys) {
             if(key.startsWith(name)) {
                 String[] values = key.split(VALUE_SEPARATOR_CHAR);
                 if(values!=null && values.length>1) {
-                    headers.add(values[1].toLowerCase());
+                    boolean isOptional = key.endsWith(VALUE_OPTIONAL_SEPARATOR_CHAR);
+                    boolean toSort = values.length>2 && values[2].equals(VALUE_SORTED_CHAR);
+
+                    headers.add(new MultiValuedKey(values[1],isOptional,toSort));
                 }
             }
         }
-        return headers.toArray(new String[headers.size()]);
+        return headers.toArray(new MultiValuedKey[headers.size()]);
     }
 
+    public static class MultiValuedKey {
+        private final String value;
+        private final boolean optional;
+        private final boolean sorted;
+
+        public MultiValuedKey(String value, boolean optional, boolean sorted) {
+            this.value = value;
+            this.optional = optional;
+            this.sorted = sorted;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public boolean isOptional() {
+            return this.optional;
+        }
+
+        public boolean isToBeSorted() {
+            return this.sorted;
+        }
+    }
+
+    /**
+     * Actually takes the header values out of the request and
+     * @param request
+     * @param headerNames
+     * @param namesRequested
+     * @return
+     */
     private Map<String,String> parseHeaders(HttpServletRequest request,
                                             Enumeration<String> headerNames,
                                             Set<String> namesRequested) {
@@ -139,7 +191,17 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             String lowerHeaderName = headerName.toLowerCase();
 
             if(namesRequested.contains(lowerHeaderName)) {
-                extractedHeaders.put(lowerHeaderName,request.getHeader(headerName));
+                Enumeration<String> headerValues = request.getHeaders(headerName);
+                if(headerValues==null) {
+                    extractedHeaders.put(lowerHeaderName,null);
+                    continue;
+                }
+                StringBuilder headerValue = new StringBuilder(32);
+                while(headerValues.hasMoreElements()) {
+                    headerValue.append(headerValues.nextElement()).append(',');
+                }
+                headerValue.deleteCharAt(headerValue.length()-1);
+                extractedHeaders.put(lowerHeaderName,headerValue.toString());
             }
         }
         return extractedHeaders;
@@ -167,27 +229,55 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         for(CacheKeyType type : keyOrder) {
             GetRequestAttribute attributeRequest = attributes[type.index];
             CacheKeyElement element;
+            boolean isOptional = true;
+            boolean toBeSorted = false;
+            MultiValuedKey keyItem = null;
+
             switch (type) {
                 case HEADER:
-                    element = attributeRequest.getAttribute(request,headers,headerNames[headersNum++]);
-                    b.append(element.getElement());
+                    keyItem = headerNames[headersNum++];
+                    isOptional = keyItem.isOptional();
+                    toBeSorted = keyItem.isToBeSorted();
+                    element = attributeRequest.getAttribute(request,headers,keyItem.getValue());
                     break;
                 case COOKIE:
-                    element = attributeRequest.getAttribute(request,cookies,cookieNames[cookiesNum++]);
-                    b.append(element.getElement());
+                    keyItem = cookieNames[cookiesNum++];
+                    isOptional = keyItem.isOptional();
+                    element = attributeRequest.getAttribute(request,cookies,keyItem.getValue());
                     break;
                 default:
                     element = attributeRequest.getAttribute(request);
-                    b.append(element.getElement());
+
             }
-            if(!element.isAvailable()) {
+            if(!element.isAvailable() && !isOptional) {
                 enabled = false;
             }
+
+            String elemValue = element.getElement();
+            if(toBeSorted) {
+                elemValue = sortValue(elemValue);
+            }
+            b.append(elemValue);
 
         }
         return new CacheKey(enabled,keyHashingUtil.hash(b.toString()));
     }
 
+
+    private String sortValue(String value) {
+        List<String> values = splitter.split(value,',');
+        Collections.sort(values);
+        return join(values,',',value.length());
+    }
+
+    private String join(List<String> values,char c, int expectedLength) {
+        StringBuilder b = new StringBuilder(expectedLength);
+        for(String value : values) {
+            b.append(value).append(c);
+        }
+        b.deleteCharAt(b.length());
+        return b.toString();
+    }
 
     private Map<String,String> parseCookies(Cookie[] cookies,Set<String> cookieNames) {
         Map<String,String> cookieValues = new HashMap<String,String>(cookieNames.size());

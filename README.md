@@ -50,3 +50,44 @@ using the memcached hosts `127.0.0.1:11211` and `127.0.0.1:11212`
         <filter-name>writeToMemcached</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
+## Availablity ##
+
+Currently a SNAPSHOT version is available in the sonatype repo:
+
+`https://oss.sonatype.org/content/repositories/snapshots/org/greencheek/memcached`
+
+
+## Configuration ##
+
+There's a few configuration (`init-param`) available for customisation of the filter.  Those that will most frequently
+be used is that of setting the memcached hosts and the cache key used.
+
+Other param control when caching takes place, how long an item is cached for, should the cache expiry times use
+the `Cache-Control` `max-age` value; etc.
+
+
+### Specifying the memcached hosts ###
+
+The init parameter `memcached-hosts` is configurable with a comma separated list of the host and ports of the memcached
+servers to talk to; and shard put/gets on.  An example is as follows:
+
+         <init-param>
+            <param-name>memcached-hosts</param-name>
+            <param-value>127.0.0.1:11211,127.0.0.1:11212</param-value>
+         </init-param>
+
+
+### Specifying the cache key ###
+
+One of the most important parts of caching, is the key against which to cache content.  If everything is cached
+under the same key, then things are going to go pretty bad.
+
+The default key is: `$scheme$request_method$request_uri$header_accept$header_accept-encoding`  The means that the
+following items make up the cache key:
+
+- The scheme, i.e: http
+- The request method, i.e: GET
+- The request uri (This is the path and the query parameters), i.e: "/products/12344?includetext=no&pretty=false"
+- The "Accept" header sent by the client: */*
+- The "Accept-Encoding" header as sent by the client: "gzip,deflate,sdch"

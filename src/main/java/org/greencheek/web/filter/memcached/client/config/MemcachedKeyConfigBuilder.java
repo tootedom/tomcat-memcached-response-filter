@@ -20,8 +20,11 @@ public class MemcachedKeyConfigBuilder {
     }
 
     public MemcachedKeyConfigBuilder setCacheKey(String cacheKey) {
-        if(cacheKey!=null && cacheKey.trim().length()>0) {
-            this.cacheKey = cacheKey;
+        if(cacheKey!=null) {
+            String key = cacheKey.trim();
+            if(key.length()>0) {
+                this.cacheKey = cacheKey;
+            }
         }
         return this;
     }

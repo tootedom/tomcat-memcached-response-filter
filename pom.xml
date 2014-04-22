@@ -37,7 +37,7 @@
         <tag>HEAD</tag>
     </scm>
 	<properties>
-
+        <surefireArgLine></surefireArgLine>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<catalina.version>7.0.53</catalina.version>
 		<catalina.groupId>org.apache.tomcat</catalina.groupId>

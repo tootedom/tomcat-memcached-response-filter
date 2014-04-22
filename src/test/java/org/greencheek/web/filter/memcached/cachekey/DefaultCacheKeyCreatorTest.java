@@ -6,6 +6,7 @@ import org.junit.Test;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -113,6 +114,9 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
+        when(request.getHeaders("Content-Type")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Type"))));
+        when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
+
 
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
     }
@@ -133,12 +137,20 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
+        when(request.getHeaders("Content-Type")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Type"))));
+        when(request.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
+        when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
+
 
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request).getKey());
         when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
+        when(request.getHeaders("Content-Type")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Type"))));
+        when(request.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
+        when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
+
 
         expected = "10text/plain";
         this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Length$header_Content-Type");
@@ -163,6 +175,9 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
+        when(request.getHeaders("Content-Type")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Type"))));
+        when(request.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
+        when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
 
         this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Type$cookie_cookie1$header_Content-Length$cookie_CooKIE3");
 
@@ -196,6 +211,10 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeader("Accept")).thenReturn(headers.get("Accept"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
+        when(request.getHeaders("Accept")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept"))));
+        when(request.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
+        when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
+
 
 
         this.cacheKeyCreator = new DefaultCacheKeyCreator("$request_method$scheme$request_uri$header_accept-encoding$header_accept$cookie_cookie2");
