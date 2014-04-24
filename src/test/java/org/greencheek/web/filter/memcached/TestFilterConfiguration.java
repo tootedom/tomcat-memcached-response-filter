@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import static org.junit.Assert.fail;
  */
 public class TestFilterConfiguration {
     private final static Pattern RESPONSE_BODY_TIME = Pattern.compile("Time:\\((\\d+)\\)");
+    private final static Pattern RESPONSE_BODY_SESSION_ID = Pattern.compile("Session:\\((\\w+)\\)");
 
     EmbeddedTomcatServer server;
     MemcachedDaemonWrapper memcached;
@@ -90,6 +92,50 @@ public class TestFilterConfiguration {
     public void testCachingOnJSESSIONIDCookie() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$request_uri$cookie_jsessionid");
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY,"10");
+        }};
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),null,filterInitParams);
+        String url = server.setupServlet("/date/*","date","org.greencheek.web.filter.memcached.servlets.JSESSIONIDServlet",true);
+
+        assertTrue(server.startTomcat());
+        url = server.replacePort(url);
+        Response response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+        List<Cookie> cookies1 = response.getCookies();
+        response = executeGetRequest(url,cookies1);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+
+        response = executeGetRequest(url,cookies1);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+
+        response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+
+
+        List<Cookie> cookies2 = response.getCookies();
+        // This request will cache.
+        executeGetRequest(url,cookies2);
+
+        // the request will get from the cache
+        response = executeGetRequest(url,cookies2);
+        String sessionId2 = getSessionID(response);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+
+        response = executeGetRequest(url,cookies1);
+
+        String sessionId1 = getSessionID(response);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+
+        assertNotEquals("The two session ids must be different",sessionId1,sessionId2);
+
+    }
+
+    @Test
+    public void testOptionalCachingOnJSESSIONIDCookie() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$request_uri$cookie_jsessionid?");
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY,"10");
         }};
         server.setupServlet3Filter("localhost:" + memcached.getPort(),null,filterInitParams);
         String url = server.setupServlet("/date/*","date","org.greencheek.web.filter.memcached.servlets.JSESSIONIDServlet",true);
@@ -98,10 +144,10 @@ public class TestFilterConfiguration {
         url = server.replacePort(url);
         Response response = executeGetRequest(url);
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
-        System.out.println(getCookieString(response,"JSESSIONID"));
-        System.out.println(response.getHeader(JSESSIONIDServlet.HEADER));
 
         List<Cookie> cookies = response.getCookies();
+        String sessionId = getSessionID(response);
+
         response = executeGetRequest(url,cookies);
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
 
@@ -109,11 +155,16 @@ public class TestFilterConfiguration {
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
 
         response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
+        assertEquals(sessionId, getSessionID(response));
+
+        Cookie c = cookies.get(0);
+        Cookie madeupJsessionId = new Cookie("JSESSIONID","xx","xx",c.getDomain(),c.getPath(),
+                c.getExpires(),c.getMaxAge(),c.isSecure(),c.isHttpOnly());
+
+        response = executeGetRequest(url, Collections.singletonList(madeupJsessionId));
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
-
-        System.out.println(getCookieString(response,"JSESSIONID"));
-        System.out.println(response.getHeader(JSESSIONIDServlet.HEADER));
-
+        assertNotEquals(sessionId, getSessionID(response));
 
     }
 
@@ -148,9 +199,31 @@ public class TestFilterConfiguration {
         return "";
     }
 
+    /**
+     * Returns the time from the html body
+     * @param response
+     * @return
+     */
     private String getTime(Response response) {
         try {
             Matcher m = RESPONSE_BODY_TIME.matcher(response.getResponseBody());
+            assertTrue(m.find());
+            assertTrue(m.groupCount()>0);
+            return m.group(1);
+        } catch(IOException e) {
+            fail("Failed to obtain response body");
+            return "";
+        }
+    }
+
+    /**
+     * Returns the session id from the html body
+     * @param response
+     * @return
+     */
+    private String getSessionID(Response response) {
+        try {
+            Matcher m = RESPONSE_BODY_SESSION_ID.matcher(response.getResponseBody());
             assertTrue(m.find());
             assertTrue(m.groupCount()>0);
             return m.group(1);
@@ -206,6 +279,7 @@ public class TestFilterConfiguration {
             String time = getTime(response);
             String formattedDate = formatter.toDate(Long.parseLong(time));
             assertEquals(formattedDate,response.getHeader("X-Now"));
+//            System.out.println(response.getResponseBody());
 
             Thread.sleep(1000);
             response = executeGetRequest(url);

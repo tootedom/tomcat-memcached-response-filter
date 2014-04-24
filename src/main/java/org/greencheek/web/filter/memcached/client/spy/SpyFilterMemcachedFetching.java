@@ -35,10 +35,10 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         if(cacheControlHeader != null && hasClientCacheBuster(config.getNoCacheHeaders(),cacheControlHeader)) {
             return CachedResponse.MISS;
         } else {
-            CacheKey key = config.getKeyConfig().createCacheKey(theRequest);
-            if(!key.isFullyPopulated()) return CachedResponse.MISS;
+            String key = config.getKeyConfig().createCacheKey(theRequest);
+            if(key==null) return CachedResponse.MISS;
 
-            byte[] content = get(key.getKey());
+            byte[] content = get(key);
             if(content == null) {
                 return CachedResponse.MISS;
             } else {

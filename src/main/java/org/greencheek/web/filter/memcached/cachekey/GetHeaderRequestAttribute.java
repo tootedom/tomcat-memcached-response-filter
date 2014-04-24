@@ -14,6 +14,10 @@ public class GetHeaderRequestAttribute implements GetRequestAttribute {
     public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
         Map<String,String> headers = (Map<String,String>)extra[0];
         String header = headers.get(extra[1].toString());
-        return new CacheKeyElement(header,header==null ? false : true);
+        if(header == null) {
+            return CacheKeyElement.CACHE_KEY_ELEMENT_NOT_AVAILABLE;
+        } else {
+            return new CacheKeyElement(header, true);
+        }
     }
 }

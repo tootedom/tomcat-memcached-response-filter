@@ -21,7 +21,7 @@ public class MemcachedKeyConfig {
      * @param theRequest
      * @return
      */
-    public CacheKey createCacheKey(HttpServletRequest theRequest) {
+    public String createCacheKey(HttpServletRequest theRequest) {
         return cacheKeyCreator.createCacheKey(theRequest);
     }
 }

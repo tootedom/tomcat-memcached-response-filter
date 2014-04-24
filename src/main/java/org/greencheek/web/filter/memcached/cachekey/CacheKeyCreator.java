@@ -8,5 +8,5 @@ import java.util.Set;
  * Created by dominictootell on 13/04/2014.
  */
 public interface CacheKeyCreator {
-    CacheKey createCacheKey(HttpServletRequest request);
+    String createCacheKey(HttpServletRequest request);
 }

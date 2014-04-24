@@ -14,7 +14,10 @@ public class GetCookieRequestAttribute implements GetRequestAttribute {
         Map<String,String> cookies = (Map<String,String>)extra[0];
         String cookieName = (String)extra[1];
         String cookieValue = cookies.get(cookieName);
-        return new CacheKeyElement(cookieValue,
-                (cookieValue==null || cookieValue.trim().length()==0) ? false : true);
+        if(cookieValue==null || cookieValue.trim().length()==0) {
+            return CacheKeyElement.CACHE_KEY_ELEMENT_NOT_AVAILABLE;
+        } else {
+            return new CacheKeyElement(cookieValue,true);
+        }
     }
 }

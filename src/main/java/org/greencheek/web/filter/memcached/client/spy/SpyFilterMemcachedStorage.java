@@ -139,8 +139,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
             return;
         }
 
-        CacheKey key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
-        if(!key.isFullyPopulated()) {
+        String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
+        if(key == null) {
             return;
         }
 
@@ -171,7 +171,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
 
         if(memcachedContent.canWrite()) {
-            writeToMemcached(key.getKey(), expiryInSeconds, memcachedContent.trim().getBuf());
+            writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
         }
 
     }

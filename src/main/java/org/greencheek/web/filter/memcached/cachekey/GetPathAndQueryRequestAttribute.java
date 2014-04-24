@@ -9,6 +9,10 @@ public class GetPathAndQueryRequestAttribute implements GetRequestAttribute {
     public static final GetPathAndQueryRequestAttribute INSTANCE = new GetPathAndQueryRequestAttribute();
     @Override
     public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
-        return new CacheKeyElement(request.getRequestURI() + request.getQueryString(),true);
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+        if(query == null) query = "";
+        if(uri == null) uri = "";
+        return new CacheKeyElement(uri + query,true);
     }
 }

@@ -17,7 +17,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
     private enum CacheKeyType {
         PATH(0),REQUEST_METHOD(1),PATH_AND_PARAMS(2),
-        QUERY_STRING(3),SCHEME(4),HEADER(5),COOKIE(6);
+        QUERY_STRING(3),SCHEME(4),HEADER(5),COOKIE(6),CONTENT_TYPE(7);
 
         public int index;
 
@@ -30,7 +30,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             GetPathRequestAttribute.INSTANCE,GetMethodRequestAttribute.INSTANCE,
             GetPathAndQueryRequestAttribute.INSTANCE,
             GetQueryStringRequestAttribute.INSTANCE,GetSchemeRequestAttribute.INSTANCE,
-            GetHeaderRequestAttribute.INSTANCE,GetCookieRequestAttribute.INSTANCE
+            GetHeaderRequestAttribute.INSTANCE,GetCookieRequestAttribute.INSTANCE,GetContentTypeAttribute.INSTANCE
     };
 
     private static final String REQUEST_METHOD = "request_method";
@@ -40,6 +40,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     private static final String HEADERS = "header";
     private static final String COOKIES = "cookie";
     private static final String SCHEME = "scheme";
+    private static final String CONTENT_TYPE = "content_type";
     public static final String KEY_SEPARATOR_CHAR = "\\$";
     public static final String VALUE_SEPARATOR_CHAR = "_";
     public static final String VALUE_OPTIONAL_SEPARATOR_CHAR = "?";
@@ -77,6 +78,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             else if(item.startsWith(SCHEME)) keyOrder.add(CacheKeyType.SCHEME);
             else if(item.startsWith(COOKIES)) keyOrder.add(CacheKeyType.COOKIE);
             else if(item.startsWith(HEADERS)) keyOrder.add(CacheKeyType.HEADER);
+            else if(item.startsWith(CONTENT_TYPE)) keyOrder.add(CacheKeyType.CONTENT_TYPE);
         }
 
         headerNames = parseHeaders(keySet);
@@ -137,8 +139,11 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
                 if(values!=null && values.length>1) {
                     boolean isOptional = key.endsWith(VALUE_OPTIONAL_SEPARATOR_CHAR);
                     boolean toSort = values.length>2 && values[2].equals(VALUE_SORTED_CHAR);
-
-                    headers.add(new MultiValuedKey(values[1],isOptional,toSort));
+                    String value = values[1];
+                    if(!toSort && isOptional) {
+                        value = value.substring(0,value.length()-1);
+                    }
+                    headers.add(new MultiValuedKey(value,isOptional,toSort));
                 }
             }
         }
@@ -181,9 +186,6 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
                                             Set<String> namesRequested) {
 
         Map<String,String> extractedHeaders = new HashMap<String, String>(namesRequested.size(),1.0f);
-        for(String header : namesRequested) {
-            extractedHeaders.put(header,"");
-        }
         if(headerNames == null) return extractedHeaders;
 
         while(headerNames.hasMoreElements()) {
@@ -193,7 +195,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             if(namesRequested.contains(lowerHeaderName)) {
                 Enumeration<String> headerValues = request.getHeaders(headerName);
                 if(headerValues==null) {
-                    extractedHeaders.put(lowerHeaderName,null);
+                    extractedHeaders.put(lowerHeaderName,"");
                     continue;
                 }
                 StringBuilder headerValue = new StringBuilder(32);
@@ -208,9 +210,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     }
 
     @Override
-    public CacheKey createCacheKey(HttpServletRequest request) {
-        String key;
-        boolean enabled = true;
+    public String createCacheKey(HttpServletRequest request) {
 
         int headersNum = 0;
         int cookiesNum = 0;
@@ -231,7 +231,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             CacheKeyElement element;
             boolean isOptional = true;
             boolean toBeSorted = false;
-            MultiValuedKey keyItem = null;
+            MultiValuedKey keyItem;
 
             switch (type) {
                 case HEADER:
@@ -250,7 +250,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
             }
             if(!element.isAvailable() && !isOptional) {
-                enabled = false;
+                return null;
             }
 
             String elemValue = element.getElement();
@@ -260,7 +260,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             b.append(elemValue);
 
         }
-        return new CacheKey(enabled,keyHashingUtil.hash(b.toString()));
+        return keyHashingUtil.hash(b.toString());
     }
 
 
