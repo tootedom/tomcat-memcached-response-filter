@@ -42,14 +42,32 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
         }
     }
 
+
+    private String getMatchingHeaderName(HttpServletRequest request) {
+        Enumeration<String> headerNames = request.getHeaderNames();
+        if(headerNames==null || !headerNames.hasMoreElements()) return null;
+
+        String headerName = null;
+        while(headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            if(name.toLowerCase().equals(this.headerName)) {
+                headerName = name;
+                break;
+            }
+        } return headerName;
+    }
     /**
      * Actually takes the header values out of the request and
      * @param request
      * @return
      */
     private String parseHeaders(HttpServletRequest request) {
+        String headerName = getMatchingHeaderName(request);
+        if(headerName==null) {
+            return null;
+        }
 
-        Enumeration<String> headerValues = request.getHeaders(this.headerName);
+        Enumeration<String> headerValues = request.getHeaders(headerName);
         if(headerValues==null || !headerValues.hasMoreElements()) {
             return null;
         } else {
