@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
+import org.greencheek.web.filter.memcached.cachekey.extraction.*;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
@@ -7,7 +8,6 @@ import org.greencheek.web.filter.memcached.util.SplitByChar;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
@@ -26,25 +26,14 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         }
     }
 
-    private GetRequestAttribute[] attributes = new GetRequestAttribute[] {
-            GetPathRequestAttribute.INSTANCE,GetMethodRequestAttribute.INSTANCE,
-            GetPathAndQueryRequestAttribute.INSTANCE,
-            GetQueryStringRequestAttribute.INSTANCE,GetSchemeRequestAttribute.INSTANCE,
-            GetHeaderRequestAttribute.INSTANCE,GetCookieRequestAttribute.INSTANCE,GetContentTypeAttribute.INSTANCE
+    private KeyAttributeExtractor[] attributes = new KeyAttributeExtractor[] {
+            PathAttributeExtractor.INSTANCE, MethodAttributeExtractor.INSTANCE,
+            PathAndQueryAttributeExtractor.INSTANCE,
+            QueryAttributeExtractor.INSTANCE, SchemeAttributeExtractor.INSTANCE,
+            HeaderAttributeExtractor.INSTANCE, CookieAttributeExtractor.INSTANCE, ContentTypeAttributeExtractor.INSTANCE
     };
 
-    private static final String REQUEST_METHOD = "request_method";
-    private static final String PATH_AND_PARAMS = "request_uri";
-    private static final String PATH = "uri";
-    private static final String QUERY_STRING = "args";
-    private static final String HEADERS = "header";
-    private static final String COOKIES = "cookie";
-    private static final String SCHEME = "scheme";
-    private static final String CONTENT_TYPE = "content_type";
-    public static final String KEY_SEPARATOR_CHAR = "\\$";
-    public static final String VALUE_SEPARATOR_CHAR = "_";
-    public static final String VALUE_OPTIONAL_SEPARATOR_CHAR = "?";
-    public static final String VALUE_SORTED_CHAR = "s";
+
 
     private final boolean useCookies;
     private final boolean useHeaders;
@@ -81,8 +70,8 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             else if(item.startsWith(CONTENT_TYPE)) keyOrder.add(CacheKeyType.CONTENT_TYPE);
         }
 
-        headerNames = parseHeaders(keySet);
-        cookieNames = parseCookies(keySet);
+        headerNames = parseKeySpecHeaders(keySet);
+        cookieNames = parseKeySpecCookies(keySet);
 
         if(cookieNames.length==0) {
             cookieNameSet = Collections.EMPTY_SET;
@@ -117,7 +106,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
      * @param keys
      * @return
      */
-    private MultiValuedKey[] parseHeaders(List<String> keys) {
+    private MultiValuedKey[] parseKeySpecHeaders(List<String> keys) {
         return parseValues(keys,HEADERS);
     }
 
@@ -127,7 +116,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
      * @param keys
      * @return
      */
-    private MultiValuedKey[] parseCookies(List<String> keys) {
+    private MultiValuedKey[] parseKeySpecCookies(List<String> keys) {
         return parseValues(keys,COOKIES);
     }
 
@@ -150,29 +139,6 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         return headers.toArray(new MultiValuedKey[headers.size()]);
     }
 
-    public static class MultiValuedKey {
-        private final String value;
-        private final boolean optional;
-        private final boolean sorted;
-
-        public MultiValuedKey(String value, boolean optional, boolean sorted) {
-            this.value = value;
-            this.optional = optional;
-            this.sorted = sorted;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public boolean isOptional() {
-            return this.optional;
-        }
-
-        public boolean isToBeSorted() {
-            return this.sorted;
-        }
-    }
 
     /**
      * Actually takes the header values out of the request and
@@ -227,7 +193,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
         }
 
         for(CacheKeyType type : keyOrder) {
-            GetRequestAttribute attributeRequest = attributes[type.index];
+            KeyAttributeExtractor attributeRequest = attributes[type.index];
             CacheKeyElement element;
             boolean isOptional = true;
             boolean toBeSorted = false;
@@ -264,85 +230,8 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     }
 
 
-    private String sortValue(String value) {
-        List<String> values = splitter.split(value,',');
-        Collections.sort(values);
-        return join(values,',',value.length());
-    }
-
-    private String join(List<String> values,char c, int expectedLength) {
-        StringBuilder b = new StringBuilder(expectedLength);
-        for(String value : values) {
-            b.append(value).append(c);
-        }
-        b.deleteCharAt(b.length());
-        return b.toString();
-    }
-
-    private Map<String,String> parseCookies(Cookie[] cookies,Set<String> cookieNames) {
-        Map<String,String> cookieValues = new HashMap<String,String>(cookieNames.size());
-        if(cookies == null) return cookieValues;
-        for(String cookieName : cookieNames) {
-            cookieValues.put(cookieName,"");
-        }
-
-        for(Cookie c : cookies) {
-            String cName = c.getName().toLowerCase();
-            if(cookieNames.contains(cName)) {
-                cookieValues.put(cName,cookieToString(c));
-            }
-        }
-
-        return cookieValues;
-    }
-
-    public String cookieToString(Cookie cookie) {
-        StringBuffer b = new StringBuffer(64);
-        b.append(cookie.getName()).append('=').append(cookie.getValue());
-
-        if(cookie.getVersion()==1) {
-            b.append ("; Version=1");
-
-            String comment = cookie.getComment();
-            // Comment=comment
-            if ( comment!=null ) {
-                b.append("; Comment=");
-                b.append(comment);
-            }
-        }
-
-        String domain = cookie.getDomain();
-        // Add domain information, if present
-        if (domain!=null) {
-            b.append("; Domain=").append(domain);
-        }
-
-        int maxAge = cookie.getMaxAge();
-        // Max-Age=secs ... or use old "Expires" format
-        if (maxAge >= 0) {
-            b.append("; Max-Age=");
-            b.append(maxAge);
-        }
 
 
-        String path = cookie.getPath();
-        // Path=path
-        if (path!=null) {
-            b.append("; Path=").append(path);
-        }
-
-        // Secure
-        if (cookie.getSecure()) {
-            b.append("; Secure");
-        }
-
-        // HttpOnly
-        if (cookie.isHttpOnly()) {
-            b.append("; HttpOnly");
-        }
-
-        return b.toString();
-    }
 
 
 
