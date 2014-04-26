@@ -14,7 +14,7 @@ public class QueryAttributeExtractor implements KeyAttributeExtractor {
     public CacheKeyElement getAttribute(HttpServletRequest request) {
         String query = request.getQueryString();
         if(query==null) {
-            query = "";
+            return CacheKeyElement.EMPTY_CACHE_KEY_ELEMENT;
         }
         return new CacheKeyElement(query,true);
     }

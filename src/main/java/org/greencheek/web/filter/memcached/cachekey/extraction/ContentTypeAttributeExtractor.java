@@ -13,7 +13,7 @@ public class ContentTypeAttributeExtractor implements KeyAttributeExtractor {
     public CacheKeyElement getAttribute(HttpServletRequest request) {
         String contentType = request.getContentType();
         if(contentType==null) {
-            contentType ="";
+            return CacheKeyElement.EMPTY_CACHE_KEY_ELEMENT;
         }
         return new CacheKeyElement(contentType, true);
     }

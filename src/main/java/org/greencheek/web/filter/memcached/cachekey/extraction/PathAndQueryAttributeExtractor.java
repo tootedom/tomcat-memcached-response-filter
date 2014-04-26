@@ -13,8 +13,13 @@ public class PathAndQueryAttributeExtractor implements KeyAttributeExtractor {
     public CacheKeyElement getAttribute(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String query = request.getQueryString();
-        if(query == null) query = "";
-        if(uri == null) uri = "";
+        if(query == null && uri == null) {
+            return CacheKeyElement.EMPTY_CACHE_KEY_ELEMENT;
+        } else if(query == null) {
+            query = "";
+        } else if(uri == null) {
+            uri = "";
+        }
         return new CacheKeyElement(uri + query,true);
     }
 }

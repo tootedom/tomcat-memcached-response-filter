@@ -4,8 +4,6 @@ import org.greencheek.web.filter.memcached.cachekey.CacheKeyElement;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by dominictootell on 13/04/2014.
@@ -24,8 +22,12 @@ public class CookieAttributeExtractor implements KeyAttributeExtractor {
     public CacheKeyElement getAttribute(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
 
-        if(cookies == null && !isOptional) {
-            return CacheKeyElement.CACHE_KEY_ELEMENT_NOT_AVAILABLE;
+        if(cookies == null) {
+            if (!isOptional) {
+                return CacheKeyElement.CACHE_KEY_ELEMENT_NOT_AVAILABLE;
+            } else if (cookies == null) {
+                return CacheKeyElement.EMPTY_CACHE_KEY_ELEMENT;
+            }
         }
 
         for(Cookie cookie : cookies) {
@@ -37,7 +39,7 @@ public class CookieAttributeExtractor implements KeyAttributeExtractor {
         return  CacheKeyElement.CACHE_KEY_ELEMENT_NOT_AVAILABLE;
     }
 
-    public String cookieToString(Cookie cookie) {
+    private String cookieToString(Cookie cookie) {
         StringBuffer b = new StringBuffer(64);
         b.append(cookie.getName()).append('=').append(cookie.getValue());
 

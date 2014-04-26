@@ -117,43 +117,7 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
         }
 
         return extractors;
-//
-//        String[] keys = keySpec.split(KEY_SEPARATOR_CHAR);
-//        List<KeyAttributeExtractor> keySet = new ArrayList<KeyAttributeExtractor>();
-//        for(String item : keys) {
-//            if(item == null || item.length()==0) continue;
-//            keySet.add(item);
-//
-//        }
-//
-//        headerNames = parseKeySpecHeaders(keySet);
-//        cookieNames = parseKeySpecCookies(keySet);
-//
-//        if(cookieNames.length==0) {
-//            cookieNameSet = Collections.EMPTY_SET;
-//        }
-//        else {
-//            cookieNameSet = new HashSet<String>(cookieNames.length,1.0f);
-//            for(MultiValuedKey name : cookieNames) {
-//                cookieNameSet.add(name.getValue());
-//            }
-//        }
-//
-//        if(headerNames.length==0) {
-//            headerNamesSet = Collections.EMPTY_SET;
-//        } else {
-//            headerNamesSet = new HashSet<String>(headerNames.length,1.0f);
-//            for(MultiValuedKey name : headerNames) {
-//                headerNamesSet.add(name.getValue());
-//            }
-//        }
-//
-//        useHeaders = headerNames.length>0 ? true : false;
-//        useCookies = cookieNames.length>0 ? true : false;
     }
-
-
-
 
     private boolean isOptional(String keyValue) {
         return keyValue.endsWith(VALUE_OPTIONAL_SEPARATOR_CHAR);
