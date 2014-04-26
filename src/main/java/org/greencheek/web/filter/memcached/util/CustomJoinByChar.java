@@ -1,8 +1,6 @@
 package org.greencheek.web.filter.memcached.util;
 
-import org.greencheek.web.filter.memcached.util.JoinByChar;
-
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Created by dominictootell on 26/04/2014.
@@ -10,7 +8,7 @@ import java.util.List;
 public class CustomJoinByChar implements JoinByChar {
 
 
-    public String join(List<String> values,char c, int expectedLength) {
+    public String join(Collection<String> values,char c, int expectedLength) {
         if(values==null || values.size()==0) return "";
 
         StringBuilder b = new StringBuilder(expectedLength);

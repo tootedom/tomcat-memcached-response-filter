@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached.util;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -14,5 +15,5 @@ public interface JoinByChar {
      * @param expectedLength
      * @return
      */
-    public String join(List<String> values,char c, int expectedLength);
+    public String join(Collection<String> values,char c, int expectedLength);
 }

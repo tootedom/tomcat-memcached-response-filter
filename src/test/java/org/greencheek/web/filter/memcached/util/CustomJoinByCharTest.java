@@ -19,7 +19,13 @@ public class CustomJoinByCharTest {
     @Test
     public void testNoItem() {
         CustomJoinByChar joiner = new CustomJoinByChar();
-        assertNull(joiner.join(Collections.EMPTY_LIST, ',', 3));
+        assertSame("",joiner.join(Collections.EMPTY_LIST, ',', 3));
+    }
+
+    @Test
+    public void testNull() {
+        CustomJoinByChar joiner = new CustomJoinByChar();
+        assertSame("",joiner.join(null, ',', 3));
     }
 
 

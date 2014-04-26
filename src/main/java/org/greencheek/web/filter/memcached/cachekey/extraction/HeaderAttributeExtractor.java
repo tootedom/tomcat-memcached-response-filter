@@ -81,20 +81,10 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
             headerValue.deleteCharAt(headerValue.length() - 1);
             return headerValue.toString();
         }
-
     }
 
     private String sortValue(String value) {
         return valueSorter.sort(value,',');
     }
-
-//    private String join(List<String> values,char c, int expectedLength) {
-//        StringBuilder b = new StringBuilder(expectedLength);
-//        for(String value : values) {
-//            b.append(value).append(c);
-//        }
-//        b.deleteCharAt(b.length()-1);
-//        return b.toString();
-//    }
 
 }
