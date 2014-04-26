@@ -11,6 +11,10 @@ public class ContentTypeAttributeExtractor implements KeyAttributeExtractor {
     public static final ContentTypeAttributeExtractor INSTANCE = new ContentTypeAttributeExtractor();
     @Override
     public CacheKeyElement getAttribute(HttpServletRequest request) {
-        return new CacheKeyElement(request.getContentType(),true);
+        String contentType = request.getContentType();
+        if(contentType==null) {
+            contentType ="";
+        }
+        return new CacheKeyElement(contentType, true);
     }
 }
