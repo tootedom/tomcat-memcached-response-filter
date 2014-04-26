@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 public class MethodAttributeExtractor implements KeyAttributeExtractor {
     public static final MethodAttributeExtractor INSTANCE = new MethodAttributeExtractor();
     @Override
-    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
+    public CacheKeyElement getAttribute(HttpServletRequest request) {
         return new CacheKeyElement(request.getMethod(),true);
     }
 }

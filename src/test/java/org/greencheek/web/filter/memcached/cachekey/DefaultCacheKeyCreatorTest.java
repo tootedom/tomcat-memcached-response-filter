@@ -1,6 +1,8 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
-import org.junit.Before;
+import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
+import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
+import org.greencheek.web.filter.memcached.util.*;
 import org.junit.Test;
 
 import javax.servlet.http.Cookie;
@@ -20,16 +22,28 @@ import static org.mockito.Mockito.*;
  */
 public class DefaultCacheKeyCreatorTest {
 
-    private DefaultCacheKeyCreator cacheKeyCreator;
+    private static final SplitByChar splitByChar = new CustomSplitByChar();
+    private static final CharSeparatedValueSorter valueSorter = new SplittingCharSeparatedValueSorter(splitByChar,new CustomJoinByChar());
+    private static final KeyHashing hashing = new MessageDigestHashing();
+    private static final KeySpecFactory keySpec = new DollarStringKeySpecFactory(splitByChar,valueSorter);
 
+
+
+    private CacheKeyCreator getKeyCreator(String key) {
+        return new DefaultCacheKeyCreator(key,hashing,keySpec);
+    }
+
+    private String hash(String value) {
+        return hashing.hash(value);
+    }
 
     @Test
     public void testPathAndQueryStringReturnByRequestUri() throws Exception {
         String path = "/path/value";
         String queryString = "bob=xxx&fred=yyyy";
         String expected = path+queryString;
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$request_uri");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$request_uri");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(path);
@@ -43,8 +57,8 @@ public class DefaultCacheKeyCreatorTest {
         String path = "/path/value";
         String queryString = "bob=xxx&fred=yyyy";
         String expected = path;
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$uri");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$uri");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(path);
@@ -58,8 +72,8 @@ public class DefaultCacheKeyCreatorTest {
         String path = "/path/value";
         String queryString = "bob=xxx&fred=yyyy";
         String expected = "PUT";
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$request_method");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$request_method");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(path);
@@ -74,8 +88,8 @@ public class DefaultCacheKeyCreatorTest {
         String path = "/path/value";
         String queryString = "bob=xxx&fred=yyyy";
         String expected = "https";
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$scheme");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$scheme");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(path);
@@ -91,8 +105,8 @@ public class DefaultCacheKeyCreatorTest {
         String path = "/path/value";
         String queryString = "bob=xxx&fred=yyyy";
         String expected = queryString;
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$args");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$args");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(path);
@@ -107,8 +121,8 @@ public class DefaultCacheKeyCreatorTest {
             put("Accept-Encoding","gzip,deflate");}};
 
         String expected = "text/plain";
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Type");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$header_Content-Type");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
@@ -129,8 +143,8 @@ public class DefaultCacheKeyCreatorTest {
         }};
 
         String expected = "text/plain10";
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Type$header_Content-Length");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$header_Content-Type$header_Content-Length");
+        expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
@@ -153,8 +167,8 @@ public class DefaultCacheKeyCreatorTest {
 
 
         expected = "10text/plain";
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Length$header_Content-Type");
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        cacheKeyCreator = getKeyCreator("$header_Content-Length$header_Content-Type");
+        expected = hash(expected);
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
 
     }
@@ -179,10 +193,10 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
         when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
 
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$header_Content-Type$cookie_cookie1$header_Content-Length$cookie_CooKIE3");
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$header_Content-Type$cookie_cookie1$header_Content-Length$cookie_CooKIE3");
 
         String expected = "text/plaincookie1=value1; Domain=www.test1.com; Max-Age=10; Path=/path110cookie3=value3; Version=1; Domain=www.test3.com; Max-Age=55; Path=/path3; Secure; HttpOnly";
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        expected = hash(expected);
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
 
 
@@ -217,10 +231,10 @@ public class DefaultCacheKeyCreatorTest {
 
 
 
-        this.cacheKeyCreator = new DefaultCacheKeyCreator("$request_method$scheme$request_uri$header_accept-encoding$header_accept$cookie_cookie2");
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$request_method$scheme$request_uri$header_accept-encoding$header_accept$cookie_cookie2");
 
         String expected = "GEThttps/path/valuebob=xxx&fred=yyyygzip,deflatetext/plaincookie2=value2; Version=1; Comment=blahblah; Domain=www.test2.com; Max-Age=167; Path=/path2";
-        expected = cacheKeyCreator.getKeyHashingUtil().hash(expected);
+        expected = hash(expected);
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
 
 

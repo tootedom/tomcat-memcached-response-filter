@@ -1,6 +1,8 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
 import org.greencheek.web.filter.memcached.cachekey.extraction.*;
+import org.greencheek.web.filter.memcached.util.CharSeparatedValueSorter;
+import org.greencheek.web.filter.memcached.util.JoinByChar;
 import org.greencheek.web.filter.memcached.util.SplitByChar;
 
 import java.util.*;
@@ -57,9 +59,11 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
 
 
     private final SplitByChar charSplitter;
+    private final CharSeparatedValueSorter valueSorter;
 
-    public DollarStringKeySpecFactory(SplitByChar charSplitter) {
-        this.charSplitter = charSplitter;
+    public DollarStringKeySpecFactory(SplitByChar splitByChar,CharSeparatedValueSorter valueSorter) {
+        this.charSplitter = splitByChar;
+        this.valueSorter = valueSorter;
     }
 
     private KeyAttributeExtractor parseKeyElementValue(String keyElementValue) {
@@ -95,7 +99,7 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
             return null;
         }
         else {
-            return new HeaderAttributeExtractor(keyAndValue.get(1),isOptional,toBeSorted,charSplitter);
+            return new HeaderAttributeExtractor(keyAndValue.get(1),isOptional,toBeSorted,valueSorter);
         }
     }
 

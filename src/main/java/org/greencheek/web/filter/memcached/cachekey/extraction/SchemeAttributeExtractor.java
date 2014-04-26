@@ -12,7 +12,6 @@ public class SchemeAttributeExtractor implements KeyAttributeExtractor {
 
     @Override
     public CacheKeyElement getAttribute(HttpServletRequest request) {
-        String scheme = request.getScheme();
-        return new CacheKeyElement(scheme,true);
+        return new CacheKeyElement(request.getScheme(),true);
     }
 }

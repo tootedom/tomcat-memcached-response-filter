@@ -11,7 +11,11 @@ public class QueryAttributeExtractor implements KeyAttributeExtractor {
     public static final QueryAttributeExtractor INSTANCE = new QueryAttributeExtractor();
 
     @Override
-    public CacheKeyElement getAttribute(HttpServletRequest request, Object... extra) {
-        return new CacheKeyElement(request.getQueryString(),true);
+    public CacheKeyElement getAttribute(HttpServletRequest request) {
+        String query = request.getQueryString();
+        if(query==null) {
+            query = "";
+        }
+        return new CacheKeyElement(query,true);
     }
 }

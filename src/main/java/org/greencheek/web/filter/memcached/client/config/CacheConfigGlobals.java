@@ -5,6 +5,12 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import org.greencheek.web.filter.memcached.cachekey.DollarStringKeySpecFactory;
+import org.greencheek.web.filter.memcached.cachekey.KeySpecFactory;
+import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
+import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
+import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
+import org.greencheek.web.filter.memcached.util.SplitByChar;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -16,6 +22,10 @@ import java.util.Set;
  * Created by dominictootell on 16/04/2014.
  */
 public class CacheConfigGlobals {
+
+    public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
+    public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
+    public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,null);
 
     public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$request_uri$header_accept?$header_accept-encoding?";
     public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";

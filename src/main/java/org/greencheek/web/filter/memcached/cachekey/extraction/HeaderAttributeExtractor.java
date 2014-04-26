@@ -1,6 +1,8 @@
 package org.greencheek.web.filter.memcached.cachekey.extraction;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyElement;
+import org.greencheek.web.filter.memcached.util.CharSeparatedValueSorter;
+import org.greencheek.web.filter.memcached.util.JoinByChar;
 import org.greencheek.web.filter.memcached.util.SplitByChar;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,14 +16,14 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
     private final String headerName;
     private final boolean isOptional;
     private final boolean sortValue;
-    private final SplitByChar splitByChar;
+    private final CharSeparatedValueSorter valueSorter;
 
     public HeaderAttributeExtractor(String header, boolean isOptional,
-                                    boolean toBeSorted, SplitByChar splitByChar) {
+                                    boolean toBeSorted,CharSeparatedValueSorter sorter) {
         this.headerName = header;
         this.isOptional = isOptional;
         this.sortValue = toBeSorted;
-        this.splitByChar = splitByChar;
+        this.valueSorter = sorter;
     }
 
     @Override
@@ -54,7 +56,8 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
                 headerName = name;
                 break;
             }
-        } return headerName;
+        }
+        return headerName;
     }
     /**
      * Actually takes the header values out of the request and
@@ -82,18 +85,16 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
     }
 
     private String sortValue(String value) {
-        List<String> values = splitByChar.split(value,',');
-        Collections.sort(values);
-        return join(values,',',value.length());
+        return valueSorter.sort(value,',');
     }
 
-    private String join(List<String> values,char c, int expectedLength) {
-        StringBuilder b = new StringBuilder(expectedLength);
-        for(String value : values) {
-            b.append(value).append(c);
-        }
-        b.deleteCharAt(b.length());
-        return b.toString();
-    }
+//    private String join(List<String> values,char c, int expectedLength) {
+//        StringBuilder b = new StringBuilder(expectedLength);
+//        for(String value : values) {
+//            b.append(value).append(c);
+//        }
+//        b.deleteCharAt(b.length()-1);
+//        return b.toString();
+//    }
 
 }
