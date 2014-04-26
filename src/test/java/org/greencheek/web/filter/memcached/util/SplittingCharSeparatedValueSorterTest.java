@@ -3,8 +3,6 @@ package org.greencheek.web.filter.memcached.util;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
-
 import static org.junit.Assert.*;
 
 public class SplittingCharSeparatedValueSorterTest {
@@ -21,4 +19,33 @@ public class SplittingCharSeparatedValueSorterTest {
         assertEquals("",sorter.sort("",','));
     }
 
+    @Test
+    public void testSortNullString() {
+        assertEquals("",sorter.sort(null,','));
+    }
+
+    @Test
+    public void testSortString() {
+        assertEquals("a,b",sorter.sort("b,a",','));
+    }
+
+    @Test
+    public void testSortStringDifferentChar() {
+        assertEquals("a;b",sorter.sort("b;a",';'));
+    }
+
+    @Test
+    public void testSortStringWrongChar() {
+        assertEquals("b,a",sorter.sort("b,a",';'));
+    }
+
+    @Test
+    public void testStringNoChar() {
+        assertEquals("a",sorter.sort("a",','));
+    }
+
+    @Test
+    public void testStringWithMultipleItems() {
+        assertEquals("a,a,b,c,f,z",sorter.sort("a,c,f,b,a,z",','));
+    }
 }
