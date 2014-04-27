@@ -92,3 +92,7 @@ following items make up the cache key:
 - The request query parameters, optional, i.e: "includetext=no&pretty=false"
 - The "Accept" header sent by the client, optional, i.e.: */*
 - The "Accept-Encoding" header as sent by the client, optional and sorted, i.e: "gzip,deflate,sdch"
+
+### Force Caching ###
+
+By default the

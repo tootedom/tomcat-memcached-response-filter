@@ -60,6 +60,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_CACHE_STATUS_HIT_VALUE = "memcached-cachestatus-hit";
     public final static String MEMCACHED_CACHE_STATUS_MISS_VALUE = "memcached-cachestatus-miss";
     public final static String MEMCACHED_STATUS_CODES_TO_CACHE = "memcached-cacheablestatuscodes";
+    public final static String MEMCACHED_CACHE_WITH_NO_CACHE_CONTROL = "memcached-cache-nocachecontrol";
 
 	/**
 	 * Logger
@@ -116,6 +117,7 @@ public class PublishToMemcachedFilter implements Filter {
         storageConfigBuilder.setForceCacheDuration(filterConfig.getInitParameter(MEMCACHED_FORCE_EXPIRY));
         storageConfigBuilder.setDefaultExpiry(filterConfig.getInitParameter(MEMCACHED_EXPIRY));
         storageConfigBuilder.setCacheableResponseCodes(filterConfig.getInitParameter(MEMCACHED_STATUS_CODES_TO_CACHE));
+        storageConfigBuilder.setCanCacheWithNoCacheControl(filterConfig.getInitParameter(MEMCACHED_CACHE_WITH_NO_CACHE_CONTROL));
 
         MemcachedFetchingConfigBulder fetchingConfigBuilder = new MemcachedFetchingConfigBulder(keyConfig);
 

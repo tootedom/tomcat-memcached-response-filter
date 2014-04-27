@@ -210,6 +210,15 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setCanCacheWithNoCacheControl(String canCacheWithNoCacheControl) {
+        if(canCacheWithNoCacheControl == null || canCacheWithNoCacheControl.trim().length()==0) {
+            return this;
+        } else {
+            this.canCacheWithNoCacheControl = Boolean.parseBoolean(canCacheWithNoCacheControl);
+        }
+        return this;
+    }
+
     public MemcachedStorageConfigBuilder setCanCacheWithNoCacheControl(boolean canCacheWithNoCacheControl) {
         this.canCacheWithNoCacheControl = canCacheWithNoCacheControl;
         return this;

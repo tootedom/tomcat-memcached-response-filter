@@ -82,7 +82,7 @@ public class TestFilterConfiguration {
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
         }};
 
-        Map<String,String> filterInitParamsForced = new HashMap<String,String>(1,1.0f) {{
+        Map<String,String> filterInitParamsForced = new HashMap<String,String>(3,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
             put(PublishToMemcachedFilter.MEMCACHED_FORCE_CACHE,"true");
             put(PublishToMemcachedFilter.MEMCACHED_FORCE_EXPIRY,"3");
@@ -105,8 +105,40 @@ public class TestFilterConfiguration {
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
         response = executeGetRequest(urlforced);
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+    }
 
+    @Test
+    public void testCachingWithoutCacheControl() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+        }};
 
+        Map<String,String> filterInitParamsForced = new HashMap<String,String>(2,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+            put(PublishToMemcachedFilter.MEMCACHED_CACHE_WITH_NO_CACHE_CONTROL,"false");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"/nocachecontrol",filterInitParams);
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"nocachedcontrolforced","/nocachedcontrolforced",filterInitParamsForced);
+        String url = server.setupServlet("/nocachecontrol/*","nocache","org.greencheek.web.filter.memcached.servlets.NoCacheControlServlet",true);
+        String urlforced = server.setupServlet("/nocachedcontrolforced/*","nocachedcontrolforced","org.greencheek.web.filter.memcached.servlets.NoCacheControlServlet",true);
+        assertTrue(server.startTomcat());
+
+        url = server.replacePort(url);
+        urlforced = server.replacePort(urlforced);
+        Response response = executeGetRequest(url);
+        String time = getTime(response);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+        assertEquals(time,getTime(response));
+
+        response = executeGetRequest(urlforced);
+        time = getTime(response);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequest(urlforced);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        assertNotEquals(time,getTime(response));
     }
 
 
