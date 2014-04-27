@@ -87,6 +87,34 @@ public class DollarStringKeySpecFactoryTest {
     }
 
     @Test
+    public void testOptionalHeader() {
+        List<KeyAttributeExtractor> extractors = keySpecFactory.getKeySpecExtractors("$header_accept?");
+        assertEquals(1, extractors.size());
+
+        assertTrue(extractors.get(0) instanceof HeaderAttributeExtractor);
+        HeaderAttributeExtractor extractor1 = (HeaderAttributeExtractor) extractors.get(0);
+
+
+        CacheKeyElement element = extractor1.getAttribute(mockRequest);
+        assertTrue(element.isAvailable());
+        assertEquals("text/plain", element.getElement());
+    }
+
+    @Test
+    public void testOptionalWithSortingHeader() {
+        List<KeyAttributeExtractor> extractors = keySpecFactory.getKeySpecExtractors("$header_accept_s?");
+        assertEquals(1, extractors.size());
+
+        assertTrue(extractors.get(0) instanceof HeaderAttributeExtractor);
+        HeaderAttributeExtractor extractor1 = (HeaderAttributeExtractor) extractors.get(0);
+
+
+        CacheKeyElement element = extractor1.getAttribute(mockRequest);
+        assertTrue(element.isAvailable());
+        assertEquals("text/plain", element.getElement());
+    }
+
+    @Test
     public void testHeaders() {
         List<KeyAttributeExtractor> extractors =  keySpecFactory.getKeySpecExtractors("$header_accept$header_accept-encoding$header_unknown?$header_required-unknown");
         assertEquals(4, extractors.size());
@@ -177,6 +205,7 @@ public class DollarStringKeySpecFactoryTest {
         extractors =  keySpecFactory.getKeySpecExtractors("$cookie");
         assertEquals(0, extractors.size());
     }
+
 
     @Test
     public void testSchemeMethodUriQueryArgsAndRequestURI() {

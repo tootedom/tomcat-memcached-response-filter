@@ -98,7 +98,7 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
 
     private KeyAttributeExtractor parseCookieKey(String cookieKey) {
         boolean isOptional = isOptional(cookieKey);
-        String value = getKeyValue(cookieKey);
+        String value = getKeyValue(cookieKey,isOptional,false);
         if(value==null) {
             return null;
         }
@@ -112,7 +112,7 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
         boolean isOptional = isOptional(headerKey);
         boolean toBeSorted = isValueToBeSorted(headerKey);
 
-        String value = getKeyValue(headerKey);
+        String value = getKeyValue(headerKey,isOptional,toBeSorted);
         if(value==null) {
             return null;
         }
@@ -121,12 +121,17 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
         }
     }
 
-    private String getKeyValue(String keyAndValue) {
+    private String getKeyValue(String keyAndValue,boolean optional,boolean sorted) {
         List<String> splitValues = getKeyNameAndValue(keyAndValue);
         if(splitValues.size()<2 || splitValues.get(1).length()==0) {
             return null;
         } else {
-            return splitValues.get(1);
+            String value = splitValues.get(1);
+            if(!sorted && optional) {
+                return value.substring(0,value.length()-1);
+            } else {
+                return value;
+            }
         }
     }
 
