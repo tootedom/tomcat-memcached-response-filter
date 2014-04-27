@@ -27,7 +27,7 @@ public class CacheConfigGlobals {
     public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
     public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,null);
 
-    public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$request_uri$header_accept?$header_accept-encoding?";
+    public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$uri$args?$header_accept?$header_accept-encoding?";
     public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";
     public final static String DEFAULT_CACHE_MISS_HEADER_VALUE = "MISS";
     public final static String DEFAULT_CACHE_HIT_HEADER_VALUE = "HIT";

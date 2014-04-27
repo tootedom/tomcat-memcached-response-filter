@@ -91,7 +91,7 @@ public class TestFilterConfiguration {
     @Test
     public void testCachingOnJSESSIONIDCookie() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
-            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$request_uri$cookie_jsessionid");
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$uri$args?$cookie_jsessionid");
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY,"10");
         }};
         server.setupServlet3Filter("localhost:" + memcached.getPort(),null,filterInitParams);
@@ -134,7 +134,7 @@ public class TestFilterConfiguration {
     @Test
     public void testOptionalCachingOnJSESSIONIDCookie() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
-            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$request_uri$cookie_jsessionid?");
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$uri$args?$cookie_jsessionid?");
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY,"10");
         }};
         server.setupServlet3Filter("localhost:" + memcached.getPort(),null,filterInitParams);

@@ -2,8 +2,9 @@ package org.greencheek.web.filter.memcached.cachekey;
 
 import org.greencheek.web.filter.memcached.cachekey.extraction.*;
 import org.greencheek.web.filter.memcached.util.CharSeparatedValueSorter;
-import org.greencheek.web.filter.memcached.util.JoinByChar;
 import org.greencheek.web.filter.memcached.util.SplitByChar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -11,6 +12,9 @@ import java.util.*;
  * Created by dominictootell on 25/04/2014.
  */
 public class DollarStringKeySpecFactory implements KeySpecFactory{
+
+    private static final Logger logger = LoggerFactory.getLogger(DollarStringKeySpecFactory.class);
+
 
     /**
      * represent GET|PUT|POST etc
@@ -30,7 +34,8 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
     /**
      * repreents just the query parameters
      */
-    public static final String QUERY_STRING = "args";
+    public static final String ARGS_STRING = "args";
+    public static final String QUERY_STRING = "query";
 
     /**
      * represents that a header is to be used.  header_accept
@@ -68,9 +73,22 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
 
     private KeyAttributeExtractor parseKeyElementValue(String keyElementValue) {
         if(keyElementValue.startsWith(PATH)) return PathAttributeExtractor.INSTANCE;
-        else if(keyElementValue.startsWith(QUERY_STRING)) return QueryAttributeExtractor.INSTANCE;
+        else if(keyElementValue.startsWith(QUERY_STRING) || keyElementValue.startsWith(ARGS_STRING)) {
+            if(isOptional(keyElementValue)) {
+                return QueryAttributeExtractor.IS_OPTIONAL_INSTANCE;
+            } else {
+                return QueryAttributeExtractor.IS_REQUIRED_INSTANCE;
+            }
+        }
         else if(keyElementValue.startsWith(REQUEST_METHOD)) return MethodAttributeExtractor.INSTANCE;
-        else if(keyElementValue.startsWith(PATH_AND_PARAMS)) return PathAndQueryAttributeExtractor.INSTANCE;
+        else if(keyElementValue.startsWith(PATH_AND_PARAMS)) {
+            if(isOptional(keyElementValue)) {
+                return PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE;
+            } else {
+                return PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE;
+            }
+        }
+
         else if(keyElementValue.startsWith(SCHEME)) return SchemeAttributeExtractor.INSTANCE;
         else if(keyElementValue.startsWith(COOKIES)) return parseCookieKey(keyElementValue);
         else if(keyElementValue.startsWith(HEADERS)) return parseHeaderKey(keyElementValue);
@@ -80,26 +98,35 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
 
     private KeyAttributeExtractor parseCookieKey(String cookieKey) {
         boolean isOptional = isOptional(cookieKey);
-        List<String> keyAndValue = getKeyNameAndValue(cookieKey);
-        if(keyAndValue.size()<2) {
+        String value = getKeyValue(cookieKey);
+        if(value==null) {
             return null;
         }
         else {
-            return new CookieAttributeExtractor(keyAndValue.get(1),isOptional);
+            return new CookieAttributeExtractor(value,isOptional);
         }
     }
 
 
-    private KeyAttributeExtractor parseHeaderKey(String cookieKey) {
-        boolean isOptional = isOptional(cookieKey);
-        boolean toBeSorted = isValueToBeSorted(cookieKey);
+    private KeyAttributeExtractor parseHeaderKey(String headerKey) {
+        boolean isOptional = isOptional(headerKey);
+        boolean toBeSorted = isValueToBeSorted(headerKey);
 
-        List<String> keyAndValue = getKeyNameAndValue(cookieKey);
-        if(keyAndValue.size()<2) {
+        String value = getKeyValue(headerKey);
+        if(value==null) {
             return null;
         }
         else {
-            return new HeaderAttributeExtractor(keyAndValue.get(1),isOptional,toBeSorted,valueSorter);
+            return new HeaderAttributeExtractor(value,isOptional,toBeSorted,valueSorter);
+        }
+    }
+
+    private String getKeyValue(String keyAndValue) {
+        List<String> splitValues = getKeyNameAndValue(keyAndValue);
+        if(splitValues.size()<2 || splitValues.get(1).length()==0) {
+            return null;
+        } else {
+            return splitValues.get(1);
         }
     }
 
@@ -113,7 +140,12 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
 
         for(String keyItem : keyItems) {
             KeyAttributeExtractor extractor = parseKeyElementValue(keyItem);
-            extractors.add(extractor);
+            if(extractor!=null) {
+                extractors.add(extractor);
+            } else {
+                logger.warn("Unable to parse key element: {}",keyItem);
+            }
+
         }
 
         return extractors;

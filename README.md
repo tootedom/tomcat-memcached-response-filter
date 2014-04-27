@@ -83,7 +83,7 @@ servers to talk to; and shard put/gets on.  An example is as follows:
 One of the most important parts of caching, is the key against which to cache content.  If everything is cached
 under the same key, then things are going to go pretty bad.
 
-The default key is: `$scheme$request_method$request_uri$header_accept$header_accept-encoding`  The means that the
+The default key is: `$scheme$request_method$uri$args?$header_accept?$header_accept-encoding?`  The means that the
 following items make up the cache key:
 
 - The scheme, i.e: http

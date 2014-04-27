@@ -25,7 +25,7 @@ public class PathAndQueryAttributeExtractorTest {
         String query = "b=a&a=b";
         HttpServletRequest request = createRequest(path,query);
 
-        CacheKeyElement element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals(path+query,element.getElement());
@@ -36,7 +36,7 @@ public class PathAndQueryAttributeExtractorTest {
         String path = "/context/servlet/restpath";
         HttpServletRequest request = createRequest(path,null);
 
-        CacheKeyElement element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals(path,element.getElement());
@@ -47,7 +47,7 @@ public class PathAndQueryAttributeExtractorTest {
         String path = "/context/servlet/restpath";
         HttpServletRequest request = createRequest(path,"");
 
-        CacheKeyElement element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals(path,element.getElement());
@@ -58,49 +58,82 @@ public class PathAndQueryAttributeExtractorTest {
         String query = "b=a&a=b";
         HttpServletRequest request = createRequest(null,query);
 
-        CacheKeyElement element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals(query,element.getElement());
     }
 
     @Test
-    public void testNoPathValueAvailable() {
+    public void testOptionalNoPathValueAvailable() {
         String query = "b=a&a=b";
         HttpServletRequest request = createRequest("",query);
 
-        CacheKeyElement element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals(query,element.getElement());
+    }
+
+    @Test
+    public void testRequiredNullPathValueAvailable() {
+        String query = "b=a&a=b";
+        HttpServletRequest request = createRequest(null,query);
+
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
+
+        assertFalse(element.isAvailable());
+        assertSame("",element.getElement());
+    }
+
+    @Test
+    public void testRequiredNullQueryValueAvailable() {
+        String path = "/context/servlet/restpath";
+        HttpServletRequest request = createRequest(path,null);
+
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
+
+        assertFalse(element.isAvailable());
+        assertSame("",element.getElement());
+    }
+
+    @Test
+    public void testRequiredEmptyQueryValueAvailable() {
+        String path = "/context/servlet/restpath";
+        HttpServletRequest request = createRequest(path,"");
+
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
+
+        assertFalse(element.isAvailable());
+        assertSame("",element.getElement());
     }
 
     @Test
     public void testNoValues() {
         HttpServletRequest request = createRequest(null,null);
 
-        CacheKeyElement element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertSame("",element.getElement());
 
         request = createRequest("",null);
 
-        element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals("",element.getElement());
 
         request = createRequest(null,"");
 
-        element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals("",element.getElement());
 
         request = createRequest("","");
 
-        element = PathAndQueryAttributeExtractor.INSTANCE.getAttribute(request);
+        element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
         assertEquals("",element.getElement());

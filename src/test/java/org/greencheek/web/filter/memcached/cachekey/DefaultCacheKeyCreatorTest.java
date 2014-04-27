@@ -4,14 +4,13 @@ import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 import org.greencheek.web.filter.memcached.util.*;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -50,6 +49,21 @@ public class DefaultCacheKeyCreatorTest {
         when(request.getQueryString()).thenReturn(queryString);
 
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+    }
+
+    @Test
+    public void testRequiredHeader() throws Exception {
+        String path = "/path/value";
+        String queryString = "bob=xxx&fred=yyyy";
+        String expected = path+queryString;
+        CacheKeyCreator cacheKeyCreator = getKeyCreator("$request_uri$header_accept-encoding");
+        expected = hash(expected);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRequestURI()).thenReturn(path);
+        when(request.getQueryString()).thenReturn(queryString);
+
+        assertEquals("Cache key should be:" + null, null, cacheKeyCreator.createCacheKey(request));
     }
 
     @Test
@@ -137,7 +151,8 @@ public class DefaultCacheKeyCreatorTest {
 
     @Test
     public void testTwoHeadersReturnedByHeaderSpec() throws Exception {
-        Map<String,String> headers = new HashMap<String,String>() {{ put("Content-Type","text/plain");
+        Map<String,String> headers = new HashMap<String,String>() {{
+            put("Content-Type","text/plain");
             put("Accept-Encoding","gzip,deflate");
             put("Content-Length", "10");
         }};
@@ -147,7 +162,12 @@ public class DefaultCacheKeyCreatorTest {
         expected = hash(expected);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
+        when(request.getHeaderNames()).then(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return Collections.enumeration(Arrays.asList("Content-Type", "Content-Length"));
+            }
+        });
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
@@ -157,19 +177,26 @@ public class DefaultCacheKeyCreatorTest {
 
 
         assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
-        when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");add("Content-Length");}}) );
-        when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
-        when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
-        when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
-        when(request.getHeaders("Content-Type")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Type"))));
-        when(request.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
-        when(request.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
+
+        HttpServletRequest request2  = mock(HttpServletRequest.class);
+        when(request2.getHeaderNames()).then(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return Collections.enumeration(Arrays.asList("Content-Type", "Content-Length"));
+            }
+        });
+        when(request2.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
+        when(request2.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
+        when(request2.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
+        when(request2.getHeaders("Content-Type")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Type"))));
+        when(request2.getHeaders("Content-Length")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Content-Length"))));
+        when(request2.getHeaders("Accept-Encoding")).thenReturn(Collections.enumeration(Collections.singletonList(headers.get("Accept-Encoding"))));
 
 
         expected = "10text/plain";
         cacheKeyCreator = getKeyCreator("$header_Content-Length$header_Content-Type");
         expected = hash(expected);
-        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request));
+        assertEquals("Cache key should be:" + expected, expected, cacheKeyCreator.createCacheKey(request2));
 
     }
 
@@ -182,10 +209,10 @@ public class DefaultCacheKeyCreatorTest {
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getCookies()).thenReturn(createCookies());
-        when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Content-Type");
-            add("Content-Length");
-            add("Accept-Encoding");
-        }}) );
+        when(request.getHeaderNames()).thenReturn(Collections.enumeration(Arrays.asList("Content-Type",
+                                                                                        "Content-Length",
+                                                                                        "Accept-Encoding")));
+
         when(request.getHeader("Content-Type")).thenReturn(headers.get("Content-Type"));
         when(request.getHeader("Content-Length")).thenReturn(headers.get("Content-Length"));
         when(request.getHeader("Accept-Encoding")).thenReturn(headers.get("Accept-Encoding"));
@@ -213,10 +240,14 @@ public class DefaultCacheKeyCreatorTest {
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getCookies()).thenReturn(createCookies());
-        when(request.getHeaderNames()).thenReturn(java.util.Collections.enumeration(new HashSet<String>(){{ add("Accept");
-            add("Content-Length");
-            add("Accept-Encoding");
-        }}) );
+        when(request.getHeaderNames()).then(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return Collections.enumeration(Arrays.asList("Content-Type",
+                        "Content-Length",
+                        "Accept-Encoding","Accept"));
+            }
+        });
         when(request.getRequestURI()).thenReturn(path);
         when(request.getQueryString()).thenReturn(queryString);
 

@@ -13,11 +13,20 @@ import static org.mockito.Mockito.when;
 public class QueryAttributeExtractorTest {
 
     @Test
-    public void testNullQueryString() {
+    public void testNullOptionalQueryString() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getQueryString()).thenReturn(null);
-        CacheKeyElement element = QueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = QueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
+        assertSame("", element.getElement());
+    }
+
+    @Test
+    public void testNullRequiredQueryString() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getQueryString()).thenReturn(null);
+        CacheKeyElement element = QueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
+        assertFalse(element.isAvailable());
         assertSame("", element.getElement());
     }
 
@@ -25,7 +34,7 @@ public class QueryAttributeExtractorTest {
     public void testQueryString() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getQueryString()).thenReturn("?bob=bob&p=p");
-        CacheKeyElement element = QueryAttributeExtractor.INSTANCE.getAttribute(request);
+        CacheKeyElement element = QueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
         assertEquals("?bob=bob&p=p", element.getElement());
     }
