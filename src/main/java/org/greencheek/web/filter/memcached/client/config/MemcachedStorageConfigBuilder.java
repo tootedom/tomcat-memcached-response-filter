@@ -183,6 +183,21 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setForceCacheDuration(String expiryInSeconds) {
+        if (expiryInSeconds == null) return this;
+
+        expiryInSeconds = expiryInSeconds.trim();
+        if (expiryInSeconds.length() > 0) {
+            try {
+                this.forceCacheDuration = (int)new Duration(Integer.parseInt(expiryInSeconds), TimeUnit.SECONDS).toSeconds();
+            } catch (NumberFormatException e) {
+
+            }
+        }
+        return this;
+    }
+
+
     public MemcachedStorageConfigBuilder setHttpStatusLinePrefix(String prefix) {
         prefix = prefix.trim();
         this.httpStatusLinePrefix = CacheConfigGlobals.getBytes(prefix);

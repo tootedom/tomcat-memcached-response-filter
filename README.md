@@ -83,11 +83,12 @@ servers to talk to; and shard put/gets on.  An example is as follows:
 One of the most important parts of caching, is the key against which to cache content.  If everything is cached
 under the same key, then things are going to go pretty bad.
 
-The default key is: `$scheme$request_method$uri$args?$header_accept?$header_accept-encoding?`  The means that the
+The default key is: `$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?`  The means that the
 following items make up the cache key:
 
 - The scheme, i.e: http
 - The request method, i.e: GET
-- The request uri (This is the path and the query parameters), i.e: "/products/12344?includetext=no&pretty=false"
-- The "Accept" header sent by the client: */*
-- The "Accept-Encoding" header as sent by the client: "gzip,deflate,sdch"
+- The request uri (This is the path), i.e: /context/servlet/restpath
+- The request query parameters, optional, i.e: "includetext=no&pretty=false"
+- The "Accept" header sent by the client, optional, i.e.: */*
+- The "Accept-Encoding" header as sent by the client, optional and sorted, i.e: "gzip,deflate,sdch"

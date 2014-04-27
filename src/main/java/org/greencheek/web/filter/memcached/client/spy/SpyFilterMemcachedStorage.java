@@ -3,6 +3,8 @@ package org.greencheek.web.filter.memcached.client.spy;
 import net.spy.memcached.MemcachedClient;
 import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
+import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.CacheableFor;
+import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.WriteToCacheDecider;
 import org.greencheek.web.filter.memcached.client.config.MemcachedStorageConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
@@ -31,7 +33,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
     }
 
     @Override
-    public void writeToCache(HttpServletRequest theRequest, BufferedResponseWrapper theResponse) {
+    public void writeToCache(HttpServletRequest theRequest, BufferedResponseWrapper theResponse,
+                             WriteToCacheDecider cacheDecider) {
         ResizeableByteBuffer buffer = theResponse.getBufferedMemcachedContent();
         if(buffer==null) return;
         boolean hasOverflowed = !buffer.canWrite();
@@ -39,34 +42,13 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
         if(hasOverflowed) return;
 
-        if(storageConfig.isForceCache()) {
-            writeToCache(theRequest,theResponse, storageConfig.getForceCacheDurationInSeconds(), storageConfig.getCustomHeaders(),
+        CacheableFor cacheableFor = cacheDecider.isCacheable(storageConfig,theResponse);
+        if(cacheableFor.isCacheable()) {
+            writeToCache(theRequest,theResponse, cacheableFor.getDurationInSeconds(), storageConfig.getCustomHeaders(),
                          getHeaders(storageConfig.getResponseHeadersToIgnore(),theResponse),buffer);
+        } else {
+            return;
         }
-        else {
-            String cacheControlHeader = theResponse.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
-            if (cacheControlHeader == null) {
-                if (!storageConfig.isCanCacheWithNoCacheControlHeader()) {
-                    return;
-                } else {
-                    writeToCache(theRequest, theResponse,
-                            storageConfig.getDefaultExpiryInSeconds(),
-                            storageConfig.getCustomHeaders(), getHeaders(storageConfig.getResponseHeadersToIgnore(), theResponse),
-                            buffer);
-                }
-            } else {
-                boolean canCache = storageConfig.getCacheResponseDecider().isCacheable(cacheControlHeader);
-                if (!canCache) {
-                    return;
-                } else {
-                    writeToCache(theRequest, theResponse,
-                            storageConfig.getMaxAgeParser().maxAge(cacheControlHeader, storageConfig.getDefaultExpiryInSeconds()),
-                            storageConfig.getCustomHeaders(), getHeaders(storageConfig.getResponseHeadersToIgnore(), theResponse),
-                            buffer);
-                }
-            }
-        }
-
     }
 
     /**
@@ -132,6 +114,29 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
     }
 
 
+
+    private void addAdditionalHeaders(Set<String> additionalContent, ResizeableByteBuffer memcachedContent) {
+        for(String string : additionalContent) {
+            addStringToContent(memcachedContent,string);
+            memcachedContent.append(CacheConfigGlobals.NEW_LINE);
+        }
+    }
+
+    private void addResponseHeadersToBuffer(Map<String,Collection<String>> responseHeaders, ResizeableByteBuffer content) {
+        for(Map.Entry<String,Collection<String>> entry : responseHeaders.entrySet()) {
+            byte[] headerName = getBytes(entry.getKey());
+
+            for(String value : entry.getValue()) {
+                content.append(headerName);
+                content.append(CacheConfigGlobals.HEADER_NAME_SEPARATOR);
+                addStringToContent(content, value);
+                content.append(CacheConfigGlobals.NEW_LINE);
+            }
+
+        }
+        content.append(CacheConfigGlobals.NEW_LINE);
+    }
+
     private void writeToCache(HttpServletRequest theRequest,BufferedResponseWrapper theResponse,
                               int expiryInSeconds, Set<String> additionalContent,
                               Map<String,Collection<String>> responseHeaders, ResizeableByteBuffer content) {
@@ -150,23 +155,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         addHttpStatusLine(theResponse,memcachedContent);
         addContentLengthHeader(theResponse,memcachedContent);
         addContentTypeHeader(theResponse,memcachedContent);
-        for(String string : additionalContent) {
-            addStringToContent(memcachedContent,string);
-            memcachedContent.append(CacheConfigGlobals.NEW_LINE);
-        }
-
-        for(Map.Entry<String,Collection<String>> entry : responseHeaders.entrySet()) {
-            byte[] headerName = getBytes(entry.getKey());
-
-            for(String value : entry.getValue()) {
-                memcachedContent.append(headerName);
-                memcachedContent.append(CacheConfigGlobals.HEADER_NAME_SEPARATOR);
-                addStringToContent(memcachedContent, value);
-                memcachedContent.append(CacheConfigGlobals.NEW_LINE);
-            }
-
-        }
-        memcachedContent.append(CacheConfigGlobals.NEW_LINE);
+        addAdditionalHeaders(additionalContent,memcachedContent);
+        addResponseHeadersToBuffer(responseHeaders,memcachedContent);
         memcachedContent.append(content.getBuf(),0,contentLength);
 
 
@@ -175,6 +165,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         }
 
     }
+
 
     private void addStringToContent(ResizeableByteBuffer content, String value) {
         content.append(getBytes(value));

@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 import net.spy.memcached.MemcachedClient;
 
 import org.greencheek.web.filter.memcached.client.*;
+import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.CacheControlWriteToCacheDecider;
+import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.WriteToCacheDecider;
 import org.greencheek.web.filter.memcached.client.config.*;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedStorage;
@@ -43,8 +45,6 @@ import org.slf4j.LoggerFactory;
 
 
 public class PublishToMemcachedFilter implements Filter {
-
-
     public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
 
     public final static String MEMCACHED_HOSTS_PARAM = "memcached-hosts";
@@ -77,6 +77,7 @@ public class PublishToMemcachedFilter implements Filter {
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
     private FilterMemcachedStorage filterMemcachedStorage;
+    private WriteToCacheDecider writeToCacheDecider = new CacheControlWriteToCacheDecider();
     private String cacheHitHeader = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
     private String cacheHitValue = CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE;
     private String cacheMissValue = CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE;
@@ -113,6 +114,7 @@ public class PublishToMemcachedFilter implements Filter {
         storageConfigBuilder.setMaxHeadersSize(filterConfig.getInitParameter(MEMCACHED_HEADER_SIZE));
         storageConfigBuilder.setStorePrivate(filterConfig.getInitParameter(MEMCACHED_CACHE_PRIVATE));
         storageConfigBuilder.setForceCache(filterConfig.getInitParameter(MEMCACHED_FORCE_CACHE));
+        storageConfigBuilder.setForceCacheDuration(filterConfig.getInitParameter(MEMCACHED_FORCE_EXPIRY));
         storageConfigBuilder.setDefaultExpiry(filterConfig.getInitParameter(MEMCACHED_EXPIRY));
         storageConfigBuilder.setCacheableResponseCodes(filterConfig.getInitParameter(MEMCACHED_STATUS_CODES_TO_CACHE));
 
@@ -218,7 +220,7 @@ public class PublishToMemcachedFilter implements Filter {
     }
 
     void storeResponseInMemcached(HttpServletRequest servletRequest,BufferedResponseWrapper servletResponse) {
-        filterMemcachedStorage.writeToCache(servletRequest,servletResponse);
+        filterMemcachedStorage.writeToCache(servletRequest,servletResponse,writeToCacheDecider);
     }
 
     @Override
