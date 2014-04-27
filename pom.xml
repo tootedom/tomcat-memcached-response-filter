@@ -7,7 +7,7 @@
 
 	<name>tomcat-memcached-response-filter</name>
 	<description>A Lazy mans servlet filter that stores the responses in memcached</description>
-
+    <url>https://github.com/tootedom/tomcat-memcached-response-filter</url>
     <!-- Required: license information: -->
     <licenses>
         <license>
