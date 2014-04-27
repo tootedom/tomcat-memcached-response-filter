@@ -76,6 +76,39 @@ public class TestFilterConfiguration {
         testDateHeader(url);
     }
 
+    @Test
+    public void testForceCaching() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+        }};
+
+        Map<String,String> filterInitParamsForced = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+            put(PublishToMemcachedFilter.MEMCACHED_FORCE_CACHE,"true");
+            put(PublishToMemcachedFilter.MEMCACHED_FORCE_EXPIRY,"3");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"/nocache",filterInitParams);
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"nocachedforced","/nocacheforced",filterInitParamsForced);
+        String url = server.setupServlet("/nocache/*","nocache","org.greencheek.web.filter.memcached.servlets.NoCacheServlet",true);
+        String urlforced = server.setupServlet("/nocacheforced/*","nocacheforce","org.greencheek.web.filter.memcached.servlets.NoCacheServlet",true);
+        assertTrue(server.startTomcat());
+
+        url = server.replacePort(url);
+        urlforced = server.replacePort(urlforced);
+        Response response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+        response = executeGetRequest(urlforced);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequest(urlforced);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+
+
+    }
+
 
     @Test
     public void testDateHeaderIsAddedAndParsed() {

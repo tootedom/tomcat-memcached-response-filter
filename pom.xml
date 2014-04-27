@@ -37,7 +37,7 @@
         <tag>HEAD</tag>
     </scm>
 	<properties>
-        <surefireArgLine></surefireArgLine>
+        <!--<surefireArgLine></surefireArgLine>-->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<catalina.version>7.0.53</catalina.version>
 		<catalina.groupId>org.apache.tomcat</catalina.groupId>
@@ -183,6 +183,13 @@
             <groupId>com.thimbleware.jmemcached</groupId>
             <artifactId>jmemcached-core</artifactId>
             <version>${memcachedtest.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
             <scope>test</scope>
         </dependency>
 

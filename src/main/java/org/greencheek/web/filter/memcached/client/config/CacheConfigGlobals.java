@@ -23,6 +23,8 @@ import java.util.Set;
  */
 public class CacheConfigGlobals {
 
+    public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
+
     public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
     public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
     public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,null);

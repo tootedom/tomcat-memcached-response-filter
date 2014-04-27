@@ -68,6 +68,10 @@ public class EmbeddedTomcatServer {
         setupFilter(memcachedUrl,"memcached-s2filter",DEFAULT_SERVLET2_FILTER,url,false, filterConfig);
     }
 
+    public void setupServlet3Filter(String memcachedUrl,String name,String url,Map<String,String> filterConfig) {
+        setupFilter(memcachedUrl,name,DEFAULT_SERVLET3_FILTER,url,true, filterConfig);
+    }
+
     public void setupServlet3Filter(String memcachedUrl,String url,Map<String,String> filterConfig) {
         setupFilter(memcachedUrl,"memcached-s3filter",DEFAULT_SERVLET3_FILTER,url,true, filterConfig);
     }

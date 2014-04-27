@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 
 public class PublishToMemcachedFilter implements Filter {
-    public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
 
     public final static String MEMCACHED_HOSTS_PARAM = "memcached-hosts";
     public final static String MEMCACHED_KEY_PARAM = "memcached-key";
@@ -71,7 +70,7 @@ public class PublishToMemcachedFilter implements Filter {
 	 * Has this component been started yet?
 	 */
 
-    private volatile int maxContentSizeForMemcachedEntry = DEFAULT_MAX_CACHEABLE_RESPONSE_BODY;
+    private volatile int maxContentSizeForMemcachedEntry = CacheConfigGlobals.DEFAULT_MAX_CACHEABLE_RESPONSE_BODY;
 
     private DateHeaderFormatter dateHeaderFormatter = new QueueBasedDateFormatter();
     private MemcachedClient client;
