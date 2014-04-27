@@ -108,6 +108,39 @@ public class TestFilterConfiguration {
     }
 
     @Test
+    public void testPrivateCaching() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+        }};
+
+        Map<String,String> filterInitParamsForced = new HashMap<String,String>(3,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+            put(PublishToMemcachedFilter.MEMCACHED_CACHE_PRIVATE,"true");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"/noprivate",filterInitParams);
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"private","/private",filterInitParamsForced);
+        String url = server.setupServlet("/noprivate/*","noprivate","org.greencheek.web.filter.memcached.servlets.CacheControlWithConfigurablePrivateServlet",true);
+        String urlforced = server.setupServlet("/private/*","private","org.greencheek.web.filter.memcached.servlets.CacheControlWithConfigurablePrivateServlet",true);
+        assertTrue(server.startTomcat());
+
+        url = server.replacePort(url);
+        url = url+"?private=1";
+        urlforced = server.replacePort(urlforced);
+        urlforced = urlforced+"?private=1";
+        Response response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+        response = executeGetRequest(urlforced);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequest(urlforced);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+    }
+
+
+    @Test
     public void testCachingWithoutCacheControl() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");

@@ -12,9 +12,9 @@ public class StringContainsCacheControlResponseDecider implements CacheControlRe
 
     public StringContainsCacheControlResponseDecider(boolean allowPrivate) {
         if(allowPrivate) {
-            stringsToMatch = CACHE_WITH_PRIVATE;
-        } else {
             stringsToMatch = CACHE_WITH_NO_PRIVATE;
+        } else {
+            stringsToMatch = CACHE_WITH_PRIVATE;
         }
     }
 

@@ -159,6 +159,9 @@ public class MemcachedStorageConfigBuilder {
     }
 
     public MemcachedStorageConfigBuilder setStorePrivate(String storePrivate) {
+        if(storePrivate==null || storePrivate.trim().length()==0) {
+            return this;
+        }
         this.cacheResponseDecider = new StringContainsCacheControlResponseDecider(Boolean.parseBoolean(storePrivate));
         return this;
     }

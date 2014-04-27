@@ -81,10 +81,10 @@ servers to talk to; and shard put/gets on.  An example is as follows:
 ### Specifying the cache key ###
 
 One of the most important parts of caching, is the key against which to cache content.  If everything is cached
-under the same key, then things are going to go pretty bad.
+under the same key, then things are going to go pretty bad, and start acting quite odd on your web service/site.
 
-The default key is: `$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?`  The means that the
-following items make up the cache key:
+The default cache key is as follows: `$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?`
+The means that the following items make up the cache key:
 
 - The scheme, i.e: http
 - The request method, i.e: GET
@@ -93,6 +93,50 @@ following items make up the cache key:
 - The "Accept" header sent by the client, optional, i.e.: */*
 - The "Accept-Encoding" header as sent by the client, optional and sorted, i.e: "gzip,deflate,sdch"
 
-### Force Caching ###
 
-By default the
+
+
+## Caching Duration ##
+
+By default the amount of time that an item will be cached in memcached, is that of the `max-age` parameter in the
+the `Cache-Control` response header.  If no `Cache-Control` header is specified in the response, a default expiry is used of
+`300` seconds (5 minutes).  This default expiry time can be specified by the init parameter `memcached-expiry`:
+
+    <init-param>
+      <param-name>memcached-expiry</param-name>
+      <param-value>86400</param-value>
+    </init-param>
+
+If you do not which for a default to be applied, and only want responses to be cached when a `Cache-Control` max-age value
+is specified, you can turn off the default:
+
+    <init-param>
+      <param-name>memcached-cache-nocachecontrol</param-name>
+      <param-value>false</param-value>
+    </init-param>
+
+If the `Cache-Control` response header contains `no-cache`, `no-store` or `private`, then the result will not be cached.
+If you don't mind the cache storing private in the shared cache, then you can allow `private` to be ignored when it is
+in the `Cache-Control` header; via the following:
+
+    <init-param>
+      <param-name>memcached-cache-private</param-name>
+      <param-value>true</param-value>
+    </init-param>
+
+If you `ALWAYS` want to cache content regardless of the value in the `Cache-Control` header then you can set the following
+init parameter to `force` the response to be cached.
+
+    <init-param>
+      <param-name>memcached-force-cache</param-name>
+      <param-value>true</param-value>
+    </init-param>
+
+The duration of the `forced` caching is: 300.  To change this specify the following parameter, and specify the number of
+seconds to cache for:
+
+    <init-param>
+      <param-name>memcached-forced-expiry</param-name>
+      <param-value>86400</param-value>
+    </init-param>
+

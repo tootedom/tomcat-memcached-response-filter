@@ -1,6 +1,5 @@
 package org.greencheek.web.filter.memcached.client.config;
 
-import gnu.trove.decorator.TIntObjectMapDecorator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.TIntSet;
@@ -9,13 +8,10 @@ import org.greencheek.web.filter.memcached.cachekey.DollarStringKeySpecFactory;
 import org.greencheek.web.filter.memcached.cachekey.KeySpecFactory;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
-import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
-import org.greencheek.web.filter.memcached.util.SplitByChar;
+import org.greencheek.web.filter.memcached.util.*;
 
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -26,8 +22,10 @@ public class CacheConfigGlobals {
     public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
 
     public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
+    public static final JoinByChar DEFAULT_CHAR_JOINER = new CustomJoinByChar();
+    public static final CharSeparatedValueSorter DEFAULT_CHAR_SEPARATED_VALUE_SORTER = new SplittingCharSeparatedValueSorter(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_JOINER);
     public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
-    public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,null);
+    public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_SEPARATED_VALUE_SORTER);
 
     public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?";
     public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";

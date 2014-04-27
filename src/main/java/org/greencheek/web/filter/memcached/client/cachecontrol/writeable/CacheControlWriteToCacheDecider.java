@@ -2,15 +2,15 @@ package org.greencheek.web.filter.memcached.client.cachecontrol.writeable;
 
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.client.config.MemcachedStorageConfig;
+import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created by dominictootell on 27/04/2014.
  */
 public class CacheControlWriteToCacheDecider implements WriteToCacheDecider {
     @Override
-    public CacheableFor isCacheable(MemcachedStorageConfig config, HttpServletResponse theResponse) {
+    public CacheableFor isCacheable(MemcachedStorageConfig config, BufferedResponseWrapper theResponse) {
         if(config.isForceCache()) {
             return new CacheableFor(true,config.getForceCacheDurationInSeconds());
         }
