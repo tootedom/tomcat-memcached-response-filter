@@ -1,9 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.greencheek.memcached</groupId>
 	<artifactId>caching-filter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>tomcat-memcached-response-filter</name>
@@ -34,10 +33,10 @@
         <connection>scm:git:git@github.com:tootedom/tomcat-memcached-response-filter.git</connection>
         <url>scm:git:git@github.com:tootedom/tomcat-memcached-response-filter.git</url>
         <developerConnection>scm:git:git@github.com:tootedom/tomcat-memcached-response-filter.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>caching-filter-0.0.1</tag>
     </scm>
 	<properties>
-        <surefireArgLine></surefireArgLine>
+        <surefireArgLine />
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<catalina.version>7.0.53</catalina.version>
 		<catalina.groupId>org.apache.tomcat</catalina.groupId>
@@ -281,7 +280,7 @@
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ComponentsXmlResourceTransformer" />
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>																	
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer" />																	
 							</transformers>
 						</configuration>
 					</execution>
