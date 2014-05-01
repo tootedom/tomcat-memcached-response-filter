@@ -67,7 +67,7 @@ Other param control when caching takes place, how long an item is cached for, sh
 the `Cache-Control` `max-age` value; etc.
 
 
-### Specifying the memcached hosts ###
+## Specifying the memcached hosts ##
 
 The init parameter `memcached-hosts` is configurable with a comma separated list of the host and ports of the memcached
 servers to talk to; and shard put/gets on.  An example is as follows:
@@ -78,7 +78,7 @@ servers to talk to; and shard put/gets on.  An example is as follows:
          </init-param>
 
 
-### Specifying the cache key ###
+## Specifying the cache key ##
 
 One of the most important parts of caching, is the key against which to cache content.  If everything is cached
 under the same key, then things are going to go pretty bad, and start acting quite odd on your web service/site.
@@ -93,6 +93,32 @@ The means that the following items make up the cache key:
 - The "Accept" header sent by the client, optional, i.e.: */*
 - The "Accept-Encoding" header as sent by the client, optional and sorted, i.e: "gzip,deflate,sdch"
 
+
+### Available Key Items ###
+
+The following table shows the cache key items that are available for combining into the key that a piece of content
+is cached under.
+
+||Item||Description||Can be Optional||Can be Sorted||
+| $scheme | This is `http` or `https`, i.e the addressing scheme  | No | No |
+| $request_method | The HTTP verb (GET|POST|etc) | No | No |
+| $uri | The request path (including context) of the url | No | No |
+| $args | The query parameters | Yes | No |
+| $content_type | The request `Content-Type` header | No | No |
+| $request_uri | The $uri and $args in one, This can be optional; but only applies to the query params | Yes (for query parmas) | No |
+
+
+## What is Cached? ##
+
+In short, the response body and the HTTP response headers are cached.  However, there are slight restrictions to this
+rather large sweeping statement.
+
+The below specifies that the response body can only be 8k in size, or less, in order for it to be considered cacheable
+
+    <init-param>
+      <param-name>memcached-maxcacheable-bodysize</param-name>
+      <param-value>8192</param-value>
+    </init-param>
 
 
 
