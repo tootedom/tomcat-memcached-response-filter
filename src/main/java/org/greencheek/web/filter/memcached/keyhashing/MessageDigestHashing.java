@@ -16,7 +16,7 @@ public class MessageDigestHashing implements KeyHashing {
     private final ArrayBlockingQueue<MessageDigest> digesters;
 
     public MessageDigestHashing() {
-        this(KeyHashing.SHA526);
+        this(KeyHashing.MD5);
     }
 
     public MessageDigestHashing(String algorithm) {

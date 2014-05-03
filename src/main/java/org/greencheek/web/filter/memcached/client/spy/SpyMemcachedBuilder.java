@@ -6,6 +6,9 @@ import net.spy.memcached.DefaultHashAlgorithm;
 import net.spy.memcached.FailureMode;
 import org.greencheek.web.filter.memcached.client.config.MemcachedFactoryUtils;
 import org.greencheek.web.filter.memcached.client.spy.extensions.SerializingTranscoder;
+import org.greencheek.web.filter.memcached.client.spy.extensions.connection.CustomConnectionFactoryBuilder;
+import org.greencheek.web.filter.memcached.client.spy.extensions.connection.NoValidationConnectionFactory;
+import org.greencheek.web.filter.memcached.client.spy.extensions.hashing.JenkinsHash;
 import org.greencheek.web.filter.memcached.domain.Duration;
 
 import java.net.InetAddress;
@@ -18,10 +21,11 @@ import java.util.List;
  */
 public class SpyMemcachedBuilder {
 
-    private final ConnectionFactoryBuilder builder = new ConnectionFactoryBuilder();
+    private final ConnectionFactoryBuilder builder = new CustomConnectionFactoryBuilder();
 
     public SpyMemcachedBuilder() {
-        builder.setHashAlg(DefaultHashAlgorithm.KETAMA_HASH);
+        // Jenkins Hash is the same one used by php
+        builder.setHashAlg(new JenkinsHash());
         builder.setProtocol(ConnectionFactoryBuilder.Protocol.TEXT);
         builder.setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE);
         builder.setFailureMode(FailureMode.Redistribute);
