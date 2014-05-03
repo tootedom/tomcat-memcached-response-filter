@@ -52,7 +52,7 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
         String headerName = null;
         while(headerNames.hasMoreElements()) {
             String name = headerNames.nextElement();
-            if(name.toLowerCase().equals(this.headerName)) {
+            if(name.equalsIgnoreCase(this.headerName)) {
                 headerName = name;
                 break;
             }

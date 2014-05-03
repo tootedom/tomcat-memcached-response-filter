@@ -31,7 +31,7 @@ public class CookieAttributeExtractor implements KeyAttributeExtractor {
         }
 
         for(Cookie cookie : cookies) {
-            if(cookie.getName().toLowerCase().equals(cookieNameToExtract)) {
+            if(cookie.getName().equalsIgnoreCase(cookieNameToExtract)) {
                 return new CacheKeyElement(cookieToString(cookie),true);
             }
         }
