@@ -99,7 +99,8 @@ The means that the following items make up the cache key:
 The following table shows the cache key items that are available for combining into the key that a piece of content
 is cached under.
 
-||Item||Description||Can be Optional||Can be Sorted||
+| Item | Description | Can be Optional | Can be Sorted |
+| ---- | ----------- | --------------- | ------------- |
 | $scheme | This is `http` or `https`, i.e the addressing scheme  | No | No |
 | $request_method | The HTTP verb (GET|POST|etc) | No | No |
 | $uri | The request path (including context) of the url | No | No |
