@@ -61,6 +61,8 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_CACHE_STATUS_MISS_VALUE = "memcached-cachestatus-miss";
     public final static String MEMCACHED_STATUS_CODES_TO_CACHE = "memcached-cacheablestatuscodes";
     public final static String MEMCACHED_CACHE_WITH_NO_CACHE_CONTROL = "memcached-cache-nocachecontrol";
+    public final static String MEMCACHED_KEY_HASHING_PARAM = "memcached-key-hashing";
+    public final static String MEMCACHED_CACHEABLE_METHODS = "memcached-cacheable-methods";
 
 	/**
 	 * Logger
@@ -77,6 +79,7 @@ public class PublishToMemcachedFilter implements Filter {
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
     private FilterMemcachedStorage filterMemcachedStorage;
+    private CacheableMethods cacheableMethods;
     private WriteToCacheDecider writeToCacheDecider = new CacheControlWriteToCacheDecider();
     private String cacheHitHeader = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
     private String cacheHitValue = CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE;
@@ -88,6 +91,15 @@ public class PublishToMemcachedFilter implements Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
         SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
+        keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
+
+        String listOfMethods = filterConfig.getInitParameter(MEMCACHED_CACHEABLE_METHODS);
+        if(listOfMethods == null || listOfMethods.trim().length()==0) {
+            cacheableMethods = new CommaSeparatedCacheableMethods("GET",CacheConfigGlobals.DEFAULT_CHAR_SPLITTER);
+        } else {
+            cacheableMethods = new CommaSeparatedCacheableMethods(listOfMethods,CacheConfigGlobals.DEFAULT_CHAR_SPLITTER);
+        }
+
         String hosts = filterConfig.getInitParameter(MEMCACHED_HOSTS_PARAM);
         builder.setMemcachedHosts(hosts);
 
@@ -188,7 +200,7 @@ public class PublishToMemcachedFilter implements Filter {
             if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
                 HttpServletResponse servletResponse = (HttpServletResponse) response;
                 servletRequest = (HttpServletRequest) request;
-                if (CacheConfigGlobals.DEFAULT_REQUEST_METHODS_TO_CACHE.contains(servletRequest.getMethod())) {
+                if (cacheableMethods.isCacheable(servletRequest)) {
                     CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest);
                     if (cacheResponse.isCacheHit()) {
                         sendCachedResponse(cacheResponse, servletResponse);

@@ -187,6 +187,44 @@ public class TestFilterConfiguration {
     }
 
     @Test
+    public void testPostCaching() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+        }};
+
+        Map<String,String> filterInitPostAllowedParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_CACHEABLE_METHODS, "get,post");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"nocaching","/posting/not/*",filterInitParams);
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"caching","/posting/is/*",filterInitPostAllowedParams);
+
+        String url = server.setupServlet("/posting/not/cacheable/*","posting","org.greencheek.web.filter.memcached.servlets.ServiceServlet",true);
+        String urlCachable = server.setupServlet("/posting/is/cacheable/*","postingcachable","org.greencheek.web.filter.memcached.servlets.ServiceServlet",true);
+
+
+        assertTrue(server.startTomcat());
+
+        url = server.replacePort(url);
+        urlCachable = server.replacePort(urlCachable);
+
+        Response response = executePostRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+
+        response = executePostRequest(urlCachable);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(urlCachable);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+
+
+
+
+    }
+
+    @Test
     public void testCachingOnJSESSIONIDCookie() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$uri$args?$cookie_jsessionid");
@@ -275,6 +313,11 @@ public class TestFilterConfiguration {
 
     private Response executeGetRequest(String url) throws Exception {
         Request r = server.getHttpClient().prepareGet(url).build();
+        return server.getHttpClient().executeRequest(r).get();
+    }
+
+    private Response executePostRequest(String url) throws Exception {
+        Request r = server.getHttpClient().preparePost(url).build();
         return server.getHttpClient().executeRequest(r).get();
     }
 
