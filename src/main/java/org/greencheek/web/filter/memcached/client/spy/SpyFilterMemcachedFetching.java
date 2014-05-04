@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
 
+    private static final byte COLON = 58;
+    private static final byte SPACE = 32;
+    private static final byte ZERO = 48;
+
     private final MemcachedClient client;
     private final MemcachedFetchingConfig config;
 
@@ -66,10 +70,30 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         }
     }
 
+    /**
+     * returns twos ints, the first is the status code
+     * the seconds is the end of the status code line
+     *
+     * @param content
+     * @return
+     */
+    private int[] parseStatusCode(byte[] content) {
+        int i =0;
+        byte prev = -1;
+        while(i<content.length) {
+            if( (content[i] == CacheConfigGlobals.NEW_LINE[1]) && (prev == CacheConfigGlobals.NEW_LINE[0]) ) {
+                break;
+            }
+            prev = content[i++];
+        }
+
+        return new int[]{parseStatusCode(content,0,i-2),i+1};
+    }
+
     private int parseStatusCode(byte[] content,int offset, int length) {
         int finalPosition = offset + length;
         for(int i = 0;i < length;i++) {
-            if(content[offset++]!=32) continue;
+            if(content[offset++]!=SPACE) continue;
             else break;
         }
 
@@ -80,55 +104,58 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
 
 
         if(offset+3<finalPosition) {
-            char[] status = new char[3];
-            for(int i=0;i<3;i++) {
-                status[i] = (char)content[offset+i];
-            }
-            try {
-                return Integer.parseInt(new String(status));
-            } catch(NumberFormatException e) {
-                return 200;
-            }
+            return parseThreeCharacterInt(content,offset);
         } else {
-            return 200;
+            return -1;
         }
+    }
+
+    private int parseThreeCharacterInt(byte[] content,int offset) {
+        return ((content[offset] - ZERO) * 100) + ((content[offset+1] - ZERO) * 10) + (content[offset+2] - ZERO);
+
+    }
+
+    private void parseHeader(byte[] content, int lineEnding, int offset,
+                             int colonPosition, Map<String,Collection<String>> headers) {
+        String key = toString(content, offset, colonPosition - offset);
+        String value = toString(content, colonPosition+2, ((lineEnding-3) - colonPosition));
+        Collection<String> existing = headers.get(key);
+        if(existing==null) {
+            existing = new ArrayList<String>(1);
+            headers.put(key,existing);
+        }
+        existing.add(value);
     }
 
     public CachedResponse parseCachedResponse(byte[] content) {
         Map<String,Collection<String>> headers = new HashMap<String,Collection<String>>();
-        int offset = 0;
+        int[] statusCodes = parseStatusCode(content);
+        int statusCode;
+        if(statusCodes[0] == -1) return CachedResponse.MISS;
+        else statusCode = statusCodes[0];
+
         byte prevMinOne = -1;
         byte prevMinTwo = -1;
         byte prev = -1;
         int colon = -1;
-        int statusCode = 200;
-        for(int i=0;i<content.length;i++) {
-            if(content[i] == 58 && colon==-1) {
-                colon = i+2;
+        int offset = statusCodes[1];
+        for(int i=statusCodes[1];i<content.length;i++) {
+            if(content[i] == COLON && colon==-1) {
+                colon = i;
                 continue;
             }
 
-            if((content[i] ^ CacheConfigGlobals.NEW_LINE[1]) * (prev ^ CacheConfigGlobals.NEW_LINE[0] ) == 0) {
-                if((prevMinTwo ^ CacheConfigGlobals.NEW_LINE[0]) * (prevMinOne ^ CacheConfigGlobals.NEW_LINE[1]) == 0){
+            if( (content[i] == CacheConfigGlobals.NEW_LINE[1]) && (prev == CacheConfigGlobals.NEW_LINE[0])) {
+                if (colon != -1) {
+                    parseHeader(content,i,offset,colon,headers);
+                }
+
+                if((prevMinTwo == CacheConfigGlobals.NEW_LINE[0]) && (prevMinOne == CacheConfigGlobals.NEW_LINE[1])){
                     offset = i+2;
                     break;
                 } else {
-                    if (colon != -1) {
-                        String key = toString(content, offset, colon - 2 - offset);
-                        String value = toString(content, colon, (i - 1 - colon));
-                        Collection<String> existing = headers.get(key);
-                        if(existing==null) {
-                            existing = new ArrayList<String>(1);
-                            headers.put(key,existing);
-                        }
-                        existing.add(value);
-
-                    } else {
-                        statusCode = parseStatusCode(content,offset,colon-2);
-                    }
-
-                    offset = i+1;
                     colon = -1;
+                    offset = i+1;
                 }
             }
 
