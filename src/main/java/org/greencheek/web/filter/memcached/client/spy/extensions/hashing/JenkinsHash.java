@@ -13,7 +13,7 @@ public class JenkinsHash implements HashAlgorithm {
     public long hash(String k) {
         try {
             int hash = 0;
-            for (byte bt : k.getBytes("utf-8")) {
+            for (byte bt : k.getBytes("UTF-8")) {
                 hash += (bt & 0xFF);
                 hash += (hash << 10);
                 hash ^= (hash >>> 6);

@@ -6,8 +6,10 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import org.greencheek.web.filter.memcached.cachekey.DollarStringKeySpecFactory;
 import org.greencheek.web.filter.memcached.cachekey.KeySpecFactory;
+import org.greencheek.web.filter.memcached.keyhashing.JavaXXHashKeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
+import org.greencheek.web.filter.memcached.keyhashing.XXHashKeyHashing;
 import org.greencheek.web.filter.memcached.util.*;
 
 import java.io.UnsupportedEncodingException;
@@ -24,7 +26,7 @@ public class CacheConfigGlobals {
     public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
     public static final JoinByChar DEFAULT_CHAR_JOINER = new CustomJoinByChar();
     public static final CharSeparatedValueSorter DEFAULT_CHAR_SEPARATED_VALUE_SORTER = new SplittingCharSeparatedValueSorter(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_JOINER);
-    public static final KeyHashing DEFAULT_MESSAGE_HASHING = new MessageDigestHashing();
+    public static final KeyHashing DEFAULT_MESSAGE_HASHING = new JavaXXHashKeyHashing();
     public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_SEPARATED_VALUE_SORTER);
 
     public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?";

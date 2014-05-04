@@ -80,6 +80,12 @@
         </dependency>
 
         <dependency>
+            <groupId>net.jpountz.lz4</groupId>
+            <artifactId>lz4</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.0.1</version>
@@ -372,6 +378,10 @@
                                     <pattern>net.spy.memcached</pattern>
                                     <shadedPattern>org.greencheek.net.spy.memcached</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>net.jpountz.lz4</pattern>
+                                    <shadedPattern>org.greencheek.net.jpountz.lz4</shadedPattern>
+                                </relocation>
                             </relocations>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
 							<shadedClassifierName>shadewithslf4j</shadedClassifierName>
@@ -397,6 +407,10 @@
                                 <relocation>
                                     <pattern>net.spy.memcached</pattern>
                                     <shadedPattern>org.greencheek.net.spy.memcached</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.jpountz.lz4</pattern>
+                                    <shadedPattern>org.greencheek.net.jpountz.lz4</shadedPattern>
                                 </relocation>
                             </relocations>
                             <shadedArtifactAttached>true</shadedArtifactAttached>

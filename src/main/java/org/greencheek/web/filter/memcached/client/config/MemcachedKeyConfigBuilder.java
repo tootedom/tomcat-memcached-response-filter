@@ -4,6 +4,8 @@ import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.cachekey.DefaultCacheKeyCreator;
 import org.greencheek.web.filter.memcached.cachekey.DollarStringKeySpecFactory;
 import org.greencheek.web.filter.memcached.cachekey.KeySpecFactory;
+import org.greencheek.web.filter.memcached.keyhashing.FastestXXHashKeyHashing;
+import org.greencheek.web.filter.memcached.keyhashing.JavaXXHashKeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
@@ -32,7 +34,26 @@ public class MemcachedKeyConfigBuilder {
         return this;
     }
 
-    public MemcachedKeyConfigBuilder setKeyHashingFunction(MessageDigestHashing keyHashingFunction) {
+    public MemcachedKeyConfigBuilder setKeyHashingFunction(String hashingFunction) {
+        if(hashingFunction==null || hashingFunction.trim().length()==0) {
+            keyHashingFunction = CacheConfigGlobals.DEFAULT_MESSAGE_HASHING;
+        }
+        else if(hashingFunction.equalsIgnoreCase("javaxxhash") || hashingFunction.equalsIgnoreCase("xxhash")) {
+            keyHashingFunction = new JavaXXHashKeyHashing();
+        }
+        else if(hashingFunction.equalsIgnoreCase("nativexxhash")) {
+            keyHashingFunction = new FastestXXHashKeyHashing();
+        } else if(hashingFunction.equalsIgnoreCase("md5")) {
+            keyHashingFunction = new MessageDigestHashing(KeyHashing.MD5);
+        } else if(hashingFunction.equalsIgnoreCase("sha")) {
+            keyHashingFunction = new MessageDigestHashing(KeyHashing.SHA526);
+        } else {
+            keyHashingFunction = CacheConfigGlobals.DEFAULT_MESSAGE_HASHING;
+        }
+        return this;
+    }
+
+    public MemcachedKeyConfigBuilder setKeyHashingFunction(KeyHashing keyHashingFunction) {
         this.keyHashingFunction = keyHashingFunction;
         return this;
     }
