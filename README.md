@@ -77,10 +77,50 @@ the `Cache-Control` `max-age` value; etc.
 The init parameter `memcached-hosts` is configurable with a comma separated list of the host and ports of the memcached
 servers to talk to; and shard put/gets on.  An example is as follows:
 
-         <init-param>
-            <param-name>memcached-hosts</param-name>
-            <param-value>127.0.0.1:11211,127.0.0.1:11212</param-value>
-         </init-param>
+    <init-param>
+      <param-name>memcached-hosts</param-name>
+      <param-value>127.0.0.1:11211,127.0.0.1:11212</param-value>
+    </init-param>
+
+----
+
+## Host Checking ##
+
+Given the comma separated list of memcached hosts, the filter can perform a preliminary check that the current server
+is able to open a connection to the given memcached server.  If the server is not contactable, then that host is removed
+from the list of hosts that are used as memcached nodes.
+
+You may or may not want this functionality, therefore, by default it is disabled.  To enable:
+
+    <init-param>
+      <param-name>memcached-checkhost-connectivity</param-name>
+      <param-value>true</param-value>
+    </init-param>
+
+----
+
+## DNS Timeouts ##
+
+The list of memcached hosts provided are resolved to DNS (`InetSocketAddress` objects) addresses.  The resolution of DNS
+addresses for hostnames, have a default timeout of: 3 seconds.  To change this specify the following parameter, the
+following sets the timeout to be 1 second:
+
+    <init-param>
+      <param-name>memcached-host-dnsresolutiontimeout-secs</param-name>
+      <param-value>1</param-value>
+    </init-param>
+
+----
+
+## Memcached Protocol ##
+
+By default the filter uses the `TEXT` protocol.  It is recommended that you use the `BINARY` protocol, and that you
+specify the following parameter, as the binary protocol is more efficient:
+
+    <init-param>
+      <param-name>memcached-use-binary-protocol</param-name>
+      <param-value>true</param-value>
+    </init-param>
 
 ----
 
@@ -235,3 +275,26 @@ seconds to cache for:
     </init-param>
 
 ----
+
+### Cacheable HTTP Methods ###
+
+By default the filters are enabled only for `GET` requests.  To allow more HTTP methods to be cacheable, for example to
+allow for the caching of `GET` and `POST` requests, you can specify the following:
+
+    <init-param>
+      <param-name>memcached-cacheable-methods</param-name>
+      <param-value>get,post</param-value>
+    </init-param>
+
+----
+
+### Cacheable HTTP status codes ###
+
+By default the following set of response codes are cacheable: `200, 203, 204, 205, 300, 301, 410`
+If you wish other response codes to be cacheable then you can use the following filter config parameter.  For example to
+allow only the caching of 200 and 404, the following would do it
+
+    <init-param>
+      <param-name>memcached-cacheable-methods</param-name>
+      <param-value>200,404</param-value>
+    </init-param>

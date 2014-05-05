@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by dominictootell on 06/04/2014.
@@ -36,6 +37,7 @@ public class SpyMemcachedBuilder {
     private Duration memcachedHostDNSTimeout = MemcachedFactoryUtils.DEFAULT_DNS_TIMEOUT;
     private Duration memcachedPingHostTimeout = MemcachedFactoryUtils.ONE_SECOND;
     private String memcachedHosts = "localhost:11211";
+    private boolean checkHostConnectivity = false;
 
     /**
      * builds against localhost
@@ -44,7 +46,7 @@ public class SpyMemcachedBuilder {
     public net.spy.memcached.MemcachedClient build() {
 
         List<InetSocketAddress> addresses = MemcachedFactoryUtils.getAddressableMemcachedHosts(memcachedHostDNSTimeout,
-                memcachedPingHostTimeout,memcachedHosts);
+                memcachedPingHostTimeout,memcachedHosts,checkHostConnectivity);
 
         if(addresses.size()==0) {
             return null;
@@ -61,12 +63,33 @@ public class SpyMemcachedBuilder {
         }
     }
 
+    public SpyMemcachedBuilder setDNSTimeoutInSeconds(String expiryInSeconds) {
+        if (expiryInSeconds == null) return this;
+
+        expiryInSeconds = expiryInSeconds.trim();
+        if (expiryInSeconds.length() > 0) {
+            try {
+                this.memcachedHostDNSTimeout = new Duration(Integer.parseInt(expiryInSeconds), TimeUnit.SECONDS);
+            } catch (NumberFormatException e) {
+
+            }
+        }
+        return this;
+    }
+
+
+
     public SpyMemcachedBuilder setUseBinaryProtocol(boolean useBin) {
         if(useBin) {
             builder.setProtocol(ConnectionFactoryBuilder.Protocol.BINARY);
         } else {
             builder.setProtocol(ConnectionFactoryBuilder.Protocol.TEXT);
         }
+        return this;
+    }
+
+    public SpyMemcachedBuilder setCheckHostConnectivity(boolean checkHostConnectivity) {
+        this.checkHostConnectivity = checkHostConnectivity;
         return this;
     }
 

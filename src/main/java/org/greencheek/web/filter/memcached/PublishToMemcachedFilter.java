@@ -63,6 +63,9 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_CACHE_WITH_NO_CACHE_CONTROL = "memcached-cache-nocachecontrol";
     public final static String MEMCACHED_KEY_HASHING_PARAM = "memcached-key-hashing";
     public final static String MEMCACHED_CACHEABLE_METHODS = "memcached-cacheable-methods";
+    public final static String MEMCACHED_CHECK_HOST_CONNECTIVITY = "memcached-checkhost-connectivity";
+    public final static String MEMCACHED_DNS_TIMEOUT = "memcached-host-dnsresolutiontimeout-secs";
+    public final static String MEMCACHED_USE_BINARY = "memcached-use-binary-protocol";
 
 	/**
 	 * Logger
@@ -94,6 +97,10 @@ public class PublishToMemcachedFilter implements Filter {
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
         keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
 
+        boolean checkHostsConnectivity = Boolean.parseBoolean(filterConfig.getInitParameter(MEMCACHED_CHECK_HOST_CONNECTIVITY));
+        builder.setCheckHostConnectivity(checkHostsConnectivity);
+        builder.setDNSTimeoutInSeconds(filterConfig.getInitParameter(MEMCACHED_DNS_TIMEOUT));
+
         String listOfMethods = filterConfig.getInitParameter(MEMCACHED_CACHEABLE_METHODS);
         if(listOfMethods == null || listOfMethods.trim().length()==0) {
             cacheableMethods = new CommaSeparatedCacheableMethods("GET",CacheConfigGlobals.DEFAULT_CHAR_SPLITTER);
@@ -103,6 +110,7 @@ public class PublishToMemcachedFilter implements Filter {
 
         String hosts = filterConfig.getInitParameter(MEMCACHED_HOSTS_PARAM);
         builder.setMemcachedHosts(hosts);
+        builder.setUseBinaryProtocol(Boolean.parseBoolean(filterConfig.getInitParameter(MEMCACHED_USE_BINARY)));
 
         client = builder.build();
 

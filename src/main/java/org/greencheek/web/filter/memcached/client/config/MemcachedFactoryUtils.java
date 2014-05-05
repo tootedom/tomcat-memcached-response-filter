@@ -87,7 +87,7 @@ public class MemcachedFactoryUtils {
                     logger.error("Problem resolving host name ({}) to an ip address in fixed number of seconds: {}", host, dnsLookupTimeout, e);
             }
             catch(Exception e) {
-                    logger.error("Problem resolving host name to ip address: {}", host);
+                    logger.error("Problem resolving host name to ip address: {}", host,e);
             }
             finally {
                 if (future != null) future.cancel(true);
@@ -151,10 +151,14 @@ public class MemcachedFactoryUtils {
     }
 
     public static List<InetSocketAddress> getAddressableMemcachedHosts(Duration dnsLookuptimeout, Duration pingCheckTimeout,
-                                                                String hosts) {
+                                                                String hosts,boolean checkConnectivity) {
         List<MemcachedHost> memcachedHosts = parseMemcachedNodeList(hosts);
         List<InetSocketAddress> resolvedMemcachedHosts = returnSocketAddressesForHostNames(memcachedHosts,dnsLookuptimeout);
-        return validateMemcacheHosts(pingCheckTimeout,resolvedMemcachedHosts);
+        if(checkConnectivity) {
+            return validateMemcacheHosts(pingCheckTimeout, resolvedMemcachedHosts);
+        } else {
+            return resolvedMemcachedHosts;
+        }
     }
 
 }

@@ -489,13 +489,14 @@
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <!-- Sets the VM argument line used when unit tests are run. -->
-                    <argLine>${surefireArgLine}</argLine>
+                    <argLine>${surefireArgLine} -Dsun.net.spi.nameservice.provider.1=dns,delayeddns -Dnameservice.enabled=false -Dsun.net.inetaddr.ttl=0 -Dnetworkaddress.cache.ttl=0 -Dnetworkaddress.cache.negative.ttl=0 -Dsun.net.inetaddr.negative.ttl=0</argLine>
                     <!-- Skips unit tests if the value of skip.unit.tests property is true -->
                     <skipTests>${skip.unit.tests}</skipTests>
                     <!-- Excludes integration tests when unit tests are run. -->
                     <excludes>
                         <exclude>**/IT*.java</exclude>
                     </excludes>
+
                 </configuration>
             </plugin>
             <plugin>
