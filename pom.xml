@@ -39,7 +39,6 @@
         <jvmargs></jvmargs>
         <scala.version>2.9.3</scala.version>
         <gatling.version>1.5.5</gatling.version>
-        <surefireArgLine />
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<catalina.version>7.0.53</catalina.version>
 		<catalina.groupId>org.apache.tomcat</catalina.groupId>
@@ -681,7 +680,12 @@
                 </plugins>
             </build>
         </profile>
-
+        <profile>
+            <id>nocoverage</id>
+            <properties>
+                <surefireArgLine />
+            </properties>
+        </profile>
     </profiles>
     <repositories>
         <repository>
