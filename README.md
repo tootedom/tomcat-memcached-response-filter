@@ -8,6 +8,7 @@ response to a GET request in memcached.  When a subsequent request,
 for the same content (i.e the same GET request) is made, the content is retrieved
 and serviced from memcached; rather than from the `j2ee` application.
 
+----
 
 ## Where can it be used ##
 
@@ -31,6 +32,8 @@ you are looking for.
 If you don't have access to the webapps `web.xml`.  you can always choose to modify,
 for example, the base application server's `web.xml`, i.e. tomcat's conf/web.xml,
 and drop either the `shadewithslf4j` or `shadenoslf4j` in the tomcat lib/ directory.
+
+----
 
 ## Simple Usage ##
 
@@ -57,6 +60,7 @@ Currently a SNAPSHOT version is available in the sonatype repo:
 
 `https://oss.sonatype.org/content/repositories/snapshots/org/greencheek/memcached`
 
+----
 
 ## Configuration ##
 
@@ -66,6 +70,7 @@ be used is that of setting the memcached hosts and the cache key used.
 Other param control when caching takes place, how long an item is cached for, should the cache expiry times use
 the `Cache-Control` `max-age` value; etc.
 
+----
 
 ## Specifying the memcached hosts ##
 
@@ -77,6 +82,7 @@ servers to talk to; and shard put/gets on.  An example is as follows:
             <param-value>127.0.0.1:11211,127.0.0.1:11212</param-value>
          </init-param>
 
+----
 
 ## Specifying the cache key ##
 
@@ -93,6 +99,7 @@ The means that the following items make up the cache key:
 - The "Accept" header sent by the client, optional, i.e.: */*
 - The "Accept-Encoding" header as sent by the client, optional and sorted, i.e: "gzip,deflate,sdch"
 
+----
 
 ### Available Key Items ###
 
@@ -109,6 +116,8 @@ is cached under.
 | $request_uri | The $uri and $args in one, This can be optional; but only applies to the query params | Yes (for query parmas) | No |
 | $cookie_jsessionid | The cookie named `jessionid` is used as part of the cache key | Yes | No |
 | $header_accept | The header named `accept` is used as part of the cache key | Yes | Yes |
+
+----
 
 ### Headers in Cache Key ###
 
@@ -137,6 +146,8 @@ For example for the following `Accept-Encoding` header, you can use `_s` for the
 
 - `Accept-Encoding:gzip,deflate,sdch`
 
+----
+
 ### Cookies ###
 
 Cookies can be used as part of the cache key also.  An example use case would be the caching of content based on the
@@ -150,15 +161,19 @@ occur:
 - User hits the site, and is served cached content as the jsessionid is present in the user request's cookies, and is
 present in the cache.
 
+----
 
 ### Cache Key Init Param ###
+
+The filter config parameter `memcached-key` is used to specify the cache key.  Below shows an example of optionally
+using the jessionid cookie
 
     <init-param>
       <param-name>memcached-key</param-name>
       <param-value>$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?$cookie_jsessionid?</param-value>
     </init-param>
 
-
+----
 
 ## What is Cached? ##
 
@@ -173,6 +188,7 @@ The below specifies that the response body can only be 8k in size, or less, in o
     </init-param>
 
 
+----
 
 ## Caching Duration ##
 
@@ -218,3 +234,4 @@ seconds to cache for:
       <param-value>86400</param-value>
     </init-param>
 
+----
