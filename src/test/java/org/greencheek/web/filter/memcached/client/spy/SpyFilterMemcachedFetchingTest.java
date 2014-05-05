@@ -4,6 +4,7 @@ import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -105,7 +106,7 @@ public class SpyFilterMemcachedFetchingTest {
     }
 
     @Test
-    public void testMultiHeaderWithMultiValuesAndContent() {
+    public void testMultiHeaderWithMultiValuesAndContent() throws UnsupportedEncodingException {
         ResizeableByteBuffer buffer = new ResizeableByteBuffer(8192,8192*2);
 
         buffer.append(new String("HTTP/1.0 504 Gateway Timeout\r\n").getBytes());
@@ -135,12 +136,16 @@ public class SpyFilterMemcachedFetchingTest {
         assertTrue(content.get("Content-Type").contains("text/plain"));
         assertTrue(content.get("Content-Length").contains("10"));
 
-        assertEquals(2,content.get("Cache-Control").size());
+        assertEquals(2, content.get("Cache-Control").size());
         assertTrue(content.get("Cache-Control").contains("must-revalidate"));
         assertTrue(content.get("Cache-Control").contains("max-age=10"));
 
-        assertEquals("max-age=10",content.get("Cache-Control").toArray()[0]);
+        assertEquals("max-age=10", content.get("Cache-Control").toArray()[0]);
         assertEquals("must-revalidate",content.get("Cache-Control").toArray()[1]);
+
+        int contentLength = response.getContent().length - response.getContentOffset();
+
+        assertArrayEquals("hello".getBytes("UTF-8"), new String(response.getContent(),response.getContentOffset(),contentLength,"UTF-8").getBytes("UTF-8"));
     }
 
     @Test

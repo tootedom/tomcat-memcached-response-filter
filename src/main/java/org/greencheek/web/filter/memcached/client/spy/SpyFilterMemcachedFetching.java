@@ -121,7 +121,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         String value = toString(content, colonPosition+2, ((lineEnding-3) - colonPosition));
         Collection<String> existing = headers.get(key);
         if(existing==null) {
-            existing = new ArrayList<String>(1);
+            existing = new ArrayList<String>(2);
             headers.put(key,existing);
         }
         existing.add(value);
@@ -146,17 +146,15 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
             }
 
             if( (content[i] == CacheConfigGlobals.NEW_LINE[1]) && (prev == CacheConfigGlobals.NEW_LINE[0])) {
+                if((prevMinTwo == CacheConfigGlobals.NEW_LINE[0]) && (prevMinOne == CacheConfigGlobals.NEW_LINE[1])){
+                    offset = i+1;
+                    break;
+                }
                 if (colon != -1) {
                     parseHeader(content,i,offset,colon,headers);
-                }
-
-                if((prevMinTwo == CacheConfigGlobals.NEW_LINE[0]) && (prevMinOne == CacheConfigGlobals.NEW_LINE[1])){
-                    offset = i+2;
-                    break;
-                } else {
                     colon = -1;
-                    offset = i+1;
                 }
+                offset = i+1;
             }
 
             prevMinTwo = prevMinOne;
@@ -165,7 +163,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         }
 
         if(headers.size()>0) {
-            return new CachedResponse(true,statusCode, headers, content, offset-1);
+            return new CachedResponse(true,statusCode, headers, content, offset);
         } else {
             return CachedResponse.MISS;
         }

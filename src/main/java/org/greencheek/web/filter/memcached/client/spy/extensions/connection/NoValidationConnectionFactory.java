@@ -14,7 +14,7 @@ public class NoValidationConnectionFactory extends DefaultConnectionFactory {
 
     public MemcachedConnection createConnection(List<InetSocketAddress> addrs)
             throws IOException {
-        return new MemcachedConnection(getReadBufSize(), this, addrs,
+        return new NoKeyValidationMemcachedConnection(getReadBufSize(), this, addrs,
                 getInitialObservers(), getFailureMode(), getOperationFactory());
     }
 }
