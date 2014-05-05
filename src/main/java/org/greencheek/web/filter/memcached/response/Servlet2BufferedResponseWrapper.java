@@ -14,12 +14,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
 
-    public int status = 200;
-    public final ConcurrentHashMap<String,List<String>> headers = new ConcurrentHashMap<String, List<String>>(4);
-    public final DateHeaderFormatter dateHeaderFormatter;
+    private int status = 200;
+    private final ConcurrentHashMap<String,List<String>> headers = new ConcurrentHashMap<String, List<String>>(4);
+    private final DateHeaderFormatter dateHeaderFormatter;
+
     public Servlet2BufferedResponseWrapper(DateHeaderFormatter dateFormatter,
-                                           int memcachedContentBufferSize, HttpServletResponse response) {
-        super(memcachedContentBufferSize, response);
+                                           int memcachedContentBufferSize, HttpServletResponse response,
+                                           String cacheKey) {
+        super(memcachedContentBufferSize, response,cacheKey);
         this.dateHeaderFormatter = dateFormatter;
     }
 

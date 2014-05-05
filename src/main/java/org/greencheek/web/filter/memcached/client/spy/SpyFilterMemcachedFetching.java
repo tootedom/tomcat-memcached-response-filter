@@ -34,14 +34,13 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
     }
 
     @Override
-    public CachedResponse getCachedContent(HttpServletRequest theRequest) {
+    public CachedResponse getCachedContent(HttpServletRequest theRequest, String key) {
+        if(key==null) return CachedResponse.MISS;
+
         String cacheControlHeader = theRequest.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
         if(cacheControlHeader != null && hasClientCacheBuster(config.getNoCacheHeaders(),cacheControlHeader)) {
             return CachedResponse.MISS;
         } else {
-            String key = config.getKeyConfig().createCacheKey(theRequest);
-            if(key==null) return CachedResponse.MISS;
-
             byte[] content = get(key);
             if(content == null) {
                 return CachedResponse.MISS;

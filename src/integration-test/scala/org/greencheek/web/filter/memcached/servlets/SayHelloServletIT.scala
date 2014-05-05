@@ -7,7 +7,7 @@ import javax.servlet.ServletException
 /**
  * Created by dominictootell on 01/05/2014.
  */
-class SayHelloServlet extends HttpServlet {
+class SayHelloServletIT extends HttpServlet {
 
   @throws(classOf[IOException])
   @throws(classOf[ServletException])

@@ -25,8 +25,8 @@ public class Servlet3PublishToMemcachedFilter extends PublishToMemcachedFilter {
     }
 
     @Override
-    BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse) {
-        return new BufferedResponseWrapper(size,originalResponse);
+    BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse, String cacheKey) {
+        return new BufferedResponseWrapper(size,originalResponse,cacheKey);
     }
 
     class SetInMemcachedListener implements AsyncListener {

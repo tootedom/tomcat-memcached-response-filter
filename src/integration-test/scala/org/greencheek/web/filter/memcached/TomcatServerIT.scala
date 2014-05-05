@@ -20,7 +20,7 @@ import java.util.Map
 /**
  * Created by dominictootell on 01/05/2014.
  */
-class TomcatServer(context: String) {
+class TomcatServerIT(context: String) {
   private final val mWorkingDir: String = System.getProperty("java.io.tmpdir")
   private final val docBase: File = new File(mWorkingDir)
   private final val DEFAULT_FILTER_PATTER: String = "/*"

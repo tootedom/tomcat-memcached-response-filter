@@ -14,22 +14,18 @@ public class MemcachedFetchingConfigBulder {
     private long cacheGetTimeout = DEFAULT_CACHE_GET_TIMEOUT_IN_MILLIS;
 
 
-    private MemcachedKeyConfig keyConfig;
     private String[] noCacheClientValues = CacheConfigGlobals.NO_CACHE_CLIENT_VALUE;
 
 
-    public MemcachedFetchingConfigBulder(MemcachedKeyConfig keyConfig) {
-        this.keyConfig = keyConfig;
+    public MemcachedFetchingConfigBulder() {
+
     }
 
     public MemcachedFetchingConfig build() {
-        return new MemcachedFetchingConfig(keyConfig,cacheGetTimeout,noCacheClientValues);
+        return new MemcachedFetchingConfig(cacheGetTimeout,noCacheClientValues);
     }
 
-    public MemcachedFetchingConfigBulder setKeyConfig(MemcachedKeyConfig keyConfig) {
-        this.keyConfig = keyConfig;
-        return this;
-    }
+
 
     public MemcachedFetchingConfigBulder setCacheGetTimeout(Duration cacheGetTimeout) {
         this.cacheGetTimeout = cacheGetTimeout.toMillis();

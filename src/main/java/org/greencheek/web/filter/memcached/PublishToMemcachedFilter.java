@@ -79,6 +79,7 @@ public class PublishToMemcachedFilter implements Filter {
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
     private FilterMemcachedStorage filterMemcachedStorage;
+    private MemcachedKeyConfig keyConfig;
     private CacheableMethods cacheableMethods;
     private WriteToCacheDecider writeToCacheDecider = new CacheControlWriteToCacheDecider();
     private String cacheHitHeader = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
@@ -118,9 +119,9 @@ public class PublishToMemcachedFilter implements Filter {
             }
         }
 
-        MemcachedKeyConfig keyConfig = keyConfigBuilder.build();
+        keyConfig = keyConfigBuilder.build();
 
-        MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder(keyConfig);
+        MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder();
 
         storageConfigBuilder.setResponseHeadersToIgnore(filterConfig.getInitParameter(MEMCACHED_HEADERS_TO_IGNORE));
         storageConfigBuilder.setMaxHeadersSize(filterConfig.getInitParameter(MEMCACHED_HEADER_SIZE));
@@ -131,7 +132,7 @@ public class PublishToMemcachedFilter implements Filter {
         storageConfigBuilder.setCacheableResponseCodes(filterConfig.getInitParameter(MEMCACHED_STATUS_CODES_TO_CACHE));
         storageConfigBuilder.setCanCacheWithNoCacheControl(filterConfig.getInitParameter(MEMCACHED_CACHE_WITH_NO_CACHE_CONTROL));
 
-        MemcachedFetchingConfigBulder fetchingConfigBuilder = new MemcachedFetchingConfigBulder(keyConfig);
+        MemcachedFetchingConfigBulder fetchingConfigBuilder = new MemcachedFetchingConfigBulder();
 
         fetchingConfigBuilder.setCacheGetTimeout(filterConfig.getInitParameter(MEMCACHED_GET_TIMEOUT));
 
@@ -184,8 +185,8 @@ public class PublishToMemcachedFilter implements Filter {
         }
     }
 
-    BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse) {
-        return new Servlet2BufferedResponseWrapper(dateHeaderFormatter,size,originalResponse);
+    BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse, String cacheKey) {
+        return new Servlet2BufferedResponseWrapper(dateHeaderFormatter,size,originalResponse, cacheKey);
     }
 
     @Override
@@ -196,17 +197,21 @@ public class PublishToMemcachedFilter implements Filter {
         } else {
             BufferedResponseWrapper wrappedRes = null;
             HttpServletRequest servletRequest = null;
-
+            String cacheKey = null;
             if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
                 HttpServletResponse servletResponse = (HttpServletResponse) response;
                 servletRequest = (HttpServletRequest) request;
                 if (cacheableMethods.isCacheable(servletRequest)) {
-                    CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest);
+                    cacheKey = keyConfig.createCacheKey(servletRequest);
+                }
+
+                if(cacheKey!=null && cacheKey.length()>0) {
+                    CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest,cacheKey);
                     if (cacheResponse.isCacheHit()) {
                         sendCachedResponse(cacheResponse, servletResponse);
                         return;
                     } else {
-                        wrappedRes = createResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse);
+                        wrappedRes = createResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse,cacheKey);
                     }
                 }
                 servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);

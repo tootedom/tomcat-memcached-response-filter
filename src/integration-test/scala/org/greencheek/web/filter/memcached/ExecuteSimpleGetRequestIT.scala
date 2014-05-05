@@ -8,12 +8,12 @@ import bootstrap._
 /**
  * Created by dominictootell on 01/05/2014.
  */
-class ExecuteSimpleGetRequest extends Simulation {
+class ExecuteSimpleGetRequestIT extends Simulation {
   val filterInitParams: java.util.Map[String, String] = new java.util.HashMap[String, String](1, 1.0f)
 
-  val server = new TomcatServer("/filter");
+  val server = new TomcatServerIT("/filter");
   server.setupServlet3Filter(System.getProperty("memcached.hosts","localhost:11211"), null, filterInitParams)
-  var url: String = server.setupServlet("/simple/*", "simple", "org.greencheek.web.filter.memcached.servlets.SayHelloServlet", false)
+  var url: String = server.setupServlet("/simple/*", "simple", "org.greencheek.web.filter.memcached.servlets.SayHelloServletIT", false)
   server.startTomcat
   url = server.replacePort(url)
   System.out.println(url)

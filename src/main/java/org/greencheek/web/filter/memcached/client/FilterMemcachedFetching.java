@@ -8,5 +8,5 @@ import javax.servlet.http.HttpServletRequest;
  * Created by dominictootell on 14/04/2014.
  */
 public interface FilterMemcachedFetching {
-    public CachedResponse getCachedContent(HttpServletRequest request);
+    public CachedResponse getCachedContent(HttpServletRequest request, String key);
 }

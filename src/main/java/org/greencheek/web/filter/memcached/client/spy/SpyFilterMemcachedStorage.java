@@ -144,11 +144,6 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
             return;
         }
 
-        String key = storageConfig.getCacheKeyCreator().createCacheKey(theRequest);
-        if(key == null) {
-            return;
-        }
-
         int contentLength = content.size();
         ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength,contentLength + storageConfig.getHeadersLength());
 
@@ -161,7 +156,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
 
         if(memcachedContent.canWrite()) {
-            writeToMemcached(key, expiryInSeconds, memcachedContent.trim().getBuf());
+            writeToMemcached(theResponse.getCacheKey(), expiryInSeconds, memcachedContent.trim().getBuf());
         }
 
     }

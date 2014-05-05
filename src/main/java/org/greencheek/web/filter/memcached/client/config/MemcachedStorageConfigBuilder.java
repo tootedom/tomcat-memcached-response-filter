@@ -62,24 +62,20 @@ public class MemcachedStorageConfigBuilder {
     private TIntSet cacheableResponseCodes = CacheConfigGlobals.CACHEABLE_RESPONSE_CODES;
     private String cacheStatusHeaderName = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
 
-    private MemcachedKeyConfig keyConfig;
 
 
-    public MemcachedStorageConfigBuilder(MemcachedKeyConfig keyConfig) {
-        this.keyConfig = keyConfig;
+
+    public MemcachedStorageConfigBuilder()
+    {
     }
 
     public MemcachedStorageConfig build() {
-        return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,keyConfig,defaultExpiryInSeconds,
+        return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,defaultExpiryInSeconds,
                 additionalHeaders,responseHeadersToIgnore,cacheResponseDecider,forceCache,
                 forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl,
                 cacheableResponseCodes,cacheStatusHeaderName);
     }
 
-    public MemcachedStorageConfigBuilder setKeyConfig(MemcachedKeyConfig keyConfig) {
-        this.keyConfig = keyConfig;
-        return this;
-    }
 
     public MemcachedStorageConfigBuilder setDefaultExpiry(Duration duration) {
         defaultExpiryInSeconds = (int)duration.toSeconds();

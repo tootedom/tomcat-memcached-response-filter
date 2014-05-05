@@ -6,19 +6,13 @@ package org.greencheek.web.filter.memcached.client.config;
 public class MemcachedFetchingConfig {
 
     private final long cacheGetTimeoutInMillis;
-    private final MemcachedKeyConfig keyConfig;
     private final String[] noCacheHeaders;
 
-    public MemcachedFetchingConfig(MemcachedKeyConfig keyConfig,
-                                   long cacheGetTimeout, String[] noCacheHeaders) {
-        this.keyConfig = keyConfig;
+    public MemcachedFetchingConfig(long cacheGetTimeout, String[] noCacheHeaders) {
         this.cacheGetTimeoutInMillis = cacheGetTimeout;
         this.noCacheHeaders = noCacheHeaders;
     }
 
-    public MemcachedKeyConfig getKeyConfig() {
-        return keyConfig;
-    }
 
     public long getCacheGetTimeoutInMillis() {
         return cacheGetTimeoutInMillis;

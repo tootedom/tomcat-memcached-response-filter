@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 public class MemcachedStorageConfig {
 
     private final int headersLength;
-    private final MemcachedKeyConfig cacheKeyCreator;
     private final int defaultExpiryInSeconds;
     private final Set<String> responseHeadersToIgnore;
     private final Set<String> customHeaders;
@@ -28,14 +27,13 @@ public class MemcachedStorageConfig {
 
 
 
-    public MemcachedStorageConfig(int headersLength, MemcachedKeyConfig cacheKeyCreator,
+    public MemcachedStorageConfig(int headersLength,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   CacheControlResponseDecider cacheResponseDecider,boolean forceCache,int forceCacheDurationInSeconds,
                                   byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader,
                                   TIntSet cacheableResponseCodes,String cacheStatusHeaderName
                                   ) {
         this.headersLength = headersLength;
-        this.cacheKeyCreator = cacheKeyCreator;
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
         this.customHeaders = customHeaders;
         this.responseHeadersToIgnore = new HashSet<String>(responseHeadersToIgnore);
@@ -56,10 +54,6 @@ public class MemcachedStorageConfig {
 
     public int getHeadersLength() {
         return headersLength;
-    }
-
-    public MemcachedKeyConfig getCacheKeyCreator() {
-        return cacheKeyCreator;
     }
 
     public int getDefaultExpiryInSeconds() {

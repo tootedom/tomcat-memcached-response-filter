@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BufferedResponseWrapper extends HttpServletResponseWrapper {
-    protected HttpServletResponse origResponse = null;
 
     /**
      * Using output stream flag.
@@ -46,15 +45,24 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
      */
     protected PrintWriter writer;
 
-    private final int memcachedContentBufferSize;
-
     private int contentLength = Integer.MIN_VALUE;
 
-    public BufferedResponseWrapper(int memcachedContentBufferSize, HttpServletResponse response) {
+    private final int memcachedContentBufferSize;
+    private final HttpServletResponse origResponse;
+    private final String cacheKey;
+
+    public BufferedResponseWrapper(int memcachedContentBufferSize, HttpServletResponse response,
+                                   String cacheKey)
+    {
         super(response);
 
         this.memcachedContentBufferSize = memcachedContentBufferSize;
         origResponse = response;
+        this.cacheKey = cacheKey;
+    }
+
+    public String getCacheKey() {
+        return cacheKey;
     }
 
     @Override

@@ -8,7 +8,7 @@ import bootstrap._
 /**
  * Created by dominictootell on 01/05/2014.
  */
-class ExecuteSimpleGetRequestNoEmbeddedTomcat extends Simulation {
+class ExecuteSimpleGetRequestNoEmbeddedTomcatIT extends Simulation {
   val filterInitParams: java.util.Map[String, String] = new java.util.HashMap[String, String](1, 1.0f)
 
   var url = System.getProperty("url","http://localhost:8080/examples/servlets/servlet/HelloWorldExample")

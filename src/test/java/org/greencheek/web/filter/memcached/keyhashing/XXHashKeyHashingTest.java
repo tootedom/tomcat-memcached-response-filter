@@ -20,7 +20,7 @@ public abstract class XXHashKeyHashingTest {
 
         assertEquals("2072705615", getKeyXXKeyHasher().hash("CD"));
 
-
+        assertEquals("46947589", getKeyXXKeyHasher().hash(""));
     }
 
 
