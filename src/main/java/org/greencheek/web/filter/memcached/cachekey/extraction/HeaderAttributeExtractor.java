@@ -75,10 +75,11 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
             return null;
         } else {
             StringBuilder headerValue = new StringBuilder(32);
+
             while(headerValues.hasMoreElements()) {
                 headerValue.append(headerValues.nextElement()).append(',');
             }
-            headerValue.deleteCharAt(headerValue.length() - 1);
+            headerValue.setLength(headerValue.length()-1);
             return headerValue.toString();
         }
     }

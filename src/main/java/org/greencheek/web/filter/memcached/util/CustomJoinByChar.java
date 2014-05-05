@@ -15,7 +15,7 @@ public class CustomJoinByChar implements JoinByChar {
         for(String value : values) {
             b.append(value).append(c);
         }
-        b.deleteCharAt(b.length()-1);
+        b.setLength(b.length()-1);
         return b.toString();
     }
 }

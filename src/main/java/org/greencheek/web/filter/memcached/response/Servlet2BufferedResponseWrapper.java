@@ -71,7 +71,7 @@ public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
                 b.append(s).append(',');
             }
 
-            b.deleteCharAt(b.length()-1);
+            b.setLength(b.length()-1);
             return b.toString();
         }
         return null;
