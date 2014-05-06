@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.greencheek.memcached</groupId>
 	<artifactId>caching-filter</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.4</version>
 	<packaging>jar</packaging>
 
 	<name>tomcat-memcached-response-filter</name>
@@ -33,10 +33,10 @@
         <connection>scm:git:git@github.com:tootedom/tomcat-memcached-response-filter.git</connection>
         <url>scm:git:git@github.com:tootedom/tomcat-memcached-response-filter.git</url>
         <developerConnection>scm:git:git@github.com:tootedom/tomcat-memcached-response-filter.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>caching-filter-0.0.4</tag>
     </scm>
 	<properties>
-        <jvmargs></jvmargs>
+        <jvmargs />
         <scala.version>2.9.3</scala.version>
         <gatling.version>1.5.5</gatling.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
