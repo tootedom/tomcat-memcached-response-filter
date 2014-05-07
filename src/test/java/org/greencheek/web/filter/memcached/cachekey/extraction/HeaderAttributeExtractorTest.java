@@ -68,7 +68,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertSame("Header should be empty string", "", element.getElement());
+        assertSame("Header should be empty string", CacheKeyElement.EMPTY_VALUE, element.getElement());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertEquals("Header should be string '" + headerValues + "'", headerValues, element.getElement());
+        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElement());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertEquals("Header should be string '" + headerValues + "'", headerValues, element.getElement());
+        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElement());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertSame("Header should be empty string '" + headerValues + "'", headerValues, element.getElement());
+        assertSame("Header should be empty string '" + headerValues + "'",  CacheKeyElement.EMPTY_VALUE, element.getElement());
     }
 
     @Test
@@ -140,7 +140,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertSame("Header should be empty string '" + headerValues + "'", headerValues, element.getElement());
+        assertSame("Header should be empty string '" + headerValues + "'",  CacheKeyElement.EMPTY_VALUE, element.getElement());
     }
 
 
@@ -159,7 +159,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertEquals("Header should be string '" + headerValues + "'", headerValues, element.getElement());
+        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElement());
     }
 
     @Test
@@ -177,6 +177,6 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertEquals("Header should be string '"+headerValues+"'",headerValues,element.getElement());
+        assertArrayEquals("Header should be string '"+headerValues+"'",headerValues.getBytes(),element.getElement());
     }
 }

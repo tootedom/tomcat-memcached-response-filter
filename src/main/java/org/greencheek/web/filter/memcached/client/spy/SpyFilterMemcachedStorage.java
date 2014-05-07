@@ -1,7 +1,6 @@
 package org.greencheek.web.filter.memcached.client.spy;
 
 import net.spy.memcached.MemcachedClient;
-import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedStorage;
 import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.CacheableFor;
 import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.WriteToCacheDecider;

@@ -1,8 +1,10 @@
 package org.greencheek.web.filter.memcached;
 
+import com.excilys.ebi.gatling.http.request.builder.PostHttpRequestBuilder;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import com.ning.http.client.StringPart;
 import com.ning.http.client.cookie.Cookie;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.dateformatting.DateHeaderFormatter;
@@ -31,6 +33,8 @@ import static org.junit.Assert.fail;
  */
 public class TestFilterConfiguration {
     private final static Pattern RESPONSE_BODY_TIME = Pattern.compile("Time:\\((\\d+)\\)");
+    private final static Pattern RESPONSE_BODY_CONTENT = Pattern.compile("content:\\(([^)]+)\\)");
+
     private final static Pattern RESPONSE_BODY_SESSION_ID = Pattern.compile("Session:\\((\\w+)\\)");
 
     EmbeddedTomcatServer server;
@@ -225,6 +229,45 @@ public class TestFilterConfiguration {
     }
 
     @Test
+    public void testPostKeyWithBodyCaching() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+        }};
+
+        Map<String,String> filterInitPostAllowedParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_CACHEABLE_METHODS, "get,post");
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,CacheConfigGlobals.DEFAULT_CACHE_KEY+"$body");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"nocaching","/posting/not/*",filterInitParams);
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"caching","/posting/is/*",filterInitPostAllowedParams);
+
+        String url = server.setupServlet("/posting/not/cacheable/*","posting","org.greencheek.web.filter.memcached.servlets.PutPostServlet",true);
+        String urlCachable = server.setupServlet("/posting/is/cacheable/*","postingcachable","org.greencheek.web.filter.memcached.servlets.PutPostServlet",true);
+
+
+        assertTrue(server.startTomcat());
+
+        url = server.replacePort(url);
+        urlCachable = server.replacePort(urlCachable);
+
+        Response response = executePostRequest(url,"date=hello");
+        assertEquals("Posted content is not as expected","date=hello",getContent(response));
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(url,"date=hello");
+        assertEquals("Posted content is not as expected","date=hello",getContent(response));
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+
+        response = executePostRequest(urlCachable,"date=hello2");
+        assertEquals("Posted content is not as expected","date=hello2",getContent(response));
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(urlCachable,"date=hello2");
+        assertEquals("Posted content is not as expected","date=hello2",getContent(response));
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+    }
+
+    @Test
     public void testCachingOnJSESSIONIDCookie() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"$scheme$request_method$uri$args?$cookie_jsessionid");
@@ -321,6 +364,15 @@ public class TestFilterConfiguration {
         return server.getHttpClient().executeRequest(r).get();
     }
 
+    private Response executePostRequest(String url, String body) throws Exception {
+        AsyncHttpClient.BoundRequestBuilder builder = server.getHttpClient().preparePost(url);
+        builder.setBody(body);
+        builder.setBodyEncoding("UTF-8");
+        builder.addHeader("Content-Type","application/x-www-form-urlencoded");
+        Request r = builder.build();
+        return server.getHttpClient().executeRequest(r).get();
+    }
+
     private Response executeGetRequest(String url,List<Cookie> cookies) throws Exception {
         AsyncHttpClient.BoundRequestBuilder rBuilder = server.getHttpClient().prepareGet(url);
         for(Cookie c : cookies) {
@@ -357,6 +409,22 @@ public class TestFilterConfiguration {
         }
     }
 
+    /**
+     * Returns the time from the html body
+     * @param response
+     * @return
+     */
+    private String getContent(Response response) {
+        try {
+            Matcher m = RESPONSE_BODY_CONTENT.matcher(response.getResponseBody());
+            assertTrue(m.find());
+            assertTrue(m.groupCount()>0);
+            return m.group(1);
+        } catch(IOException e) {
+            fail("Failed to obtain response body");
+            return "";
+        }
+    }
     /**
      * Returns the session id from the html body
      * @param response

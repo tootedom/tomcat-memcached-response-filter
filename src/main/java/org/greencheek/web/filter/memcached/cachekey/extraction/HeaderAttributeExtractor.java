@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.cachekey.extraction;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyElement;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.util.CharSeparatedValueSorter;
 import org.greencheek.web.filter.memcached.util.JoinByChar;
 import org.greencheek.web.filter.memcached.util.SplitByChar;
@@ -37,9 +38,9 @@ public class HeaderAttributeExtractor implements KeyAttributeExtractor {
             }
         } else {
             if(sortValue) {
-                return new CacheKeyElement(sortValue(header), true);
+                return new CacheKeyElement(CacheConfigGlobals.getBytes(sortValue(header)), true);
             } else {
-                return new CacheKeyElement(header, true);
+                return new CacheKeyElement(CacheConfigGlobals.getBytes(header), true);
             }
         }
     }

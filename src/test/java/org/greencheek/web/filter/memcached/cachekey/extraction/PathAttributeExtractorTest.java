@@ -17,6 +17,6 @@ public class PathAttributeExtractorTest {
         when(request.getRequestURI()).thenReturn("/url/path");
         CacheKeyElement element = PathAttributeExtractor.INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("/url/path", element.getElement());
+        assertArrayEquals("/url/path".getBytes(), element.getElement());
     }
 }

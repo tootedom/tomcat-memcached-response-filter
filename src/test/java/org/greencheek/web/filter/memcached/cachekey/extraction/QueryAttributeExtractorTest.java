@@ -18,7 +18,7 @@ public class QueryAttributeExtractorTest {
         when(request.getQueryString()).thenReturn(null);
         CacheKeyElement element = QueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertSame("", element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE, element.getElement());
     }
 
     @Test
@@ -27,7 +27,7 @@ public class QueryAttributeExtractorTest {
         when(request.getQueryString()).thenReturn(null);
         CacheKeyElement element = QueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
         assertFalse(element.isAvailable());
-        assertSame("", element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE, element.getElement());
     }
 
     @Test
@@ -36,6 +36,6 @@ public class QueryAttributeExtractorTest {
         when(request.getQueryString()).thenReturn("?bob=bob&p=p");
         CacheKeyElement element = QueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("?bob=bob&p=p", element.getElement());
+        assertArrayEquals("?bob=bob&p=p".getBytes(), element.getElement());
     }
 }

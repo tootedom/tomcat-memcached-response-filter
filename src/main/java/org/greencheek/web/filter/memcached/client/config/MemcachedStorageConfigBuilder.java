@@ -10,6 +10,7 @@ import org.greencheek.web.filter.memcached.domain.Duration;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -230,17 +231,7 @@ public class MemcachedStorageConfigBuilder {
         codes = codes.trim();
         if(codes.length()==0) return this;
 
-        String[] listOfCodes = codes.split(",");
-        if(listOfCodes==null || listOfCodes.length==0) return this;
-
-        TIntSet statusCodes = new TIntHashSet(listOfCodes.length,1.0f);
-        for(String s : listOfCodes) {
-            try {
-                statusCodes.add(Integer.parseInt(s.trim()));
-            } catch(NumberFormatException e) {
-
-            }
-        }
+        TIntSet statusCodes = CacheConfigGlobals.commaSeparatedIntStringToIntSet(codes);
 
         if(statusCodes.size()==0) return this;
         this.cacheableResponseCodes = statusCodes;

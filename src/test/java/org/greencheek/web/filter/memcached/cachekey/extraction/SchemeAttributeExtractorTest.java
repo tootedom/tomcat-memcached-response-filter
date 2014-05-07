@@ -18,6 +18,6 @@ public class SchemeAttributeExtractorTest {
         when(request.getScheme()).thenReturn("http");
         CacheKeyElement element = SchemeAttributeExtractor.INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("http", element.getElement());
+        assertArrayEquals("http".getBytes(), element.getElement());
     }
 }

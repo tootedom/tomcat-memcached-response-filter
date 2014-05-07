@@ -17,6 +17,6 @@ public class MethodAttributeExtractorTest {
         when(request.getMethod()).thenReturn("GET");
         CacheKeyElement element = MethodAttributeExtractor.INSTANCE.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("GET",element.getElement());
+        assertArrayEquals("GET".getBytes(),element.getElement());
     }
 }

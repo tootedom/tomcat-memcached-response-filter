@@ -1,8 +1,6 @@
 package org.greencheek.web.filter.memcached.client.config;
 
-import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
-import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 
 import javax.servlet.http.HttpServletRequest;
 

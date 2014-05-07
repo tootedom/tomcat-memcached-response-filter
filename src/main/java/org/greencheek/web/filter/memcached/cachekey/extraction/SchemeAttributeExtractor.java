@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.cachekey.extraction;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyElement;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -12,6 +13,6 @@ public class SchemeAttributeExtractor implements KeyAttributeExtractor {
 
     @Override
     public CacheKeyElement getAttribute(HttpServletRequest request) {
-        return new CacheKeyElement(request.getScheme(),true);
+        return new CacheKeyElement(CacheConfigGlobals.getASCIIBytes(request.getScheme()),true);
     }
 }

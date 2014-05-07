@@ -13,12 +13,12 @@ import java.util.Map;
 public class MethodAttributeExtractor implements KeyAttributeExtractor {
     public static final MethodAttributeExtractor INSTANCE = new MethodAttributeExtractor();
 
-    public static final CacheKeyElement CACHE_KEY_GET_ELEMENT = new CacheKeyElement("GET",true);
-    public static final CacheKeyElement CACHE_KEY_PUT_ELEMENT = new CacheKeyElement("PUT",true);
-    public static final CacheKeyElement CACHE_KEY_POST_ELEMENT = new CacheKeyElement("POST",true);
-    public static final CacheKeyElement CACHE_KEY_HEAD_ELEMENT = new CacheKeyElement("HEAD",true);
-    public static final CacheKeyElement CACHE_KEY_DELETE_ELEMENT = new CacheKeyElement("DELETE",true);
-    public static final CacheKeyElement CACHE_KEY_OPTIONS_ELEMENT = new CacheKeyElement("OPTIONS",true);
+    public static final CacheKeyElement CACHE_KEY_GET_ELEMENT = new CacheKeyElement(CacheConfigGlobals.getASCIIBytes("GET"),true);
+    public static final CacheKeyElement CACHE_KEY_PUT_ELEMENT = new CacheKeyElement(CacheConfigGlobals.getASCIIBytes("PUT"),true);
+    public static final CacheKeyElement CACHE_KEY_POST_ELEMENT = new CacheKeyElement(CacheConfigGlobals.getASCIIBytes("POST"),true);
+    public static final CacheKeyElement CACHE_KEY_HEAD_ELEMENT = new CacheKeyElement(CacheConfigGlobals.getASCIIBytes("HEAD"),true);
+    public static final CacheKeyElement CACHE_KEY_DELETE_ELEMENT = new CacheKeyElement(CacheConfigGlobals.getASCIIBytes("DELETE"),true);
+    public static final CacheKeyElement CACHE_KEY_OPTIONS_ELEMENT = new CacheKeyElement(CacheConfigGlobals.getASCIIBytes("OPTIONS"),true);
 
     public static final Map<String,CacheKeyElement> PREBUILD_ELEMENTS;
 
@@ -45,7 +45,7 @@ public class MethodAttributeExtractor implements KeyAttributeExtractor {
     public CacheKeyElement getAttribute(HttpServletRequest request) {
         CacheKeyElement instance = PREBUILD_ELEMENTS.get(request.getMethod());
         if(instance==null) {
-            return new CacheKeyElement(request.getMethod(), true);
+            return new CacheKeyElement(CacheConfigGlobals.getASCIIBytes(request.getMethod()), true);
         } else {
             return instance;
         }

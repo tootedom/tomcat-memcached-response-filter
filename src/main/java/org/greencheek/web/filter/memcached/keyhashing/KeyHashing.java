@@ -8,4 +8,5 @@ public interface KeyHashing {
     public static final String SHA526  = "SHA-256";
 
     public String hash(String key);
+    public String hash(byte[] bytes, int offset, int length);
 }

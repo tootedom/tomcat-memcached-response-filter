@@ -33,7 +33,7 @@ public class CookieAttributeExtractorTest {
         CookieAttributeExtractor extractor = new CookieAttributeExtractor("cookie1",true);
         CacheKeyElement element = extractor.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("cookie1=value1; Domain=www.test1.com; Max-Age=10; Path=/path1",element.getElement());
+        assertArrayEquals("cookie1=value1; Domain=www.test1.com; Max-Age=10; Path=/path1".getBytes(), element.getElement());
     }
 
     @Test
@@ -41,7 +41,7 @@ public class CookieAttributeExtractorTest {
         CookieAttributeExtractor extractor = new CookieAttributeExtractor("cookie2",true);
         CacheKeyElement element = extractor.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("cookie2=value2; Version=1; Comment=blahblah; Domain=www.test2.com; Max-Age=167; Path=/path2",element.getElement());
+        assertArrayEquals("cookie2=value2; Version=1; Comment=blahblah; Domain=www.test2.com; Max-Age=167; Path=/path2".getBytes(), element.getElement());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class CookieAttributeExtractorTest {
         CookieAttributeExtractor extractor = new CookieAttributeExtractor("cookie3",true);
         CacheKeyElement element = extractor.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertEquals("cookie3=value3; Version=1; Domain=www.test3.com; Max-Age=55; Path=/path3; Secure; HttpOnly",element.getElement());
+        assertArrayEquals("cookie3=value3; Version=1; Domain=www.test3.com; Max-Age=55; Path=/path3; Secure; HttpOnly".getBytes(), element.getElement());
     }
 
 
@@ -58,7 +58,7 @@ public class CookieAttributeExtractorTest {
         CookieAttributeExtractor extractor = new CookieAttributeExtractor("cookie4",true);
         CacheKeyElement element = extractor.getAttribute(request);
         assertFalse(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 
     @Test
@@ -66,7 +66,7 @@ public class CookieAttributeExtractorTest {
         CookieAttributeExtractor extractor = new CookieAttributeExtractor("cookie4",false);
         CacheKeyElement element = extractor.getAttribute(requestNoCookies);
         assertFalse(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 
     @Test
@@ -74,7 +74,7 @@ public class CookieAttributeExtractorTest {
         CookieAttributeExtractor extractor = new CookieAttributeExtractor("cookie4",true);
         CacheKeyElement element = extractor.getAttribute(requestNoCookies);
         assertTrue(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 
     private Cookie createCookies(String name,

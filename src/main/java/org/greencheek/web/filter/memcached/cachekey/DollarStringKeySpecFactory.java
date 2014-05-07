@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * Created by dominictootell on 25/04/2014.
  */
-public class DollarStringKeySpecFactory implements KeySpecFactory{
+public class DollarStringKeySpecFactory implements KeySpecFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(DollarStringKeySpecFactory.class);
 
@@ -53,6 +53,12 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
     public static final String SCHEME = "scheme";
 
     /**
+     * represents that the request body can be used
+     */
+    public static final String BODY = "body";
+
+
+    /**
      * represents that the content_type of the request can be used
      */
     public static final String CONTENT_TYPE = "content_type";
@@ -61,6 +67,8 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
     public static final String VALUE_OPTIONAL_SEPARATOR_CHAR = "?";
     public static final String VALUE_SORTED_CHAR = "_s?";
     public static final String VALUE_SORTED_CHAR_NO_OPTIONAL_CHAR = "_s";
+
+    private static final String BODY_CHECKER = KEY_SEPARATOR_CHAR + BODY;
 
 
     private final SplitByChar charSplitter;
@@ -93,6 +101,7 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
         else if(keyElementValue.startsWith(COOKIES)) return parseCookieKey(keyElementValue);
         else if(keyElementValue.startsWith(HEADERS)) return parseHeaderKey(keyElementValue);
         else if(keyElementValue.startsWith(CONTENT_TYPE)) return ContentTypeAttributeExtractor.INSTANCE;
+        else if(keyElementValue.startsWith(BODY)) return RequestBodyAttributeExtractor.INSTANCE;
         return null;
     }
 
@@ -154,6 +163,11 @@ public class DollarStringKeySpecFactory implements KeySpecFactory{
         }
 
         return extractors;
+    }
+
+    @Override
+    public boolean requiresBody(String keySpec) {
+        return keySpec.contains(BODY_CHECKER);
     }
 
     private boolean isOptional(String keyValue) {

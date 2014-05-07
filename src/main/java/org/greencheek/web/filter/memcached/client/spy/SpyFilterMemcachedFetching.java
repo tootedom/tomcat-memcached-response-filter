@@ -2,7 +2,6 @@ package org.greencheek.web.filter.memcached.client.spy;
 
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.GetFuture;
-import org.greencheek.web.filter.memcached.cachekey.CacheKey;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.config.MemcachedFetchingConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;

@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.keyhashing;
 
 import java.io.UnsupportedEncodingException;
+import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -61,9 +62,14 @@ public class MessageDigestHashing implements KeyHashing {
         } catch(UnsupportedEncodingException e) {
             bytes = key.getBytes();
         }
+        return hash(bytes,0,bytes.length);
+    }
 
+    @Override
+    public String hash(byte[] bytes,int offset, int length) {
         MessageDigest md = digesters.remove();
-        byte[] result = md.digest(bytes);
+        md.update(bytes, offset, length);
+        byte[] result = md.digest();
         md.reset();
         digesters.add(md);
         return byteToHexStringConverter.bytesToHex(result);

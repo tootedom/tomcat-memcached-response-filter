@@ -37,7 +37,9 @@ import org.greencheek.web.filter.memcached.client.spy.SpyMemcachedBuilder;
 import org.greencheek.web.filter.memcached.dateformatting.DateHeaderFormatter;
 import org.greencheek.web.filter.memcached.dateformatting.QueueBasedDateFormatter;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
-import org.greencheek.web.filter.memcached.response.BufferedRequestWrapper;
+import org.greencheek.web.filter.memcached.request.BufferedRequestWrapper;
+import org.greencheek.web.filter.memcached.request.RequestMethodBasedInputStreamRequestWrapperFactory;
+import org.greencheek.web.filter.memcached.request.InputStreamRequestWrapperFactory;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 import org.greencheek.web.filter.memcached.response.Servlet2BufferedResponseWrapper;
 import org.slf4j.Logger;
@@ -66,6 +68,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_CHECK_HOST_CONNECTIVITY = "memcached-checkhost-connectivity";
     public final static String MEMCACHED_DNS_TIMEOUT = "memcached-host-dnsresolutiontimeout-secs";
     public final static String MEMCACHED_USE_BINARY = "memcached-use-binary-protocol";
+    public final static String MEMCACHED_MAX_POST_BODY_SIZE = "memcached-max-post-body-size";
 
 	/**
 	 * Logger
@@ -88,7 +91,9 @@ public class PublishToMemcachedFilter implements Filter {
     private String cacheHitHeader = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
     private String cacheHitValue = CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE;
     private String cacheMissValue = CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE;
-
+    private boolean requiresContent = false;
+    private InputStreamRequestWrapperFactory requestWrapperFactory = new RequestMethodBasedInputStreamRequestWrapperFactory();
+    private int maxPostBodySize = CacheConfigGlobals.DEFAULT_MAX_POST_BODY_SIZE;
     private volatile boolean isEnabled = false;
 
     @Override
@@ -128,6 +133,8 @@ public class PublishToMemcachedFilter implements Filter {
         }
 
         keyConfig = keyConfigBuilder.build();
+        requiresContent = keyConfigBuilder.requiresBody();
+        maxPostBodySize = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_MAX_POST_BODY_SIZE),CacheConfigGlobals.DEFAULT_MAX_POST_BODY_SIZE);
 
         MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder();
 
@@ -210,7 +217,11 @@ public class PublishToMemcachedFilter implements Filter {
                 HttpServletResponse servletResponse = (HttpServletResponse) response;
                 servletRequest = (HttpServletRequest) request;
                 if (cacheableMethods.isCacheable(servletRequest)) {
-                    cacheKey = keyConfig.createCacheKey(servletRequest);
+                    HttpServletRequest wrappedRequest = requestWrapperFactory.createRequestWrapper(servletRequest,requiresContent, maxPostBodySize);
+                    if(wrappedRequest!=null) {
+                        servletRequest = wrappedRequest;
+                        cacheKey = keyConfig.createCacheKey(servletRequest);
+                    }
                 }
 
                 if(cacheKey!=null && cacheKey.length()>0) {

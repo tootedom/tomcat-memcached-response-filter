@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.cachekey.extraction;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyElement;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public class CookieAttributeExtractor implements KeyAttributeExtractor {
 
         for(Cookie cookie : cookies) {
             if(cookie.getName().equalsIgnoreCase(cookieNameToExtract)) {
-                return new CacheKeyElement(cookieToString(cookie),true);
+                return new CacheKeyElement(CacheConfigGlobals.getBytes(cookieToString(cookie)), true);
             }
         }
 

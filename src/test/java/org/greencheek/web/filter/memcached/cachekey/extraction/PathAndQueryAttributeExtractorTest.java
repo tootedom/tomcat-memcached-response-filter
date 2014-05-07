@@ -28,7 +28,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals(path+query,element.getElement());
+        assertArrayEquals((path+query).getBytes(),element.getElement());
     }
 
     @Test
@@ -39,7 +39,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals(path,element.getElement());
+        assertArrayEquals(path.getBytes(),element.getElement());
     }
 
     @Test
@@ -50,7 +50,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals(path,element.getElement());
+        assertArrayEquals(path.getBytes(),element.getElement());
     }
 
     @Test
@@ -61,7 +61,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals(query,element.getElement());
+        assertArrayEquals(query.getBytes(),element.getElement());
     }
 
     @Test
@@ -72,7 +72,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals(query,element.getElement());
+        assertArrayEquals(query.getBytes(),element.getElement());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
 
         assertFalse(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 
     @Test
@@ -94,7 +94,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
 
         assertFalse(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_REQUIRED_INSTANCE.getAttribute(request);
 
         assertFalse(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 
     @Test
@@ -115,27 +115,27 @@ public class PathAndQueryAttributeExtractorTest {
         CacheKeyElement element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertSame("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
 
         request = createRequest("",null);
 
         element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
 
         request = createRequest(null,"");
 
         element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
 
         request = createRequest("","");
 
         element = PathAndQueryAttributeExtractor.IS_OPTIONAL_INSTANCE.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 }

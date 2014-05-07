@@ -23,7 +23,7 @@ public class ContentTypeAttributeExtractorTest {
         ContentTypeAttributeExtractor extractor = ContentTypeAttributeExtractor.INSTANCE;
         CacheKeyElement element = extractor.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertSame("", element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE, element.getElement());
 
     }
 
@@ -37,7 +37,7 @@ public class ContentTypeAttributeExtractorTest {
         CacheKeyElement element = extractor.getAttribute(request);
 
         assertTrue(element.isAvailable());
-        assertEquals("text/plain",element.getElement());
+        assertArrayEquals("text/plain".getBytes(),element.getElement());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class ContentTypeAttributeExtractorTest {
         ContentTypeAttributeExtractor extractor = ContentTypeAttributeExtractor.INSTANCE;
         CacheKeyElement element = extractor.getAttribute(request);
         assertTrue(element.isAvailable());
-        assertSame("", element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE, element.getElement());
 
     }
 

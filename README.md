@@ -276,7 +276,7 @@ seconds to cache for:
 
 ----
 
-### Cacheable HTTP Methods ###
+## Cacheable HTTP Methods ##
 
 By default the filters are enabled only for `GET` requests.  To allow more HTTP methods to be cacheable, for example to
 allow for the caching of `GET` and `POST` requests, you can specify the following:
@@ -288,7 +288,7 @@ allow for the caching of `GET` and `POST` requests, you can specify the followin
 
 ----
 
-### Cacheable HTTP status codes ###
+## Cacheable HTTP status codes ##
 
 By default the following set of response codes are cacheable: `200, 203, 204, 205, 300, 301, 410`
 If you wish other response codes to be cacheable then you can use the following filter config parameter.  For example to
@@ -298,3 +298,14 @@ allow only the caching of 200 and 404, the following would do it
       <param-name>memcached-cacheable-methods</param-name>
       <param-value>200,404</param-value>
     </init-param>
+
+----
+
+## Cache Size ##
+
+The filter will `NOT` cache everything.  It will only cache the response if the response body is below a limited size.
+The reason for this is that the filter creates a temporary, in memory buffer.  This buffer is a copy of the response body
+that is sent to the client.  As a result, if the filter was to cache all responses of any size, this could cause issues
+for your application that may send large response bodies.
+
+By default hte

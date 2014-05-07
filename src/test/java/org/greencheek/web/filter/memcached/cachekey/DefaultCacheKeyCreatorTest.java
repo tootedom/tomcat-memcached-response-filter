@@ -1,5 +1,6 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 import org.greencheek.web.filter.memcached.util.*;
@@ -34,6 +35,10 @@ public class DefaultCacheKeyCreatorTest {
 
     private String hash(String value) {
         return hashing.hash(value);
+    }
+
+    private String hash(byte[] value) {
+        return hashing.hash(value,0,value.length);
     }
 
     @Test
@@ -103,7 +108,7 @@ public class DefaultCacheKeyCreatorTest {
         String queryString = "bob=xxx&fred=yyyy";
         String expected = "https";
         CacheKeyCreator cacheKeyCreator = getKeyCreator("$scheme");
-        expected = hash(expected);
+        expected = hash(CacheConfigGlobals.getASCIIBytes(expected));
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(path);

@@ -1,4 +1,6 @@
-package org.greencheek.web.filter.memcached.response;
+package org.greencheek.web.filter.memcached.request;
+
+import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;

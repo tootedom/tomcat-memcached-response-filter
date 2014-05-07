@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
 import org.greencheek.web.filter.memcached.cachekey.extraction.*;
+import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
@@ -31,7 +32,8 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
     @Override
     public String createCacheKey(HttpServletRequest request) {
-        StringBuilder b = new StringBuilder(estimatedKeySize);
+        ResizeableByteBuffer b = new ResizeableByteBuffer(estimatedKeySize,ResizeableByteBuffer.MAX_ARRAY_SIZE);
+//        StringBuilder b = new StringBuilder(estimatedKeySize);
 
         for(KeyAttributeExtractor extractor : extractors) {
             CacheKeyElement keyElement = extractor.getAttribute(request);
@@ -41,7 +43,7 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             b.append(keyElement.getElement());
         }
 
-        return keyHashingUtil.hash(b.toString());
+        return keyHashingUtil.hash(b.getBuf(),0,b.position());
     }
 
 

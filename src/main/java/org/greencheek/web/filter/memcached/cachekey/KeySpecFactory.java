@@ -9,4 +9,5 @@ import java.util.List;
  */
 public interface KeySpecFactory {
     List<KeyAttributeExtractor> getKeySpecExtractors(String keySpec);
+    boolean requiresBody(String keySpec);
 }

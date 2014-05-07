@@ -4,21 +4,23 @@ package org.greencheek.web.filter.memcached.cachekey;
  * Created by dominictootell on 21/04/2014.
  */
 public class CacheKeyElement {
-    public static final CacheKeyElement CACHE_KEY_ELEMENT_NOT_AVAILABLE = new CacheKeyElement("",false);
-    public static final CacheKeyElement EMPTY_CACHE_KEY_ELEMENT = new CacheKeyElement("",true);
+    public static final byte[] EMPTY_VALUE = new byte[0];
 
-    private final String element;
+    public static final CacheKeyElement CACHE_KEY_ELEMENT_NOT_AVAILABLE = new CacheKeyElement(EMPTY_VALUE,false);
+    public static final CacheKeyElement EMPTY_CACHE_KEY_ELEMENT = new CacheKeyElement(EMPTY_VALUE,true);
+
+    private final byte[] element;
     private final boolean available;
 
 
-    public CacheKeyElement(String element, boolean available) {
+    public CacheKeyElement(byte[] element, boolean available) {
         this.element = element;
         this.available = available;
     }
 
-    public String getElement() {
+    public byte[] getElement() {
         if(element == null) {
-            return "";
+            return EMPTY_VALUE;
         }
         return element;
     }

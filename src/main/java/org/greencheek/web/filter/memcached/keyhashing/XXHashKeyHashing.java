@@ -28,6 +28,11 @@ public class XXHashKeyHashing implements KeyHashing {
             bytes = key.getBytes();
         }
 
-        return Integer.toString(factory.hash32().hash(bytes,0,bytes.length,0));
+        return hash(bytes,0,bytes.length);
+    }
+
+    @Override
+    public String hash(byte[] bytes, int offset, int length) {
+        return Integer.toString(factory.hash32().hash(bytes,offset,length,0));
     }
 }

@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.cachekey.extraction;
 
 import org.greencheek.web.filter.memcached.cachekey.CacheKeyElement;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,6 +16,6 @@ public class ContentTypeAttributeExtractor implements KeyAttributeExtractor {
         if(contentType==null) {
             return CacheKeyElement.EMPTY_CACHE_KEY_ELEMENT;
         }
-        return new CacheKeyElement(contentType, true);
+        return new CacheKeyElement(CacheConfigGlobals.getBytes(contentType), true);
     }
 }

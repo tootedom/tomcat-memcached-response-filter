@@ -97,7 +97,7 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element = extractor1.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals("text/plain", element.getElement());
+        assertArrayEquals("text/plain".getBytes(), element.getElement());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element = extractor1.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals("text/plain", element.getElement());
+        assertArrayEquals("text/plain".getBytes(), element.getElement());
     }
 
     @Test
@@ -126,11 +126,11 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element = extractor1.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals("text/plain",element.getElement());
+        assertArrayEquals("text/plain".getBytes(),element.getElement());
 
         CacheKeyElement element2 = extractor2.getAttribute(mockRequest);
         assertTrue(element2.isAvailable());
-        assertEquals(charJoiner.join(Arrays.asList("gzip", "deflate"), ',', 12),element2.getElement());
+        assertArrayEquals(charJoiner.join(Arrays.asList("gzip", "deflate"), ',', 12).getBytes(),element2.getElement());
 
 
         assertTrue(extractors.get(2) instanceof HeaderAttributeExtractor);
@@ -141,11 +141,11 @@ public class DollarStringKeySpecFactoryTest {
 
         element = extractor3.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
 
         element = extractor4.getAttribute(mockRequest);
         assertFalse(element.isAvailable());
-        assertEquals("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
 
     }
 
@@ -159,7 +159,7 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element2 = extractor2.getAttribute(mockRequest);
         assertTrue(element2.isAvailable());
-        assertEquals(sorter.sort(charJoiner.join(Arrays.asList("gzip", "deflate"), ',', 12), ','),element2.getElement());
+        assertArrayEquals(sorter.sort(charJoiner.join(Arrays.asList("gzip", "deflate"), ',', 12), ',').getBytes(),element2.getElement());
     }
 
     @Test
@@ -172,7 +172,7 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element2 = extractor2.getAttribute(mockRequestMissingAcceptEncoding);
         assertFalse(element2.isAvailable());
-        assertEquals("",element2.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element2.getElement());
     }
 
     @Test
@@ -185,7 +185,7 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element2 = extractor2.getAttribute(mockRequestMissingAcceptEncoding);
         assertTrue(element2.isAvailable());
-        assertEquals("",element2.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element2.getElement());
     }
 
     @Test
@@ -235,30 +235,30 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element = extractor1.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals(VALUE_SCHEME,element.getElement());
+        assertArrayEquals(VALUE_SCHEME.getBytes(),element.getElement());
 
         element = extractor2.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals(VALUE_METHOD,element.getElement());
+        assertArrayEquals(VALUE_METHOD.getBytes(),element.getElement());
 
         element = extractor3.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals(VALUE_URI,element.getElement());
+        assertArrayEquals(VALUE_URI.getBytes(),element.getElement());
 
         element = extractor4.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals(VALUE_QUERY,element.getElement());
+        assertArrayEquals(VALUE_QUERY.getBytes(),element.getElement());
 
         element = extractor5.getAttribute(mockRequest);
         assertFalse(element.isAvailable());
-        assertEquals(VALUE_QUERY,element.getElement());
+        assertArrayEquals(VALUE_QUERY.getBytes(),element.getElement());
 
         element = extractor6.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertEquals(VALUE_URI,element.getElement());
+        assertArrayEquals(VALUE_URI.getBytes(),element.getElement());
 
         element = extractor7.getAttribute(mockRequest);
         assertFalse(element.isAvailable());
-        assertEquals("",element.getElement());
+        assertSame(CacheKeyElement.EMPTY_VALUE,element.getElement());
     }
 }

@@ -1,13 +1,11 @@
 package org.greencheek.web.filter.memcached.io;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 
 public class ResizeableByteBuffer {
     // without oops array header is 8 bytes so max array size is that minus
-    static final int MAX_ARRAY_SIZE =Integer.MAX_VALUE - 8;
+    public static final int MAX_ARRAY_SIZE =Integer.MAX_VALUE - 8;
 
     private byte[] buf;
     private volatile int position;

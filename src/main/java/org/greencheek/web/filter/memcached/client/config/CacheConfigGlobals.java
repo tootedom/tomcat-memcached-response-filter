@@ -14,6 +14,7 @@ import org.greencheek.web.filter.memcached.util.*;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -30,6 +31,7 @@ public class CacheConfigGlobals {
     public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_SEPARATED_VALUE_SORTER);
 
     public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?";
+    public static final int DEFAULT_MAX_POST_BODY_SIZE = 8192;
     public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";
     public final static String DEFAULT_CACHE_MISS_HEADER_VALUE = "MISS";
     public final static String DEFAULT_CACHE_HIT_HEADER_VALUE = "HIT";
@@ -49,6 +51,15 @@ public class CacheConfigGlobals {
     public static final TIntSet CACHEABLE_RESPONSE_CODES;
 
     public static final char CHAR_ZERO = '0';
+
+    public static final Set<String> METHODS_WITH_CONTENT;
+
+    static {
+        Set<String> putAndPost = new HashSet<String>(24,1.0f);
+        putAndPost.addAll(permutate("PUT"));
+        putAndPost.addAll(permutate("POST"));
+        METHODS_WITH_CONTENT = putAndPost;
+    }
 
     static {
         CACHEABLE_RESPONSE_CODES = commaSeparatedIntStringToIntSet(DEFAULT_CACHEABLE_RESPONSE_CODES);
@@ -120,6 +131,14 @@ public class CacheConfigGlobals {
         }
     }
 
+    public static byte[] getASCIIBytes(String content) {
+        try {
+            return content.getBytes("US-ASCII");
+        } catch (UnsupportedEncodingException e) {
+            return content.getBytes();
+        }
+    }
+
     /**
      * Converts a positive int to its ASCII representation
      *
@@ -175,10 +194,10 @@ public class CacheConfigGlobals {
     public static TIntSet commaSeparatedIntStringToIntSet(String ints) {
         if(ints==null) return new TIntHashSet(1);
 
-        String[] listOfCodes = ints.split(",");
-        if(listOfCodes==null || listOfCodes.length==0) return new TIntHashSet(1);
+        List<String> listOfCodes = DEFAULT_CHAR_SPLITTER.split(ints,',');
+        if(listOfCodes==null || listOfCodes.size()==0) return new TIntHashSet(1);
 
-        TIntSet statusCodes = new TIntHashSet(listOfCodes.length,1.0f);
+        TIntSet statusCodes = new TIntHashSet(listOfCodes.size(),1.0f);
         for(String s : listOfCodes) {
             try {
                 statusCodes.add(Integer.parseInt(s.trim()));
@@ -187,5 +206,13 @@ public class CacheConfigGlobals {
             }
         }
         return statusCodes;
+    }
+
+    public static int parseIntValue(String value,int defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch(NumberFormatException e){
+            return defaultValue;
+        }
     }
 }

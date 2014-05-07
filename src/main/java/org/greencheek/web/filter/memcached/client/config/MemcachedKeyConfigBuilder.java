@@ -1,15 +1,11 @@
 package org.greencheek.web.filter.memcached.client.config;
 
-import org.greencheek.web.filter.memcached.cachekey.CacheKeyCreator;
 import org.greencheek.web.filter.memcached.cachekey.DefaultCacheKeyCreator;
-import org.greencheek.web.filter.memcached.cachekey.DollarStringKeySpecFactory;
 import org.greencheek.web.filter.memcached.cachekey.KeySpecFactory;
 import org.greencheek.web.filter.memcached.keyhashing.FastestXXHashKeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.JavaXXHashKeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
-import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
-import org.greencheek.web.filter.memcached.util.SplitByChar;
 
 /**
  * Created by dominictootell on 18/04/2014.
@@ -32,6 +28,10 @@ public class MemcachedKeyConfigBuilder {
             }
         }
         return this;
+    }
+
+    public boolean requiresBody() {
+        return keySpecFactory.requiresBody(this.cacheKey);
     }
 
     public MemcachedKeyConfigBuilder setKeyHashingFunction(String hashingFunction) {
