@@ -57,6 +57,10 @@ public class DollarStringKeySpecFactory implements KeySpecFactory {
      */
     public static final String BODY = "body";
 
+    /**
+     * represents the request parameters
+     */
+    public static final String PARAMS = "params";
 
     /**
      * represents that the content_type of the request can be used
@@ -109,6 +113,10 @@ public class DollarStringKeySpecFactory implements KeySpecFactory {
         else if(keyElementValue.startsWith(HEADERS)) return parseHeaderKey(keyElementValue);
         else if(keyElementValue.startsWith(CONTENT_TYPE)) return ContentTypeAttributeExtractor.INSTANCE;
         else if(keyElementValue.startsWith(BODY)) return RequestBodyAttributeExtractor.INSTANCE;
+        else if(keyElementValue.startsWith(PARAMS)) {
+            return new ParamsAttributeExtractor(isOptional(keyElementValue),isValueToBeSorted(keyElementValue),valueSorter);
+        }
+
         return null;
     }
 

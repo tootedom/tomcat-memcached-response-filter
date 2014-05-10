@@ -25,12 +25,13 @@ public class CacheConfigGlobals {
     public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2; //16k
     public final static int DEFAULT_INITIAL_CACHEABLE_RESPONSE_BODY = 4096; // 4k
     public final static int DEFAULT_MAX_CACHE_KEY_SIZE = 8192; //8kb
+    public final static int DEFAULT_MAX_SINGLE_HEADER_SIZE = 2048; //2kb
 
     public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
     public static final JoinByChar DEFAULT_CHAR_JOINER = new CustomJoinByChar();
     public static final CharSeparatedValueSorter DEFAULT_CHAR_SEPARATED_VALUE_SORTER = new SplittingCharSeparatedValueSorter(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_JOINER);
     public static final KeyHashing DEFAULT_MESSAGE_HASHING = new JavaXXHashKeyHashing();
-    public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_SEPARATED_VALUE_SORTER);
+    public static final KeySpecFactory DEFAULT_KEY_SPEC_FACTORY = new DollarStringKeySpecFactory(DEFAULT_CHAR_SPLITTER,DEFAULT_CHAR_SEPARATED_VALUE_SORTER,DEFAULT_MAX_SINGLE_HEADER_SIZE);
 
     public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?";
     public static final int DEFAULT_MAX_POST_BODY_SIZE = 8192;
@@ -127,19 +128,19 @@ public class CacheConfigGlobals {
     }
 
     public static byte[] getBytes(String content) {
+       return getBytes(content,"UTF-8");
+    }
+
+    public static byte[] getBytes(String content, String charset) {
         try {
-            return content.getBytes("UTF-8");
+            return content.getBytes(charset);
         } catch (UnsupportedEncodingException e) {
             return content.getBytes();
         }
     }
 
     public static byte[] getASCIIBytes(String content) {
-        try {
-            return content.getBytes("US-ASCII");
-        } catch (UnsupportedEncodingException e) {
-            return content.getBytes();
-        }
+        return getBytes(content,"US-ASCII");
     }
 
     /**
