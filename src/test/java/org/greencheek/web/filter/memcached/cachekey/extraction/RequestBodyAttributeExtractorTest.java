@@ -53,7 +53,13 @@ public class RequestBodyAttributeExtractorTest {
 
         CacheKeyElement element = testContentExtraction(method);
         assertTrue(element.isAvailable());
-        assertArrayEquals(body, element.getElement());
+        assertArrayEquals(body, splice(element.getElement(),element.getOffset(),element.getLength()));
+    }
+
+    private byte[] splice(byte[] bytes, int offset, int length) {
+        byte[] copy = new byte[length];
+        System.arraycopy(bytes,offset,copy,0,length);
+        return copy;
     }
 
     private void testContentExtractionHasNoBody(String method) {
@@ -66,6 +72,7 @@ public class RequestBodyAttributeExtractorTest {
     private CacheKeyElement testContentExtraction(String method) {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getMethod()).thenReturn(method);
+        when(request.getContentLength()).thenReturn(body.length);
         try {
             when(request.getInputStream()).thenReturn(inputStream);
         } catch (IOException e) {

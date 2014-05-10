@@ -73,10 +73,17 @@ public class DollarStringKeySpecFactory implements KeySpecFactory {
 
     private final SplitByChar charSplitter;
     private final CharSeparatedValueSorter valueSorter;
+    private final int maxSingleHeaderSize;
 
     public DollarStringKeySpecFactory(SplitByChar splitByChar,CharSeparatedValueSorter valueSorter) {
+        this(splitByChar,valueSorter,2048);
+    }
+
+    public DollarStringKeySpecFactory(SplitByChar splitByChar,CharSeparatedValueSorter valueSorter,
+                                      int maxSingleHeaderSize) {
         this.charSplitter = splitByChar;
         this.valueSorter = valueSorter;
+        this.maxSingleHeaderSize =  maxSingleHeaderSize;
     }
 
     private KeyAttributeExtractor parseKeyElementValue(String keyElementValue) {
@@ -126,7 +133,7 @@ public class DollarStringKeySpecFactory implements KeySpecFactory {
             return null;
         }
         else {
-            return new HeaderAttributeExtractor(value,isOptional,toBeSorted,valueSorter);
+            return new HeaderAttributeExtractor(value,isOptional,toBeSorted,valueSorter,maxSingleHeaderSize);
         }
     }
 

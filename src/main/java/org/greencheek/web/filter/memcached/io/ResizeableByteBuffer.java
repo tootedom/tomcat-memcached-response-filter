@@ -35,6 +35,11 @@ public class ResizeableByteBuffer {
         return position;
     }
 
+    public void setSize(int i) {
+        if(i>-1) {
+            this.position = i;
+        }
+    }
 
     public void reset() {
         canWrite = true;

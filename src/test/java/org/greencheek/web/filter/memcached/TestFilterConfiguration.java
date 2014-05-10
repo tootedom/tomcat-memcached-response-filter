@@ -229,6 +229,51 @@ public class TestFilterConfiguration {
     }
 
     @Test
+    public void testNoPostCachingForLargePost() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+        }};
+
+        Map<String,String> filterInitPostAllowedParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_CACHEABLE_METHODS, "get,post");
+            put(PublishToMemcachedFilter.MEMCACHED_MAX_POST_BODY_SIZE,"10");
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,CacheConfigGlobals.DEFAULT_CACHE_KEY+"$body");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"nocaching","/posting/not/*",filterInitParams);
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"caching","/posting/is/*",filterInitPostAllowedParams);
+
+        String url = server.setupServlet("/posting/not/cacheable/*","posting","org.greencheek.web.filter.memcached.servlets.ServiceServlet",true);
+        String urlCachable = server.setupServlet("/posting/is/cacheable/*","postingcachable","org.greencheek.web.filter.memcached.servlets.ServiceServlet",true);
+
+
+        assertTrue(server.startTomcat());
+
+        url = server.replacePort(url);
+        urlCachable = server.replacePort(urlCachable);
+
+        Response response = executePostRequest(url,"date=hello");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(url,"date=hello");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+
+        response = executePostRequest(urlCachable,"date=hellothisismorethattheallowed");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(urlCachable,"date=hellothisismorethattheallowed");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+        response = executePostRequest(urlCachable,"hellohello");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executePostRequest(urlCachable,"hellohello");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+
+
+    }
+
+
+
+    @Test
     public void testPostKeyWithBodyCaching() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");

@@ -30,7 +30,7 @@ public class ResizeableByteBufferTest
 
     public ResizeableByteBufferOutputStream getResizeableByteBufferOutputStream(int max, OutputStream wrappedContent) {
 
-        return new ResizeableByteBufferOutputStream(max,wrappedContent);
+        return new ResizeableByteBufferOutputStream(max,max,wrappedContent);
     }
 
 

@@ -2,7 +2,6 @@ package org.greencheek.web.filter.memcached.request;
 
 import org.greencheek.web.filter.memcached.io.ByteArrayBasedServletInputStream;
 import org.greencheek.web.filter.memcached.io.IOUtils;
-import org.greencheek.web.filter.memcached.io.ResizableByteBufferNoBoundsCheckingBackedOutputStream;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -19,11 +18,15 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
     private volatile byte[] cachedBytes;
 
     private final int contentLength;
+    private final int initialContentBufferSize;
     private final HttpServletRequest originalRequest;
 
-    public MultiReadRequestWrapper(HttpServletRequest originalRequest) {
+    public MultiReadRequestWrapper(int initialContentBufferSize,
+                                   int maxContentLength,
+                                   HttpServletRequest originalRequest) {
         super(originalRequest);
-        contentLength = originalRequest.getContentLength();
+        this.contentLength = maxContentLength;
+        this.initialContentBufferSize = initialContentBufferSize;
         this.originalRequest = originalRequest;
 
     }
@@ -50,7 +53,7 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
 
     private byte[] cacheInputStreamContent() throws IOException {
         InputStream inputStream = originalRequest.getInputStream();
-        return IOUtils.readStream(4096,inputStream,contentLength);
+        return IOUtils.readStreamToBytes(initialContentBufferSize, inputStream, contentLength);
     }
 
 

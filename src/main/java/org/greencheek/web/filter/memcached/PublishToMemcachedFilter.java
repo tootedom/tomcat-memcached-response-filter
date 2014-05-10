@@ -52,6 +52,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_KEY_PARAM = "memcached-key";
     public final static String MEMCACHED_HEADERS_TO_IGNORE = "memcached-ignore-headers";
     public final static String MEMCACHED_RESPONSE_BODY_SIZE = "memcached-maxcacheable-bodysize";
+    public final static String MEMCACHED_RESPONSE_BODY_INITIAL_SIZE = "memcached-initialcacheable-bodysize";
     public final static String MEMCACHED_HEADER_SIZE = "memcached-header-size";
     public final static String MEMCACHED_GET_TIMEOUT = "memcached-get-timeout-seconds";
     public final static String MEMCACHED_CACHE_PRIVATE = "memcached-cache-private";
@@ -69,6 +70,8 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_DNS_TIMEOUT = "memcached-host-dnsresolutiontimeout-secs";
     public final static String MEMCACHED_USE_BINARY = "memcached-use-binary-protocol";
     public final static String MEMCACHED_MAX_POST_BODY_SIZE = "memcached-max-post-body-size";
+    public final static String MEMCACHED_INITIAL_POST_BODY_SIZE = "memcached-initial-post-body-size";
+    public final static String MEMCACHED_MAX_CACHE_KEY_SIZE = "memcached-max-cache-key-size";
 
 	/**
 	 * Logger
@@ -79,8 +82,8 @@ public class PublishToMemcachedFilter implements Filter {
 	 * Has this component been started yet?
 	 */
 
-    private volatile int maxContentSizeForMemcachedEntry = CacheConfigGlobals.DEFAULT_MAX_CACHEABLE_RESPONSE_BODY;
-
+    private int maxContentSizeForMemcachedEntry;
+    private int initialContentSizeForMemcachedEntry;
     private DateHeaderFormatter dateHeaderFormatter = new QueueBasedDateFormatter();
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
@@ -94,6 +97,7 @@ public class PublishToMemcachedFilter implements Filter {
     private boolean requiresContent = false;
     private InputStreamRequestWrapperFactory requestWrapperFactory = new RequestMethodBasedInputStreamRequestWrapperFactory();
     private int maxPostBodySize = CacheConfigGlobals.DEFAULT_MAX_POST_BODY_SIZE;
+    private int initialPostBodySize = CacheConfigGlobals.DEFAULT_INITIAL_POST_BODY_SIZE;
     private volatile boolean isEnabled = false;
 
     @Override
@@ -101,6 +105,7 @@ public class PublishToMemcachedFilter implements Filter {
         SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
         keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
+        keyConfigBuilder.setMaxCacheKeySize(parseSize(filterConfig,MEMCACHED_MAX_CACHE_KEY_SIZE,CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE));
 
         boolean checkHostsConnectivity = Boolean.parseBoolean(filterConfig.getInitParameter(MEMCACHED_CHECK_HOST_CONNECTIVITY));
         builder.setCheckHostConnectivity(checkHostsConnectivity);
@@ -135,6 +140,7 @@ public class PublishToMemcachedFilter implements Filter {
         keyConfig = keyConfigBuilder.build();
         requiresContent = keyConfigBuilder.requiresBody();
         maxPostBodySize = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_MAX_POST_BODY_SIZE),CacheConfigGlobals.DEFAULT_MAX_POST_BODY_SIZE);
+        initialPostBodySize = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_INITIAL_POST_BODY_SIZE),CacheConfigGlobals.DEFAULT_INITIAL_POST_BODY_SIZE);
 
         MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder();
 
@@ -152,11 +158,8 @@ public class PublishToMemcachedFilter implements Filter {
         fetchingConfigBuilder.setCacheGetTimeout(filterConfig.getInitParameter(MEMCACHED_GET_TIMEOUT));
 
 
-        try {
-            maxContentSizeForMemcachedEntry = Integer.parseInt(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_SIZE));
-        } catch(NumberFormatException e) {
-
-        }
+        maxContentSizeForMemcachedEntry = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_SIZE),CacheConfigGlobals.DEFAULT_MAX_CACHEABLE_RESPONSE_BODY);
+        initialContentSizeForMemcachedEntry = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_INITIAL_SIZE),CacheConfigGlobals.DEFAULT_INITIAL_CACHEABLE_RESPONSE_BODY);
 
         String cacheHeaderName = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_HEADER_NAME);
         if(cacheHeaderName!=null && cacheHeaderName.trim().length()>0) {
@@ -180,6 +183,16 @@ public class PublishToMemcachedFilter implements Filter {
         isEnabled = true;
     }
 
+    private int parseSize(FilterConfig filterConfig,String property, int defaultValue) {
+        int value;
+        try {
+            value = Integer.parseInt(filterConfig.getInitParameter(property));
+        } catch(NumberFormatException e) {
+            value = defaultValue;
+        }
+        return value;
+    }
+
     public void sendCachedResponse(CachedResponse cachedResponse,HttpServletResponse response) {
         Map<String,Collection<String>> headers = cachedResponse.getHeaders();
         for(Map.Entry<String,Collection<String>> header : headers.entrySet()) {
@@ -200,8 +213,8 @@ public class PublishToMemcachedFilter implements Filter {
         }
     }
 
-    BufferedResponseWrapper createResponseWrapper(int size,HttpServletResponse originalResponse, String cacheKey) {
-        return new Servlet2BufferedResponseWrapper(dateHeaderFormatter,size,originalResponse, cacheKey);
+    BufferedResponseWrapper createResponseWrapper(int initalSize,int maxSize,HttpServletResponse originalResponse, String cacheKey) {
+        return new Servlet2BufferedResponseWrapper(dateHeaderFormatter,initalSize,maxSize,originalResponse, cacheKey);
     }
 
     @Override
@@ -217,7 +230,7 @@ public class PublishToMemcachedFilter implements Filter {
                 HttpServletResponse servletResponse = (HttpServletResponse) response;
                 servletRequest = (HttpServletRequest) request;
                 if (cacheableMethods.isCacheable(servletRequest)) {
-                    HttpServletRequest wrappedRequest = requestWrapperFactory.createRequestWrapper(servletRequest,requiresContent, maxPostBodySize);
+                    HttpServletRequest wrappedRequest = requestWrapperFactory.createRequestWrapper(servletRequest,requiresContent,initialPostBodySize, maxPostBodySize);
                     if(wrappedRequest!=null) {
                         servletRequest = wrappedRequest;
                         cacheKey = keyConfig.createCacheKey(servletRequest);
@@ -230,7 +243,7 @@ public class PublishToMemcachedFilter implements Filter {
                         sendCachedResponse(cacheResponse, servletResponse);
                         return;
                     } else {
-                        wrappedRes = createResponseWrapper(maxContentSizeForMemcachedEntry, servletResponse,cacheKey);
+                        wrappedRes = createResponseWrapper(initialContentSizeForMemcachedEntry,maxContentSizeForMemcachedEntry, servletResponse,cacheKey);
                     }
                 }
                 servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);

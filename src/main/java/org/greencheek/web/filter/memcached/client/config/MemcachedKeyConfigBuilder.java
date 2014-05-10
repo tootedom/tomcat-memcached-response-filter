@@ -15,9 +15,10 @@ public class MemcachedKeyConfigBuilder {
     private KeyHashing keyHashingFunction = CacheConfigGlobals.DEFAULT_MESSAGE_HASHING;
     private String cacheKey = CacheConfigGlobals.DEFAULT_CACHE_KEY;
     private KeySpecFactory keySpecFactory = CacheConfigGlobals.DEFAULT_KEY_SPEC_FACTORY;
+    private int maxCacheKeySize = CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE;
 
     public MemcachedKeyConfig build() {
-        return new MemcachedKeyConfig(new DefaultCacheKeyCreator(cacheKey,keyHashingFunction,keySpecFactory));
+        return new MemcachedKeyConfig(new DefaultCacheKeyCreator(maxCacheKeySize,cacheKey,keyHashingFunction,keySpecFactory));
     }
 
     public MemcachedKeyConfigBuilder setCacheKey(String cacheKey) {
@@ -60,6 +61,11 @@ public class MemcachedKeyConfigBuilder {
 
     public MemcachedKeyConfigBuilder setKeySpecFactory(KeySpecFactory keySpecFactory) {
         this.keySpecFactory = keySpecFactory;
+        return this;
+    }
+
+    public MemcachedKeyConfigBuilder setMaxCacheKeySize(int size) {
+        this.maxCacheKeySize = size;
         return this;
     }
 }

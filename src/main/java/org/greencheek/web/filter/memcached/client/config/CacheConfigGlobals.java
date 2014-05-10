@@ -22,7 +22,9 @@ import java.util.Set;
  */
 public class CacheConfigGlobals {
 
-    public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2;
+    public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2; //16k
+    public final static int DEFAULT_INITIAL_CACHEABLE_RESPONSE_BODY = 4096; // 4k
+    public final static int DEFAULT_MAX_CACHE_KEY_SIZE = 8192; //8kb
 
     public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
     public static final JoinByChar DEFAULT_CHAR_JOINER = new CustomJoinByChar();
@@ -32,6 +34,7 @@ public class CacheConfigGlobals {
 
     public static final String DEFAULT_CACHE_KEY = "$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?";
     public static final int DEFAULT_MAX_POST_BODY_SIZE = 8192;
+    public static final int DEFAULT_INITIAL_POST_BODY_SIZE = 2048;
     public final static String DEFAULT_CACHE_STATUS_HEADER_NAME = "X-Cache";
     public final static String DEFAULT_CACHE_MISS_HEADER_VALUE = "MISS";
     public final static String DEFAULT_CACHE_HIT_HEADER_VALUE = "HIT";

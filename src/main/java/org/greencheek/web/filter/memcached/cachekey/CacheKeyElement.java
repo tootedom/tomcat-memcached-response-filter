@@ -11,10 +11,17 @@ public class CacheKeyElement {
 
     private final byte[] element;
     private final boolean available;
-
+    private final int offset;
+    private final int length;
 
     public CacheKeyElement(byte[] element, boolean available) {
+        this(element,0,element.length,available);
+    }
+
+    public CacheKeyElement(byte[] element, int offset, int length,boolean available) {
         this.element = element;
+        this.offset = offset;
+        this.length = length;
         this.available = available;
     }
 
@@ -25,7 +32,21 @@ public class CacheKeyElement {
         return element;
     }
 
+    public byte[] getElementCopy() {
+        byte[] copy = new byte[length];
+        System.arraycopy(element,offset,copy,0,length);
+        return copy;
+    }
+
     public boolean isAvailable() {
         return available;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public int getLength() {
+        return length;
     }
 }

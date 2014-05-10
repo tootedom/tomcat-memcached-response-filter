@@ -1,6 +1,5 @@
 package org.greencheek.web.filter.memcached.servlets;
 
-import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.io.IOUtils;
 
 import javax.servlet.ServletException;
@@ -33,6 +32,6 @@ public class PutPostServlet extends HttpServlet {
 
 
     public String content(HttpServletRequest request) throws IOException{
-        return new String(IOUtils.readStream(4096,request.getInputStream(),request.getContentLength()),"UTF-8");
+        return new String(IOUtils.readStreamToBytes(4096, request.getInputStream(), request.getContentLength()),"UTF-8");
     }
 }

@@ -12,9 +12,10 @@ public class ResizeableByteBufferWriter extends Writer {
     private final ResizeableByteBuffer buffer;
     private final PrintWriter wrappedWriter;
 
-    public ResizeableByteBufferWriter(int maxCapacity, PrintWriter wrappedWriter) {
+    public ResizeableByteBufferWriter(int initialCapacity,
+                                      int maxCapacity, PrintWriter wrappedWriter) {
         this.wrappedWriter = wrappedWriter;
-        this.buffer = new ResizeableByteBuffer(maxCapacity);
+        this.buffer = new ResizeableByteBuffer(initialCapacity,maxCapacity);
     }
 
     public ResizeableByteBuffer getBuffer() {

@@ -19,9 +19,10 @@ public class Servlet2BufferedResponseWrapper extends BufferedResponseWrapper {
     private final DateHeaderFormatter dateHeaderFormatter;
 
     public Servlet2BufferedResponseWrapper(DateHeaderFormatter dateFormatter,
+                                           int memcachedContentInitialBufferSize,
                                            int memcachedContentBufferSize, HttpServletResponse response,
                                            String cacheKey) {
-        super(memcachedContentBufferSize, response,cacheKey);
+        super(memcachedContentInitialBufferSize,memcachedContentBufferSize, response,cacheKey);
         this.dateHeaderFormatter = dateFormatter;
     }
 

@@ -19,6 +19,7 @@ public class HeaderAttributeExtractorTest {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String REMOTE_ADDR = "Remote-Addr";
     private static final String HOST = "Host";
+    private static final int MAX_SINGLE_HEADER_SIZE = 2048;
 
     private static final SplitByChar charSplitter = new CustomSplitByChar();
     private static final JoinByChar charJoiner = new CustomJoinByChar();
@@ -58,7 +59,7 @@ public class HeaderAttributeExtractorTest {
     @Test
     public void testOptionalHeaderWithNoValue() {
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("content-types",true,
-                false, valueSorter);
+                false, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -76,7 +77,7 @@ public class HeaderAttributeExtractorTest {
         String headerValues = charJoiner.join(headers.get(ACCEPT_ENCODING),',',32);
 
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("accept-encoding",true,
-                false, valueSorter);
+                false, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -86,7 +87,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElement());
+        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElementCopy());
     }
 
     @Test
@@ -94,7 +95,7 @@ public class HeaderAttributeExtractorTest {
         String headerValues = charJoiner.join(headers.get(ACCEPT_ENCODING),',',32);
 
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("accept-encoding",true,
-                false, valueSorter);
+                false, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -102,9 +103,8 @@ public class HeaderAttributeExtractorTest {
 
         assertTrue(element.isAvailable());
 
-        // we test for same instance as we wnat the compiled "" empty string.
-        // not a new String("")
-        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElement());
+
+        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElementCopy());
     }
 
     @Test
@@ -112,7 +112,7 @@ public class HeaderAttributeExtractorTest {
         String headerValues = charJoiner.join(headers.get(REMOTE_ADDR),',',32);
 
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("Remote-Addr",false,
-                true, valueSorter);
+                true, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -130,7 +130,7 @@ public class HeaderAttributeExtractorTest {
         String headerValues = charJoiner.join(headers.get(HOST),',',32);
 
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor(HOST.toLowerCase(),false,
-                true, valueSorter);
+                true, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -149,7 +149,7 @@ public class HeaderAttributeExtractorTest {
         String headerValues = valueSorter.sort(charJoiner.join(headers.get(ACCEPT_ENCODING),',',32),',');
 
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("accept-encoding",true,
-                true, valueSorter);
+                true, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -159,7 +159,7 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElement());
+        assertArrayEquals("Header should be string '" + headerValues + "'", headerValues.getBytes(), element.getElementCopy());
     }
 
     @Test
@@ -167,7 +167,7 @@ public class HeaderAttributeExtractorTest {
         String headerValues = "text/plain";
 
         HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("accept",true,
-                true, valueSorter);
+                true, valueSorter,MAX_SINGLE_HEADER_SIZE);
 
         HttpServletRequest request = getMockHttpServletRequest();
 
@@ -177,6 +177,43 @@ public class HeaderAttributeExtractorTest {
 
         // we test for same instance as we wnat the compiled "" empty string.
         // not a new String("")
-        assertArrayEquals("Header should be string '"+headerValues+"'",headerValues.getBytes(),element.getElement());
+        assertArrayEquals("Header should be string '"+headerValues+"'",headerValues.getBytes(),element.getElementCopy());
     }
+
+    @Test
+    public void testLargeHeaderIsIgnored() throws Exception {
+        String headerValues = "text/plain";
+
+        HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("content-type",false,
+                false, valueSorter,9);
+
+        HttpServletRequest request = getMockHttpServletRequest();
+
+        CacheKeyElement element = extractor.getAttribute(request);
+
+        assertFalse(element.isAvailable());
+
+        // we test for same instance as we wnat the compiled "" empty string.
+        // not a new String("")
+        assertArrayEquals("Header should be string '"+CacheKeyElement.EMPTY_VALUE+"'",CacheKeyElement.EMPTY_VALUE,element.getElementCopy());
+    }
+
+    @Test
+    public void testLargeSortedHeaderIsIgnored() throws Exception {
+        String headerValues = "text/plain";
+
+        HeaderAttributeExtractor extractor = new HeaderAttributeExtractor("content-type",false,
+                false, valueSorter,9);
+
+        HttpServletRequest request = getMockHttpServletRequest();
+
+        CacheKeyElement element = extractor.getAttribute(request);
+
+        assertFalse(element.isAvailable());
+
+        // we test for same instance as we wnat the compiled "" empty string.
+        // not a new String("")
+        assertArrayEquals("Header should be string '"+CacheKeyElement.EMPTY_VALUE+"'",CacheKeyElement.EMPTY_VALUE,element.getElementCopy());
+    }
+
 }

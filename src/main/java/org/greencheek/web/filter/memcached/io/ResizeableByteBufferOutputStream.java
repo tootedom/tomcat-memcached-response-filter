@@ -14,9 +14,9 @@ public class ResizeableByteBufferOutputStream extends ServletOutputStream {
     private final ResizeableByteBuffer buffer;
     private final OutputStream wrappedStream;
 
-    public ResizeableByteBufferOutputStream(int maxCapacity, OutputStream wrappedStream) {
+    public ResizeableByteBufferOutputStream(int initialCapacity,int maxCapacity, OutputStream wrappedStream) {
         this.wrappedStream = wrappedStream;
-        this.buffer = new ResizeableByteBuffer(maxCapacity);
+        this.buffer = new ResizeableByteBuffer(initialCapacity,maxCapacity);
     }
 
     public ResizeableByteBuffer getBuffer() {

@@ -19,11 +19,18 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
     private final KeyHashing keyHashingUtil;
     private final List<KeyAttributeExtractor> extractors;
     private final int estimatedKeySize;
-
-
+    private final int maxCacheKeySize;
 
     public DefaultCacheKeyCreator(String keySpec, KeyHashing keyHashingUtil,
                                   KeySpecFactory keySpecFactory) {
+        this(4096,keySpec,keyHashingUtil,keySpecFactory);
+    }
+
+
+    public DefaultCacheKeyCreator(int maxCacheKeySize,String keySpec,
+                                  KeyHashing keyHashingUtil,
+                                  KeySpecFactory keySpecFactory) {
+        this.maxCacheKeySize = maxCacheKeySize;
         this.keyHashingUtil = keyHashingUtil;
         extractors = keySpecFactory.getKeySpecExtractors(keySpec);
         estimatedKeySize = 32 * extractors.size();
@@ -32,15 +39,14 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
     @Override
     public String createCacheKey(HttpServletRequest request) {
-        ResizeableByteBuffer b = new ResizeableByteBuffer(estimatedKeySize,ResizeableByteBuffer.MAX_ARRAY_SIZE);
-//        StringBuilder b = new StringBuilder(estimatedKeySize);
+        ResizeableByteBuffer b = new ResizeableByteBuffer(estimatedKeySize,maxCacheKeySize);
 
         for(KeyAttributeExtractor extractor : extractors) {
             CacheKeyElement keyElement = extractor.getAttribute(request);
             if(!keyElement.isAvailable()) {
                 return null;
             }
-            b.append(keyElement.getElement());
+            b.append(keyElement.getElement(),keyElement.getOffset(),keyElement.getLength());
         }
 
         return keyHashingUtil.hash(b.getBuf(),0,b.position());

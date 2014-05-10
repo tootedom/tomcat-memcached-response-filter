@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 public class RequestMethodBasedInputStreamRequestWrapperFactory implements InputStreamRequestWrapperFactory {
     @Override
     public HttpServletRequest createRequestWrapper(HttpServletRequest originalRequest, boolean requiresContent,
-                                                   int contentLength) {
+                                                   int initialContentBufferSize,int maxContentLength) {
         if(requiresContent && CacheConfigGlobals.METHODS_WITH_CONTENT.contains(originalRequest.getMethod())) {
             int length = originalRequest.getContentLength();
-            if(length == -1 || length>contentLength ) {
+            if(length == -1 || length>maxContentLength ) {
                 return null;
             }
             else {
-                return new MultiReadRequestWrapper(originalRequest);
+                return new MultiReadRequestWrapper(initialContentBufferSize,length,originalRequest);
             }
         }
         else {

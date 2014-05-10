@@ -9,5 +9,6 @@ public interface InputStreamRequestWrapperFactory {
 
     HttpServletRequest createRequestWrapper(HttpServletRequest originalRequest,
                                             boolean requiresContent,
+                                            int initialContentLength,
                                             int maxContentLength);
 }

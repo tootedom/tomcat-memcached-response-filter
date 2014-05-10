@@ -47,16 +47,18 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
 
     private int contentLength = Integer.MIN_VALUE;
 
-    private final int memcachedContentBufferSize;
+    private final int memcachedContentBufferInitialSize;
+    private final int memcachedContentBufferMaxSize;
     private final HttpServletResponse origResponse;
     private final String cacheKey;
 
-    public BufferedResponseWrapper(int memcachedContentBufferSize, HttpServletResponse response,
+    public BufferedResponseWrapper(int memcachedContentBufferInitialSize,
+                                   int memcachedContentBufferMaxSize, HttpServletResponse response,
                                    String cacheKey)
     {
         super(response);
-
-        this.memcachedContentBufferSize = memcachedContentBufferSize;
+        this.memcachedContentBufferInitialSize = memcachedContentBufferInitialSize;
+        this.memcachedContentBufferMaxSize = memcachedContentBufferMaxSize;
         origResponse = response;
         this.cacheKey = cacheKey;
     }
@@ -86,7 +88,8 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
 
         usingOutputStream = true;
         if (outputStream == null) {
-            outputStream = new ResizeableByteBufferOutputStream(memcachedContentBufferSize, origResponse.getOutputStream());
+            outputStream = new ResizeableByteBufferOutputStream(memcachedContentBufferInitialSize,
+                    memcachedContentBufferMaxSize, origResponse.getOutputStream());
             bufferedMemcachedContent = outputStream.getBuffer();
         }
         return outputStream;
@@ -122,7 +125,9 @@ public class BufferedResponseWrapper extends HttpServletResponseWrapper {
 
         usingWriter = true;
         if (writer == null) {
-            ResizeableByteBufferWriter bufferedWriter = new ResizeableByteBufferWriter(memcachedContentBufferSize, origResponse.getWriter());
+            ResizeableByteBufferWriter bufferedWriter = new ResizeableByteBufferWriter(memcachedContentBufferInitialSize,
+                    memcachedContentBufferMaxSize,
+                    origResponse.getWriter());
             writer = new PrintWriter(bufferedWriter);
             bufferedMemcachedContent = bufferedWriter.getBuffer();
         }

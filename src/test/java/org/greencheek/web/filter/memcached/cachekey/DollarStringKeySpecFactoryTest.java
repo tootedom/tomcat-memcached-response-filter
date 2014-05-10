@@ -97,7 +97,7 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element = extractor1.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertArrayEquals("text/plain".getBytes(), element.getElement());
+        assertArrayEquals("text/plain".getBytes(), element.getElementCopy());
     }
 
     @Test
@@ -126,11 +126,11 @@ public class DollarStringKeySpecFactoryTest {
 
         CacheKeyElement element = extractor1.getAttribute(mockRequest);
         assertTrue(element.isAvailable());
-        assertArrayEquals("text/plain".getBytes(),element.getElement());
+        assertArrayEquals("text/plain".getBytes(),element.getElementCopy());
 
         CacheKeyElement element2 = extractor2.getAttribute(mockRequest);
         assertTrue(element2.isAvailable());
-        assertArrayEquals(charJoiner.join(Arrays.asList("gzip", "deflate"), ',', 12).getBytes(),element2.getElement());
+        assertArrayEquals(charJoiner.join(Arrays.asList("gzip", "deflate"), ',', 12).getBytes(),element2.getElementCopy());
 
 
         assertTrue(extractors.get(2) instanceof HeaderAttributeExtractor);
