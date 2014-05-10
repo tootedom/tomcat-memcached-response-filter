@@ -29,7 +29,7 @@ public class SpyMemcachedBuilder {
         builder.setHashAlg(new JenkinsHash());
         builder.setProtocol(ConnectionFactoryBuilder.Protocol.TEXT);
         builder.setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE);
-        builder.setFailureMode(FailureMode.Redistribute);
+        builder.setFailureMode(FailureMode.Cancel);
         builder.setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT);
         builder.setTranscoder(new SerializingTranscoder());
     }
@@ -129,6 +129,8 @@ public class SpyMemcachedBuilder {
         } else if(failureMode.equalsIgnoreCase("retry"))  {
             builder.setFailureMode(FailureMode.Retry);
         } else if(failureMode.equalsIgnoreCase("cancel")) {
+            builder.setFailureMode(FailureMode.Cancel);
+        } else {
             builder.setFailureMode(FailureMode.Cancel);
         }
         return this;

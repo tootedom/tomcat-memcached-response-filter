@@ -72,6 +72,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_MAX_POST_BODY_SIZE = "memcached-max-post-body-size";
     public final static String MEMCACHED_INITIAL_POST_BODY_SIZE = "memcached-initial-post-body-size";
     public final static String MEMCACHED_MAX_CACHE_KEY_SIZE = "memcached-max-cache-key-size";
+    public final static String MEMCACHED_NODE_FAILURE_MODE = "memcached-failure-mode";
 
 	/**
 	 * Logger
@@ -121,6 +122,9 @@ public class PublishToMemcachedFilter implements Filter {
         String hosts = filterConfig.getInitParameter(MEMCACHED_HOSTS_PARAM);
         builder.setMemcachedHosts(hosts);
         builder.setUseBinaryProtocol(Boolean.parseBoolean(filterConfig.getInitParameter(MEMCACHED_USE_BINARY)));
+
+        builder.setFailureMode(filterConfig.getInitParameter(MEMCACHED_NODE_FAILURE_MODE));
+
 
         client = builder.build();
 
