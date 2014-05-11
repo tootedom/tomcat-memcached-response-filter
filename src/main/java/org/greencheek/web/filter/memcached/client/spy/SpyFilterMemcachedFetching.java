@@ -47,10 +47,8 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         } else {
             byte[] content = get(key);
             if(content == null) {
-                log.debug("Cache(MISS),Key({})",key);
                 return CachedResponse.MISS;
             } else {
-                log.debug("Cache(PARTIAL_HIT),Key({})",key);
                 return parseCachedResponse(content);
             }
         }
@@ -71,6 +69,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
             Object o = future.get(config.getCacheGetTimeoutInMillis(), TimeUnit.MILLISECONDS);
             return (byte[])o;
         } catch(Exception e) {
+            log.warn("{\"method\":\"get\",\"exception\":\"{}\",\"message\":\"Exception whilst attempting get from memcached for key\",\"key\":\"{}\"}",e.getMessage(),key);
             return null;
         }
     }

@@ -1,0 +1,37 @@
+<configuration scan="true" scanPeriod="120 seconds" >
+
+    <contextListener class="org.greencheek.ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+
+    <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.FileAppender">
+        <file>${catalina.base}/logs/memcachedfilter.log</file>
+        <rollingPolicy class="org.greencheek.ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>mylog-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="org.greencheek.ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 100MB -->
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>2</maxHistory>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC" class="org.greencheek.ch.qos.logback.classic.AsyncAppender">
+        <queueSize>2048</queueSize>
+        <appender-ref ref="LOGFILE" />
+    </appender>
+
+    <logger name="org.greencheek.net.spy" level="WARN"/>
+    <logger name="org.greencheek.web.filter.memcached.client.spy.extensions" level="WARN"/>
+    <logger name="org.greencheek.web.filter.memcached" level="INFO"/>
+
+    <root level="ERROR">
+        <appender-ref ref="ASYNC" />
+    </root>
+</configuration>

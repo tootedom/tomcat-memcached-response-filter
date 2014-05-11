@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
-    private static final Logger logger = LoggerFactory.getLogger(SpyFilterMemcachedStorage.class);
+    private static final Logger log = LoggerFactory.getLogger(SpyFilterMemcachedStorage.class);
 
     private final MemcachedClient client;
     private final MemcachedStorageConfig storageConfig;
@@ -75,6 +75,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
     private void addHttpStatusLine(BufferedResponseWrapper theResponse, ResizeableByteBuffer buffer) {
         int status = theResponse.getStatus();
         if(status<100) {
+            log.debug("{\"method\":\"addHttpStatusLine\",\"message\":\"response status code of {} is invalid\"}",status);
             buffer.closeForWrites();
             return;
         }
@@ -139,7 +140,9 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
     private void writeToCache(HttpServletRequest theRequest,BufferedResponseWrapper theResponse,
                               int expiryInSeconds, Set<String> additionalContent,
                               Map<String,Collection<String>> responseHeaders, ResizeableByteBuffer content) {
-        if(!storageConfig.canStatusCodeBeCached(theResponse.getStatus())) {
+        int statusCode = theResponse.getStatus();
+        if(!storageConfig.canStatusCodeBeCached(statusCode)) {
+            log.debug("{\"method\":\"writeToCache\",\"message\":\"status code {} cannot be cached\"}",statusCode);
             return;
         }
 
@@ -177,7 +180,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         try {
             client.set(key, expiryInSeconds, content);
         } catch (Exception e) {
-            logger.warn("Unable to write to memcached",e);
+            log.warn("{\"method\":\"writeToMemcached\",\"exception\":\"{}\",\"message\":\"Exception whilst attempting set to memcached for key\",\"key\":\"{}\"}",e.getMessage(),key);
         }
     }
 }

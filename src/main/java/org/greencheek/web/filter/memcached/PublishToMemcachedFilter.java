@@ -225,6 +225,7 @@ public class PublishToMemcachedFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
         if(!isEnabled) {
+            log.debug("{\"method\":\"doFilter\",\"message\":\"memcached filter is not enabled\"}");
             chain.doFilter(request, response);
         } else {
             BufferedResponseWrapper wrappedRes = null;
@@ -244,13 +245,14 @@ public class PublishToMemcachedFilter implements Filter {
                 if(cacheKey!=null && cacheKey.length()>0) {
                     CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest,cacheKey);
                     if (cacheResponse.isCacheHit()) {
-                        log.debug("Cache(HIT),Key({})",cacheKey);
+                        log.info("{\"method\":\"doFilter\",\"message\":\"cache(HIT),key({})\"}",cacheKey);
                         sendCachedResponse(cacheResponse, servletResponse);
                         return;
                     } else {
                         wrappedRes = createResponseWrapper(initialContentSizeForMemcachedEntry,maxContentSizeForMemcachedEntry, servletResponse,cacheKey);
                     }
                 }
+                log.info("{\"method\":\"doFilter\",\"message\":\"cache(MISS),key({})\"}",cacheKey);
                 servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);
             }
 
