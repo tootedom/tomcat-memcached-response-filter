@@ -54,7 +54,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_RESPONSE_BODY_SIZE = "memcached-maxcacheable-bodysize";
     public final static String MEMCACHED_RESPONSE_BODY_INITIAL_SIZE = "memcached-initialcacheable-bodysize";
     public final static String MEMCACHED_HEADER_SIZE = "memcached-header-size";
-    public final static String MEMCACHED_GET_TIMEOUT = "memcached-get-timeout-seconds";
+    public final static String MEMCACHED_GET_TIMEOUT = "memcached-get-timeout-millis";
     public final static String MEMCACHED_CACHE_PRIVATE = "memcached-cache-private";
     public final static String MEMCACHED_FORCE_CACHE = "memcached-force-cache";
     public final static String MEMCACHED_EXPIRY = "memcached-expiry";
@@ -244,6 +244,7 @@ public class PublishToMemcachedFilter implements Filter {
                 if(cacheKey!=null && cacheKey.length()>0) {
                     CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest,cacheKey);
                     if (cacheResponse.isCacheHit()) {
+                        log.debug("Cache(HIT),Key({})",cacheKey);
                         sendCachedResponse(cacheResponse, servletResponse);
                         return;
                     } else {

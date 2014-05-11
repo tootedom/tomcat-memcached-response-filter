@@ -81,6 +81,41 @@ public class TestFilterConfiguration {
     }
 
     @Test
+    public void testSettingGetTimeout() throws Exception {
+        Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_GET_TIMEOUT, "1000");
+            put(PublishToMemcachedFilter.MEMCACHED_NODE_FAILURE_MODE,"retry");
+        }};
+        server.setupServlet2Filter("localhost:"+memcached.getPort(),null,filterInitParams);
+        String url = server.setupServlet("/date/*","date","org.greencheek.web.filter.memcached.servlets.AddDateServlet",true);
+
+        assertTrue(server.startTomcat());
+        url = server.replacePort(url);
+        System.out.println(url);
+        DateHeaderFormatter formatter = new QueueBasedDateFormatter();
+
+        Response response = executeGetRequest(url);
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+        String time = getTime(response);
+        String formattedDate = formatter.toDate(Long.parseLong(time));
+        assertEquals(formattedDate,response.getHeader("X-Now"));
+
+        memcached.getDaemon().stop();
+        Thread.sleep(500);
+
+        long start = System.currentTimeMillis();
+        response = executeGetRequest(url);
+        long taken = System.currentTimeMillis() - start;
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE,getCacheHeader(response));
+        time = getTime(response);
+        formattedDate = formatter.toDate(Long.parseLong(time));
+        assertEquals(formattedDate,response.getHeader("X-Now"));
+    }
+
+
+
+
+    @Test
     public void testForceCaching() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");

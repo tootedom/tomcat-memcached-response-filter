@@ -6,6 +6,8 @@ import org.greencheek.web.filter.memcached.client.FilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.config.MemcachedFetchingConfig;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -19,6 +21,9 @@ import java.util.concurrent.TimeUnit;
  * Created by dominictootell on 16/04/2014.
  */
 public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
+
+    private static final Logger log = LoggerFactory.getLogger(org.greencheek.web.filter.memcached.client.spy.SpyFilterMemcachedFetching.class);
+
 
     private static final byte COLON = 58;
     private static final byte SPACE = 32;
@@ -42,8 +47,10 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
         } else {
             byte[] content = get(key);
             if(content == null) {
+                log.debug("Cache(MISS),Key({})",key);
                 return CachedResponse.MISS;
             } else {
+                log.debug("Cache(PARTIAL_HIT),Key({})",key);
                 return parseCachedResponse(content);
             }
         }
