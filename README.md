@@ -156,7 +156,7 @@ is cached under.
 | $request_uri | The $uri and $args in one, This can be optional; but only applies to the query params | Yes (for query parmas) | No |
 | $cookie_jsessionid | The cookie named `jessionid` is used as part of the cache key | Yes | No |
 | $header_accept | The header named `accept` is used as part of the cache key | Yes | Yes |
-
+| $body | The post body.  This is only to be used for POST. (see later for more details) | No | No |
 ----
 
 ### Headers in Cache Key ###
@@ -286,6 +286,8 @@ allow for the caching of `GET` and `POST` requests, you can specify the followin
       <param-value>get,post</param-value>
     </init-param>
 
+When specifying the caching of `POST` or `PUT`, you need to make sure 100% sure of the cache key; other wise the POST or PUT may not make it to your application.  See later for more details.
+
 ----
 
 ## Cacheable HTTP status codes ##
@@ -306,13 +308,45 @@ allow only the caching of 200 and 404, the following would do it
 The filter will `NOT` cache everything.  It will only cache the response if the response body is below a limited size.
 The reason for this is that the filter creates a temporary, in memory buffer.  This buffer is a copy of the response body
 that is sent to the client.  As a result, if the filter was to cache all responses of any size, this could cause issues
-for your application that may send large response bodies.
+for your application that may send large response bodie; such as running your jvm out of memory.
 
-By default the cache will only
+By default the cache will only cache response bodies up to `16384` bytes (16k).  The filter will not create an internal buffer of that size, but will instead use an initial size then grow in size up to the max cached size.  The default initial size is `4096`.
+
+You can set the initial and max cacheable response bodies with the following two filter parameters:  `memcached-maxcacheable-bodysize` and `memcached-initialcacheable-bodysize`
+
+Max response body (256k):
+
+    <init-param>
+      <param-name>memcached-maxcacheable-bodysize</param-name>
+      <param-value>262144</param-value>
+    </init-param>
+
+Initial response body (16k)
+
+    <init-param>
+      <param-name>memcached-initialcacheable-bodysize</param-name>
+      <param-value>16384</param-value>
+    </init-param>
+
+----
+
+## Caching POST or PUT ##
+
+If you need to cache `POST` or `PUT` request, for instance if an application is using `POST` data to send a large 'GET' request to your application (i.e. an example would be sending queries to elasticsearch or to SOLR); then you will need to use the `POST` data as part of the key.  Otherwise the cache key is going to be same for all posts; and your clients will be returned incorrect data.
+
+In order to use the POST content of the request you need to use `$body` as part of the cache key.
+
+    <init-param>
+      <param-name>memcached-key</param-name>
+      <param-value>$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?$body</param-value>
+    </init-param>
 
 
-##
 
+
+----
+
+## Example Tomcat Setup ##
 memcached-get-timeout-millis
 
 
