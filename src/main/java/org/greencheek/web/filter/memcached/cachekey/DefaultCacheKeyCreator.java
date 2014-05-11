@@ -7,6 +7,8 @@ import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
 import org.greencheek.web.filter.memcached.util.CustomSplitByChar;
 import org.greencheek.web.filter.memcached.util.SplitByChar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -16,6 +18,8 @@ import java.util.*;
  * Created by dominictootell on 13/04/2014.
  */
 public class DefaultCacheKeyCreator implements CacheKeyCreator {
+
+    private static final Logger log = LoggerFactory.getLogger(org.greencheek.web.filter.memcached.cachekey.DefaultCacheKeyCreator.class);
 
     private final KeyHashing keyHashingUtil;
     private final List<KeyAttributeExtractor> extractors;
@@ -56,7 +60,12 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
             b.append(keyElement.getElement(),keyElement.getOffset(),keyElement.getLength());
         }
 
-        return keyHashingUtil.hash(b.getBuf(),0,b.position());
+        if(b.canWrite()) {
+            return keyHashingUtil.hash(b.getBuf(), 0, b.position());
+        } else {
+            log.debug("{\"method\":\"createCacheKey\",\"message\":\"Unable to create cache key.  Max Cache Key size reached: {}\"}",maxCacheKeySize);
+            return null;
+        }
     }
 
 

@@ -213,6 +213,30 @@ using the jessionid cookie
       <param-value>$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?$cookie_jsessionid?</param-value>
     </init-param>
 
+
+----
+
+## Cache Key Size ##
+
+The cache key is made up of a number of different headers and request parameters, and can also (as will be seen later) use the request body.  As a result a limit is put on the size of the cache key (as this is held in memory).  The byte buffer associated with the cache key has an initial size, and can grow to a maximum.  The max size is '8192' bytes, and the initial size is based on a calculation (for each $ cache key, 32 bytes is allowed).  Both this values are configurable with the filter parameters
+
+- Initial Size:  `memcached-estimated-cache-key-size` 
+- Max Size:  `memcached-max-cache-key-size`
+
+The following gives an example of configuring these:
+
+
+    <init-param>
+      <param-name>memcached-estimated-cache-key-size</param-name>
+      <param-value>4196</param-value>
+    </init-param>
+    <init-param>
+      <param-name>memcached-max-cache-key-size</param-name>
+      <param-value>8192</param-value>
+    </init-param>
+
+
+
 ----
 
 ## What is Cached? ##
@@ -334,7 +358,14 @@ Initial response body (16k)
 
 If you need to cache `POST` or `PUT` request, for instance if an application is using `POST` data to send a large 'GET' request to your application (i.e. an example would be sending queries to elasticsearch or to SOLR); then you will need to use the `POST` data as part of the key.  Otherwise the cache key is going to be same for all posts; and your clients will be returned incorrect data.
 
-In order to use the POST content of the request you need to use `$body` as part of the cache key.
+First you enable the caching of `POST` or `PUT`, (and `GET`), with the following:
+
+    <init-param>
+      <param-name>memcached-cacheable-methods</param-name>
+      <param-value>get,post</param-value>
+    </init-param>
+
+In order to use the request body, you need to use `$body` as part of the cache key.
 
     <init-param>
       <param-name>memcached-key</param-name>
@@ -342,6 +373,38 @@ In order to use the POST content of the request you need to use `$body` as part 
     </init-param>
 
 
+With `$body` in place, for `POST` or `PUT` requests will use the `$body` as part of the key.  This will be ignored for `GET` requests, which will use continue to use the rest of the key.
+
+There is another piece of the puzzle to consider when using `$body`.  You need be be aware of how your application consumes the request body.  *ONLY*, if your application consumes the request body via `getInputStream` or `getReader` on the `HttpRequest`, should the `$body` be used.  If your application consumes the request body via `getParameter` or `getParameterMap` then the use of `$body` will break your application's expectations.
+
+In order for the `$body` to be useable the request **MUST** specify a `Content-Length` and not use chunking.  If the `Content-Length` header is not available; then the PUT or POST will not be cacheable.
+
+
+### Request Body Size ###
+
+As part of the use of `$body`, the size of the request body (`Content-Length`) is important.  The filter is configured to only cache PUT or POST requests with a limited request body size.  The reason for this is that one a `SerlvetRequest`'s InputStream has been consumed it cannot be read again. 
+
+As an example, if we are to use the `$body` as the cache key; and that request hasn't been cached yet (i.e. a cache miss).  The request must go to the back end (i.e. your application).  However, if your application is expecting the `InputStream` (the request body) to perform its function it is not going to be available.  It has already been read for use a the cache key.
+
+In order to solve this, the filter reads the `$body` and caches it in memory.  Therefore, a limit is put on the size of the request body that is cacheable.  It order for the filter to know the size of the request body and not read the body if it is too large, the `Content-Length` is required.
+
+The max size of the POST or PUT body, by default is `8192` bytes (8k).  This is configurable with the filter parameter `memcached-max-post-body-size`.  For example the following allows the max post body to be 16k:
+
+    <init-param>
+      <param-name>memcached-max-post-body-size</param-name>
+      <param-value>16384</param-value>
+    </init-param>
+
+As the request `$body` is used as the cache key you need to specify/increase the size of the cache key the is allowed to be created, via the filter parameter `memcached-max-cache-key-size`.  If you are combining the `$body` with that of other header you will need to make the max cache key size (`memcached-max-cache-key-size`) greater than that of the `memcached-max-post-body-size`
+
+    <init-param>
+      <param-name>memcached-estimated-cache-key-size</param-name>
+      <param-value>8192</param-value>
+    </init-param>
+    <init-param>
+      <param-name>memcached-max-cache-key-size</param-name>
+      <param-value>20480</param-value>
+    </init-param>
 
 
 ----
