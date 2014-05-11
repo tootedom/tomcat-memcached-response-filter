@@ -308,9 +308,12 @@ The reason for this is that the filter creates a temporary, in memory buffer.  T
 that is sent to the client.  As a result, if the filter was to cache all responses of any size, this could cause issues
 for your application that may send large response bodies.
 
-By default hte
+By default the cache will only
 
 
 ##
 
 memcached-get-timeout-millis
+
+
+-Dnet.spy.log.LoggerImpl=org.greencheek.net.spy.memcached.compat.log.SLF4JLogger

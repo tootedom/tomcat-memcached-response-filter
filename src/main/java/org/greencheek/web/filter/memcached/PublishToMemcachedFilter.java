@@ -72,6 +72,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_MAX_POST_BODY_SIZE = "memcached-max-post-body-size";
     public final static String MEMCACHED_INITIAL_POST_BODY_SIZE = "memcached-initial-post-body-size";
     public final static String MEMCACHED_MAX_CACHE_KEY_SIZE = "memcached-max-cache-key-size";
+    public final static String MEMCACHED_ESTIMATED_CACHE_KEY_SIZE = "memcached-estimated-cache-key-size";
     public final static String MEMCACHED_NODE_FAILURE_MODE = "memcached-failure-mode";
 
 	/**
@@ -106,7 +107,10 @@ public class PublishToMemcachedFilter implements Filter {
         SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
         keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
-        keyConfigBuilder.setMaxCacheKeySize(parseSize(filterConfig,MEMCACHED_MAX_CACHE_KEY_SIZE,CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE));
+        keyConfigBuilder.setMaxCacheKeySize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_MAX_CACHE_KEY_SIZE),
+                                            CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE));
+        keyConfigBuilder.setEstimatedCacheKeySize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_ESTIMATED_CACHE_KEY_SIZE),
+                CacheConfigGlobals.DEFAULT_ESTIMATED_CACHED_KEY_SIZE));
 
         boolean checkHostsConnectivity = Boolean.parseBoolean(filterConfig.getInitParameter(MEMCACHED_CHECK_HOST_CONNECTIVITY));
         builder.setCheckHostConnectivity(checkHostsConnectivity);
@@ -149,7 +153,7 @@ public class PublishToMemcachedFilter implements Filter {
         MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder();
 
         storageConfigBuilder.setResponseHeadersToIgnore(filterConfig.getInitParameter(MEMCACHED_HEADERS_TO_IGNORE));
-        storageConfigBuilder.setMaxHeadersSize(filterConfig.getInitParameter(MEMCACHED_HEADER_SIZE));
+        storageConfigBuilder.setMaxHeadersSize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_HEADER_SIZE),CacheConfigGlobals.DEFAULT_MAX_HEADERS_LENGTH_TO_STORE));
         storageConfigBuilder.setStorePrivate(filterConfig.getInitParameter(MEMCACHED_CACHE_PRIVATE));
         storageConfigBuilder.setForceCache(filterConfig.getInitParameter(MEMCACHED_FORCE_CACHE));
         storageConfigBuilder.setForceCacheDuration(filterConfig.getInitParameter(MEMCACHED_FORCE_EXPIRY));

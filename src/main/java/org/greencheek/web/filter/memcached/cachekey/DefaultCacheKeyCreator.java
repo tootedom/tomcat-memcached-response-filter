@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.cachekey;
 
 import org.greencheek.web.filter.memcached.cachekey.extraction.*;
+import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.io.ResizeableByteBuffer;
 import org.greencheek.web.filter.memcached.keyhashing.KeyHashing;
 import org.greencheek.web.filter.memcached.keyhashing.MessageDigestHashing;
@@ -23,17 +24,23 @@ public class DefaultCacheKeyCreator implements CacheKeyCreator {
 
     public DefaultCacheKeyCreator(String keySpec, KeyHashing keyHashingUtil,
                                   KeySpecFactory keySpecFactory) {
-        this(4096,keySpec,keyHashingUtil,keySpecFactory);
+        this(CacheConfigGlobals.DEFAULT_ESTIMATED_CACHED_KEY_SIZE,
+             CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE,
+             keySpec,keyHashingUtil,keySpecFactory);
     }
 
 
-    public DefaultCacheKeyCreator(int maxCacheKeySize,String keySpec,
+    public DefaultCacheKeyCreator(int estimatedKeySize,int maxCacheKeySize,String keySpec,
                                   KeyHashing keyHashingUtil,
                                   KeySpecFactory keySpecFactory) {
         this.maxCacheKeySize = maxCacheKeySize;
         this.keyHashingUtil = keyHashingUtil;
         extractors = keySpecFactory.getKeySpecExtractors(keySpec);
-        estimatedKeySize = 32 * extractors.size();
+        if(estimatedKeySize==-1 || estimatedKeySize<1) {
+            this.estimatedKeySize = CacheConfigGlobals.DEFAULT_ESTIMATED_KEY_INDIVIDUAL_ITEM_SIZE * extractors.size();
+        } else {
+            this.estimatedKeySize = estimatedKeySize;
+        }
 
     }
 

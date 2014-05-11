@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
  * Created by dominictootell on 15/04/2014.
  */
 public class MemcachedStorageConfigBuilder {
-    public static int DEFAULT_MAX_HEADERS_LENGTH_TO_STORE = 8192;
     public static Set<String> DEFAULT_ADDITIONAL_HEADERS = Collections.EMPTY_SET;
     public static final int DEFAULT_EXPIRY_IN_SECONDS = 300;
     public static final boolean DEFAULT_STORE_PRIVATE = false;
@@ -52,7 +51,7 @@ public class MemcachedStorageConfigBuilder {
     private Set<String> responseHeadersToIgnore = DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     private int defaultExpiryInSeconds = DEFAULT_EXPIRY_IN_SECONDS;
     private Set<String> additionalHeaders  = DEFAULT_ADDITIONAL_HEADERS;
-    private int defaultMaxHeadersLengthToStore = DEFAULT_MAX_HEADERS_LENGTH_TO_STORE;
+    private int defaultMaxHeadersLengthToStore = CacheConfigGlobals.DEFAULT_MAX_HEADERS_LENGTH_TO_STORE;
     private boolean storePrivate = DEFAULT_STORE_PRIVATE;
     private boolean forceCache = DEFAULT_FORCE_CACHE;
     private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
@@ -99,16 +98,6 @@ public class MemcachedStorageConfigBuilder {
 
     public MemcachedStorageConfigBuilder setMaxHeadersSize(int lengthInBytes) {
         this.defaultMaxHeadersLengthToStore = lengthInBytes;
-        return this;
-    }
-
-    public MemcachedStorageConfigBuilder setMaxHeadersSize(String lengthInBytes) {
-
-        try {
-            this.defaultMaxHeadersLengthToStore = Integer.parseInt(lengthInBytes);
-        } catch(NumberFormatException e) {
-
-        }
         return this;
     }
 

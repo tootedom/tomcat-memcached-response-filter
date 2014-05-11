@@ -32,6 +32,6 @@ public class RequestBodyAttributeExtractor implements KeyAttributeExtractor {
 
     private ResizeableByteBuffer readBody(HttpServletRequest request, int contentLength) throws IOException {
         InputStream inputStream = request.getInputStream();
-        return IOUtils.readStreamToResizeableByteBuffer(4096, inputStream, contentLength);
+        return IOUtils.readStreamToResizeableByteBuffer(inputStream, contentLength);
     }
 }

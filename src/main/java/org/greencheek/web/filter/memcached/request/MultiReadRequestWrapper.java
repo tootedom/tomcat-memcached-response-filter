@@ -53,7 +53,7 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
 
     private byte[] cacheInputStreamContent() throws IOException {
         InputStream inputStream = originalRequest.getInputStream();
-        return IOUtils.readStreamToBytes(initialContentBufferSize, inputStream, contentLength);
+        return IOUtils.readStreamToBytes(inputStream, contentLength);
     }
 
 

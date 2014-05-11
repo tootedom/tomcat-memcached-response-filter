@@ -25,6 +25,11 @@ public class CacheConfigGlobals {
     public final static int DEFAULT_MAX_CACHEABLE_RESPONSE_BODY = 8192*2; //16k
     public final static int DEFAULT_INITIAL_CACHEABLE_RESPONSE_BODY = 4096; // 4k
     public final static int DEFAULT_MAX_CACHE_KEY_SIZE = 8192; //8kb
+    public final static int DEFAULT_ESTIMATED_CACHED_KEY_SIZE = -1; //Will be calculate based on number of key attribute extractors and DEFAULT_ESTIMATED_KEY_INDIVIDUAL_ITEM_SIZE
+    public final static int DEFAULT_ESTIMATED_KEY_INDIVIDUAL_ITEM_SIZE = 32;
+    public final static int DEFAULT_MAX_HEADERS_LENGTH_TO_STORE = 8192;
+
+
     public final static int DEFAULT_MAX_SINGLE_HEADER_SIZE = 2048; //2kb
 
     public static final SplitByChar DEFAULT_CHAR_SPLITTER = new CustomSplitByChar();
@@ -121,6 +126,7 @@ public class CacheConfigGlobals {
         codes.put(507,getBytes("507 Insufficient Storage"));
         STATUS_CODES = codes;
     }
+
 
 
     public static byte[] getStatusCodeText(int code) {

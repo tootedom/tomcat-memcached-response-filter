@@ -37,6 +37,7 @@
     </scm>
 	<properties>
         <jvmargs />
+        <gatling.simulationClass>org.greencheek.web.filter.memcached.ExecuteSimpleGetRequestIT</gatling.simulationClass>
         <scala.version>2.9.3</scala.version>
         <gatling.version>1.5.5</gatling.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -372,7 +373,7 @@
 				<version>2.3</version>
 				<executions>
 					<execution>
-						<id>shade-including-slf4j</id>
+						<id>shade-including-slf4japi</id>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
@@ -401,6 +402,7 @@
                             <artifactSet>
                                 <excludes>
                                     <exclude>ch.qos.logback:*</exclude>
+                                    <exclude>org.slf4j:jul-to-slf4j</exclude>
                                 </excludes>
                             </artifactSet>
 							<transformers>
@@ -485,6 +487,7 @@
                                 <excludes>
                                     <exclude>org.slf4j:slf4j-api</exclude>
                                     <exclude>ch.qos.logback:*</exclude>
+                                    <exclude>org.slf4j:jul-to-slf4j</exclude>
                                 </excludes>
                             </artifactSet>
                         </configuration>
@@ -677,7 +680,7 @@
                                     <includes>
                                         <include>**/*.scala</include>
                                     </includes>
-                                    <simulationClass>org.greencheek.web.filter.memcached.ExecuteSimpleGetRequestIT</simulationClass>
+                                    <simulationClass>${gatling.simulationClass}</simulationClass>
 
                                     <!--    <noReports>false</noReports> -->
                                     <!--    <reportsOnly>false</reportsOnly> -->
@@ -688,7 +691,7 @@
                                         <jvmArg>-XX:MaxPermSize=512m</jvmArg>
                                         <jvmArg>-XX:+UnlockCommercialFeatures</jvmArg>
                                         <jvmArg>-XX:+FlightRecorder</jvmArg>
-                                        <jvmArg>-XX:StartFlightRecording=duration=160s,delay=20s,settings=profile,filename=target/recording.jfr</jvmArg>
+                                        <jvmArg>-XX:StartFlightRecording=duration=160s,delay=10s,settings=profile,filename=target/recording.jfr</jvmArg>
                                     </jvmArgs>
 
                                     <fork>true</fork>
@@ -727,7 +730,7 @@
                                     <includes>
                                         <include>**/*.scala</include>
                                     </includes>
-                                    <simulationClass>org.greencheek.web.filter.memcached.ExecuteSimpleGetRequestIT</simulationClass>
+                                    <simulationClass>${gatling.simulationClass}</simulationClass>
 
                                     <!--    <noReports>false</noReports> -->
                                     <!--    <reportsOnly>false</reportsOnly> -->
