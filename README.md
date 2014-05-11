@@ -4,9 +4,13 @@
 A Lazy man's servlet filter for caching responses in memcached.
 
 What does that mean?  It's a Java Servlet Filter (or two) that stores the
-response to a GET request in memcached.  When a subsequent request,
-for the same content (i.e the same GET request) is made, the content is retrieved
+response to a GET (or POST/PUT) request in memcached.  When a subsequent request,
+for that same content (i.e the same GET request) is made, the content is retrieved
 and serviced from memcached; rather than from the `j2ee` application.
+
+One of the ideal use cases for this servlet filter is for a legacy Web Application, which needs to use caching, to allow it to scale during periods of heavy load.  The Web Application could be being replaced by a collection of small RESTful, stateless, scalable applications; and you need to add caching to the existing application whilst the new services are brought into play.
+
+The filter is a standard java servlet filter, and has been tested on tomcat 6 (6.0.39), with java 6u65.  It has also been tested on tomcat-7.0.53 and java 7u55
 
 ----
 
@@ -409,8 +413,107 @@ As the request `$body` is used as the cache key you need to specify/increase the
 
 ----
 
+## Memcached Get Timeout ##
+
+The request to fetch the content associated with a key from memcached is a blocking request.  By default the timeout in mills for this get lookup to succeed is `1000` mills.  As 1s to obtain a result from memcached for a key can be considered a long time.  This timeout is configurable.  The filter parameter is:  `memcached-get-timeout-millis`.
+
+    <init-param>
+      <param-name>memcached-get-timeout-millis</param-name>
+      <param-value>500</param-value>
+    </init-param>
+
+
+
 ## Example Tomcat Setup ##
-memcached-get-timeout-millis
+
+The following gives an example of installing the shaded jar in a legacy web application. 
+
+The below will provide an example of installing the filter within a tomcat 6 application, running on jdk6u45 or higher.
+
+The installation will be such that the installation and setup of the filter is within the ${catalina.home}, as it is assumed the legacy application cannot be modified to deploy the servlet as part of it.
+
+The installation of the filter is a combination of the following steps:
+
+- Configure an SLF4J property
+- Deploy the shaded filter (contains slf4j and logback).
+- Configure the web.xml
+- Configure logback.xml
+
+### Configure slf4j property ###
+
+Add to `CATALINA_OPTS` the following system property: `-Dnet.spy.log.LoggerImpl=org.greencheek.net.spy.memcached.compat.log.SLF4JLogger`
+
+This can be added to `bin/setenv.sh`:
+
+    export CATALINA_OPTS="-Dnet.spy.log.LoggerImpl=org.greencheek.net.spy.memcached.compat.log.SLF4JLogger"
+
+### Install the shaded filter jar ###
+
+Download `caching-filter-0.0.6-shadewithlogback.jar` and deploy to `${catalina.home}/lib`
+
+### Configure the web.xml ###
+
+Configure the `web.xml` to enable the servlet:
+edit `${catalina.home}/conf/web.xml`
 
 
--Dnet.spy.log.LoggerImpl=org.greencheek.net.spy.memcached.compat.log.SLF4JLogger
+    <filter>
+        <filter-name>writeToMemcached</filter-name>
+        <filter-class>org.greencheek.web.filter.memcached.PublishToMemcachedFilter</filter-class>
+        <init-param>
+            <param-name>memcached-use-binary-protocol</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>memcached-cacheable-methods</param-name>
+            <param-value>get,post</param-value>
+        </init-param>
+        <init-param>
+            <param-name>memcached-key</param-name>
+            <param-value>$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?$body</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>writeToMemcached</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+### Configure logback.xml ###
+
+Create `${catalina.home}/lib/logback.xml`, and insert the following contents:
+
+    <configuration scan="true" scanPeriod="120 seconds" >
+        <contextListener class="org.greencheek.ch.qos.logback.classic.jul.LevelChangePropagator">
+            <resetJUL>true</resetJUL>
+        </contextListener>
+        
+        <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.FileAppender">
+            <file>${catalina.base}/logs/memcachedfilter.log</file>
+            <rollingPolicy class="org.greencheek.ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <!-- rollover daily -->
+                <fileNamePattern>memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <timeBasedFileNamingAndTriggeringPolicy
+                    class="org.greencheek.ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <!-- or whenever the file size reaches 100MB -->
+                    <maxFileSize>100MB</maxFileSize>
+                    <maxHistory>2</maxHistory>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <appender name="ASYNC" class="org.greencheek.ch.qos.logback.classic.AsyncAppender">
+            <queueSize>2048</queueSize>
+            <appender-ref ref="LOGFILE" />
+        </appender>
+
+        <logger name="org.greencheek.net.spy" level="WARN"/>
+        <logger name="org.greencheek.web.filter.memcached.client.spy.extensions" level="WARN"/>
+        <logger name="org.greencheek.web.filter.memcached" level="INFO"/>
+
+        <root level="ERROR">
+            <appender-ref ref="ASYNC" />
+        </root>
+    </configuration>
