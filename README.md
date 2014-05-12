@@ -8,11 +8,64 @@ response to a GET (or POST/PUT) request in memcached.  When a subsequent request
 for that same content (i.e the same GET request) is made, the content is retrieved
 and serviced from memcached; rather than from the `j2ee` application.
 
-One of the ideal use cases for this servlet filter is for a legacy Web Application, which needs to use caching, to allow it to scale during periods of heavy load.  The Web Application could be being replaced by a collection of small RESTful, stateless, scalable applications; and you need to add caching to the existing application whilst the new services are brought into play.
+One of the ideal use cases for this servlet filter is for a legacy Web Application, which needs to use caching,
+to allow it to scale during periods of heavy load.  The Web Application could be being replaced
+by a collection of small RESTful, stateless, scalable applications; and you need to add caching to the
+existing application whilst the new services are brought into play.
 
-The filter is a standard java servlet filter, and has been tested on tomcat 6 (6.0.39), with java 6u65.  It has also been tested on tomcat-7.0.53 and java 7u55
+The filter is a standard java servlet filter, and has been tested on tomcat 6 (6.0.39), with java 6u65.
+It has also been tested on tomcat-7.0.53 and java 7u55
 
 ----
+
+----
+
+## Usage ##
+
+The filter is available in maven central.
+And you can put in the depedendency as follows:
+
+    <dependency>
+       <groupId>org.greencheek.memcached</groupId>
+       <artifactId>caching-filter</artifactId>
+       <version>0.0.6</version>
+    </dependency>
+
+----
+
+## Dependencies ##
+
+The filter uses a couple of libraries/dependencies, which are listed below.
+
+- net.spy:spymemcached:jar:2.10.6:compile
+- net.sf.trove4j:trove4j:jar:3.0.3:compile
+- org.slf4j:slf4j-api:jar:1.7.7:compile
+- net.jpountz.lz4:lz4:jar:1.2.0:compile
+
+----
+
+## Shaded Artifacts ##
+
+There's a collection of shaded artifacts.  These artifacts package together the filter, and it's dependencies in one jar.
+The shaded artifacts have been relocated to the `org.greencheek` package.  For example `gnu/trove/map/hash/TByteIntHashMap.class`
+is now `org/greencheek/gnu/trove/map/hash/TByteIntHashMap.class`
+
+The shaded artifacts are for use in legacy applications, or those applications in which you cannot modify the dependencies.
+As a result you need a jar that combines all the dependencies that are required for running the filter.
+
+
+- Logback
+
+This shaded artifact compiles together all the dependencies, but also a the logging implementation `logback`
+
+    <dependency>
+       <groupId>org.greencheek.memcached</groupId>
+       <artifactId>caching-filter</artifactId>
+       <version>0.0.6</version>
+       <classifier>shadewithlogback</classifier>
+    </dependency>
+
+
 
 ## Where can it be used ##
 
@@ -222,7 +275,11 @@ using the jessionid cookie
 
 ## Cache Key Size ##
 
-The cache key is made up of a number of different headers and request parameters, and can also (as will be seen later) use the request body.  As a result a limit is put on the size of the cache key (as this is held in memory).  The byte buffer associated with the cache key has an initial size, and can grow to a maximum.  The max size is '8192' bytes, and the initial size is based on a calculation (for each $ cache key, 32 bytes is allowed).  Both this values are configurable with the filter parameters
+The cache key is made up of a number of different headers and request parameters, and can also (as will be seen later) use
+the request body.  As a result a limit is put on the size of the cache key (as this is held in memory).  The byte buffer
+associated with the cache key has an initial size, and can grow to a maximum.  The max size is '8192' bytes, and the
+initial size is based on a calculation (for each $ cache key, 32 bytes is allowed).  Both this values are configurable
+with the filter parameters
 
 - Initial Size:  `memcached-estimated-cache-key-size` 
 - Max Size:  `memcached-max-cache-key-size`
@@ -314,7 +371,8 @@ allow for the caching of `GET` and `POST` requests, you can specify the followin
       <param-value>get,post</param-value>
     </init-param>
 
-When specifying the caching of `POST` or `PUT`, you need to make sure 100% sure of the cache key; other wise the POST or PUT may not make it to your application.  See later for more details.
+When specifying the caching of `POST` or `PUT`, you need to make sure 100% sure of the cache key; otherwise the POST or
+PUT may not make it to your application.  See later for more details.
 
 ----
 
@@ -360,7 +418,10 @@ Initial response body (16k)
 
 ## Caching POST or PUT ##
 
-If you need to cache `POST` or `PUT` request, for instance if an application is using `POST` data to send a large 'GET' request to your application (i.e. an example would be sending queries to elasticsearch or to SOLR); then you will need to use the `POST` data as part of the key.  Otherwise the cache key is going to be same for all posts; and your clients will be returned incorrect data.
+If you need to cache `POST` or `PUT` request, for instance if an application is using `POST` data to send a large 'GET'
+request to your application (i.e. an example would be sending queries to SOLR, which accepts POST requests); then you
+will need to use the `POST` data as part of the key.  Otherwise the cache key is going to be same for all posts; and your
+ clients will be returned incorrect data.
 
 First you enable the caching of `POST` or `PUT`, (and `GET`), with the following:
 
@@ -377,29 +438,45 @@ In order to use the request body, you need to use `$body` as part of the cache k
     </init-param>
 
 
-With `$body` in place, for `POST` or `PUT` requests will use the `$body` as part of the key.  This will be ignored for `GET` requests, which will use continue to use the rest of the key.
+With `$body` in place, for `POST` or `PUT` requests will use the `$body` as part of the key.  This will be ignored for
+`GET` requests, which will use continue to use the rest of the key.
 
-There is another piece of the puzzle to consider when using `$body`.  You need be be aware of how your application consumes the request body.  *ONLY*, if your application consumes the request body via `getInputStream` or `getReader` on the `HttpRequest`, should the `$body` be used.  If your application consumes the request body via `getParameter` or `getParameterMap` then the use of `$body` will break your application's expectations.
+There is another piece of the puzzle to consider when using `$body`.  You need be be aware of how your application
+consumes the request body.  *ONLY*, if your application consumes the request body via `getInputStream` or `getReader`
+on the `HttpRequest`, should the `$body` be used.  If your application consumes the request body via `getParameter`
+or `getParameterMap` then the use of `$body` will break your application's expectations.
 
-In order for the `$body` to be useable the request **MUST** specify a `Content-Length` and not use chunking.  If the `Content-Length` header is not available; then the PUT or POST will not be cacheable.
+In order for the `$body` to be useable the request **MUST** specify a `Content-Length` and not use chunking.  If
+the `Content-Length` header is not available; then the PUT or POST will not be cacheable.
 
 
 ### Request Body Size ###
 
-As part of the use of `$body`, the size of the request body (`Content-Length`) is important.  The filter is configured to only cache PUT or POST requests with a limited request body size.  The reason for this is that one a `SerlvetRequest`'s InputStream has been consumed it cannot be read again. 
+As part of the use of `$body`, the size of the request body (`Content-Length`) is important.  The filter is configured
+to only cache PUT or POST requests with a limited request body size.  The reason for this is that one a `SerlvetRequest`'s
+InputStream has been consumed it cannot be read again.
 
-As an example, if we are to use the `$body` as the cache key; and that request hasn't been cached yet (i.e. a cache miss).  The request must go to the back end (i.e. your application).  However, if your application is expecting the `InputStream` (the request body) to perform its function it is not going to be available.  It has already been read for use a the cache key.
+As an example, if we are to use the `$body` as the cache key; and that request hasn't been cached yet (i.e. a cache miss).
+The request must go to the back end (i.e. your application).  However, if your application is expecting
+the `InputStream` (the request body) to perform its function it is not going to be available.  It has already been read
+for use a the cache key.
 
-In order to solve this, the filter reads the `$body` and caches it in memory.  Therefore, a limit is put on the size of the request body that is cacheable.  It order for the filter to know the size of the request body and not read the body if it is too large, the `Content-Length` is required.
+In order to solve this, the filter reads the `$body` and caches it in memory.  Therefore, a limit is put on the size
+of the request body that is cacheable.  It order for the filter to know the size of the request body and not read the
+body if it is too large, the `Content-Length` is required.
 
-The max size of the POST or PUT body, by default is `8192` bytes (8k).  This is configurable with the filter parameter `memcached-max-post-body-size`.  For example the following allows the max post body to be 16k:
+The max size of the POST or PUT body, by default is `8192` bytes (8k).  This is configurable with the filter parameter
+`memcached-max-post-body-size`.  For example the following allows the max post body to be 16k:
 
     <init-param>
       <param-name>memcached-max-post-body-size</param-name>
       <param-value>16384</param-value>
     </init-param>
 
-As the request `$body` is used as the cache key you need to specify/increase the size of the cache key the is allowed to be created, via the filter parameter `memcached-max-cache-key-size`.  If you are combining the `$body` with that of other header you will need to make the max cache key size (`memcached-max-cache-key-size`) greater than that of the `memcached-max-post-body-size`
+As the request `$body` is used as the cache key you need to specify/increase the size of the cache key the is allowed to
+be created, via the filter parameter `memcached-max-cache-key-size`.  If you are combining the `$body` with that of other
+header you will need to make the max cache key size (`memcached-max-cache-key-size`) greater than that of
+the `memcached-max-post-body-size`
 
     <init-param>
       <param-name>memcached-estimated-cache-key-size</param-name>
@@ -415,7 +492,9 @@ As the request `$body` is used as the cache key you need to specify/increase the
 
 ## Memcached Get Timeout ##
 
-The request to fetch the content associated with a key from memcached is a blocking request.  By default the timeout in mills for this get lookup to succeed is `1000` mills.  As 1s to obtain a result from memcached for a key can be considered a long time.  This timeout is configurable.  The filter parameter is:  `memcached-get-timeout-millis`.
+The request to fetch the content associated with a key from memcached is a blocking request.  By default the timeout in
+millis for this get lookup to succeed is `1000` mills.  As 1s to obtain a result from memcached for a key can be
+considered a long time.  This timeout is configurable.  The filter parameter is:  `memcached-get-timeout-millis`.
 
     <init-param>
       <param-name>memcached-get-timeout-millis</param-name>
@@ -430,7 +509,8 @@ The following gives an example of installing the shaded jar in a legacy web appl
 
 The below will provide an example of installing the filter within a tomcat 6 application, running on jdk6u45 or higher.
 
-The installation will be such that the installation and setup of the filter is within the ${catalina.home}, as it is assumed the legacy application cannot be modified to deploy the servlet as part of it.
+The installation will be such that the installation and setup of the filter is within the ${catalina.home}, as it is
+assumed the legacy application cannot be modified to deploy the servlet as part of it.
 
 The installation of the filter is a combination of the following steps:
 
