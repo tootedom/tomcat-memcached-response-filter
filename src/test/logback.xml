@@ -9,7 +9,7 @@
         <file>${catalina.base}/logs/memcachedfilter.log</file>
         <rollingPolicy class="org.greencheek.ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>mylog-%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+            <fileNamePattern>memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="org.greencheek.ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <!-- or whenever the file size reaches 100MB -->
@@ -28,8 +28,8 @@
     </appender>
 
     <logger name="org.greencheek.net.spy" level="WARN"/>
-    <logger name="org.greencheek.web.filter.memcached.client.spy.extensions" level="WARN"/>
-    <logger name="org.greencheek.web.filter.memcached" level="INFO"/>
+    <logger name="org.greencheek.web.filter.memcached" level="WARN"/>
+    <logger name="org.greencheek.web.filter.memcached.util.CacheStatusLogger" level="INFO"/>
 
     <root level="ERROR">
         <appender-ref ref="ASYNC" />

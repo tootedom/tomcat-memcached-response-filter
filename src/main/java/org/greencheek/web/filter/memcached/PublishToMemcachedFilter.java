@@ -42,6 +42,8 @@ import org.greencheek.web.filter.memcached.request.RequestMethodBasedInputStream
 import org.greencheek.web.filter.memcached.request.InputStreamRequestWrapperFactory;
 import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 import org.greencheek.web.filter.memcached.response.Servlet2BufferedResponseWrapper;
+import org.greencheek.web.filter.memcached.util.CacheStatusLogger;
+import org.greencheek.web.filter.memcached.util.Slf4jCacheStatusLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +55,8 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_HEADERS_TO_IGNORE = "memcached-ignore-headers";
     public final static String MEMCACHED_RESPONSE_BODY_SIZE = "memcached-maxcacheable-bodysize";
     public final static String MEMCACHED_RESPONSE_BODY_INITIAL_SIZE = "memcached-initialcacheable-bodysize";
-    public final static String MEMCACHED_HEADER_SIZE = "memcached-header-size";
+    public final static String MEMCACHED_RESPONSE_MAX_HEADER_SIZE = "memcached-response-max-header-size";
+    public final static String MEMCACHED_RESPONSE_ESTIMATED_HEADER_SIZE = "memcached-response-estimated-header-size";
     public final static String MEMCACHED_GET_TIMEOUT = "memcached-get-timeout-millis";
     public final static String MEMCACHED_CACHE_PRIVATE = "memcached-cache-private";
     public final static String MEMCACHED_FORCE_CACHE = "memcached-force-cache";
@@ -75,6 +78,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_ESTIMATED_CACHE_KEY_SIZE = "memcached-estimated-cache-key-size";
     public final static String MEMCACHED_NODE_FAILURE_MODE = "memcached-failure-mode";
 
+
 	/**
 	 * Logger
 	 */
@@ -84,6 +88,7 @@ public class PublishToMemcachedFilter implements Filter {
 	 * Has this component been started yet?
 	 */
 
+    private static final CacheStatusLogger cacheStatusLogger = new Slf4jCacheStatusLogger();
     private int maxContentSizeForMemcachedEntry;
     private int initialContentSizeForMemcachedEntry;
     private DateHeaderFormatter dateHeaderFormatter = new QueueBasedDateFormatter();
@@ -108,7 +113,7 @@ public class PublishToMemcachedFilter implements Filter {
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
         keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
         keyConfigBuilder.setMaxCacheKeySize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_MAX_CACHE_KEY_SIZE),
-                                            CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE));
+                CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE));
         keyConfigBuilder.setEstimatedCacheKeySize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_ESTIMATED_CACHE_KEY_SIZE),
                 CacheConfigGlobals.DEFAULT_ESTIMATED_CACHED_KEY_SIZE));
 
@@ -153,7 +158,8 @@ public class PublishToMemcachedFilter implements Filter {
         MemcachedStorageConfigBuilder storageConfigBuilder = new MemcachedStorageConfigBuilder();
 
         storageConfigBuilder.setResponseHeadersToIgnore(filterConfig.getInitParameter(MEMCACHED_HEADERS_TO_IGNORE));
-        storageConfigBuilder.setMaxHeadersSize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_HEADER_SIZE),CacheConfigGlobals.DEFAULT_MAX_HEADERS_LENGTH_TO_STORE));
+        storageConfigBuilder.setEstimatedHeaderSize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_ESTIMATED_HEADER_SIZE), CacheConfigGlobals.DEFAULT_RESPONSE_ESTIMATED_HEADER_SIZE));
+        storageConfigBuilder.setMaxHeadersSize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_MAX_HEADER_SIZE), CacheConfigGlobals.DEFAULT_RESPONSE_MAX_HEADERS_LENGTH_TO_STORE));
         storageConfigBuilder.setStorePrivate(filterConfig.getInitParameter(MEMCACHED_CACHE_PRIVATE));
         storageConfigBuilder.setForceCache(filterConfig.getInitParameter(MEMCACHED_FORCE_CACHE));
         storageConfigBuilder.setForceCacheDuration(filterConfig.getInitParameter(MEMCACHED_FORCE_EXPIRY));
@@ -166,8 +172,8 @@ public class PublishToMemcachedFilter implements Filter {
         fetchingConfigBuilder.setCacheGetTimeout(filterConfig.getInitParameter(MEMCACHED_GET_TIMEOUT));
 
 
-        maxContentSizeForMemcachedEntry = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_SIZE),CacheConfigGlobals.DEFAULT_MAX_CACHEABLE_RESPONSE_BODY);
-        initialContentSizeForMemcachedEntry = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_INITIAL_SIZE),CacheConfigGlobals.DEFAULT_INITIAL_CACHEABLE_RESPONSE_BODY);
+        maxContentSizeForMemcachedEntry = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_SIZE), CacheConfigGlobals.DEFAULT_MAX_CACHEABLE_RESPONSE_BODY);
+        initialContentSizeForMemcachedEntry = CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_RESPONSE_BODY_INITIAL_SIZE), CacheConfigGlobals.DEFAULT_INITIAL_CACHEABLE_RESPONSE_BODY);
 
         String cacheHeaderName = filterConfig.getInitParameter(MEMCACHED_CACHE_STATUS_HEADER_NAME);
         if(cacheHeaderName!=null && cacheHeaderName.trim().length()>0) {
@@ -249,14 +255,14 @@ public class PublishToMemcachedFilter implements Filter {
                 if(cacheKey!=null && cacheKey.length()>0) {
                     CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest,cacheKey);
                     if (cacheResponse.isCacheHit()) {
-                        log.info("{\"method\":\"doFilter\",\"message\":\"cache(HIT),key({})\"}",cacheKey);
+                        cacheStatusLogger.logCacheHit(cacheKey);
                         sendCachedResponse(cacheResponse, servletResponse);
                         return;
                     } else {
                         wrappedRes = createResponseWrapper(initialContentSizeForMemcachedEntry,maxContentSizeForMemcachedEntry, servletResponse,cacheKey);
                     }
                 }
-                log.info("{\"method\":\"doFilter\",\"message\":\"cache(MISS),key({})\"}",cacheKey);
+                cacheStatusLogger.logCacheMiss(cacheKey);
                 servletResponse.addHeader(this.cacheHitHeader,this.cacheMissValue);
             }
 

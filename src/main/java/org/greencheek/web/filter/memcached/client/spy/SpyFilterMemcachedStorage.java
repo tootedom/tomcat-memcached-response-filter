@@ -39,7 +39,10 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         boolean hasOverflowed = !buffer.canWrite();
         buffer.closeForWrites();
 
-        if(hasOverflowed) return;
+        if(hasOverflowed) {
+            log.debug("{\"method\":\"writeToCache\",\"message\":\"Response is too large to cache\"}");
+            return;
+        }
 
         CacheableFor cacheableFor = cacheDecider.isCacheable(storageConfig,theResponse);
         if(cacheableFor.isCacheable()) {
@@ -147,7 +150,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         }
 
         int contentLength = content.size();
-        ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength,contentLength + storageConfig.getHeadersLength());
+        ResizeableByteBuffer memcachedContent = new ResizeableByteBuffer(contentLength + storageConfig.getEstimatedHeadersLength(),
+                                                                         contentLength + storageConfig.getHeadersLength());
 
         addHttpStatusLine(theResponse,memcachedContent);
         addContentLengthHeader(theResponse,memcachedContent);
@@ -159,6 +163,8 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
         if(memcachedContent.canWrite()) {
             writeToMemcached(theResponse.getCacheKey(), expiryInSeconds, memcachedContent.trim().getBuf());
+        } else {
+            log.debug("{\"method\":\"writeToCache\",\"message\":\"Response body and headers combined are too large to cache\"}");
         }
 
     }

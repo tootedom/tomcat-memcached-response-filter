@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
  */
 public class MemcachedStorageConfig {
 
+    private final int estimatedHeadersLength;
     private final int headersLength;
     private final int defaultExpiryInSeconds;
     private final Set<String> responseHeadersToIgnore;
@@ -27,12 +28,13 @@ public class MemcachedStorageConfig {
 
 
 
-    public MemcachedStorageConfig(int headersLength,
+    public MemcachedStorageConfig(int estimatedHeadersLength,int headersLength,
                                   int defaultExpiryInSeconds, Set<String> customHeaders, Set<String> responseHeadersToIgnore,
                                   CacheControlResponseDecider cacheResponseDecider,boolean forceCache,int forceCacheDurationInSeconds,
                                   byte[] httpStatusLinePrefix,MaxAgeParser maxAgeParser,boolean canCacheWithNoCacheControlHeader,
                                   TIntSet cacheableResponseCodes,String cacheStatusHeaderName
                                   ) {
+        this.estimatedHeadersLength = estimatedHeadersLength;
         this.headersLength = headersLength;
         this.defaultExpiryInSeconds = defaultExpiryInSeconds;
         this.customHeaders = customHeaders;
@@ -51,6 +53,9 @@ public class MemcachedStorageConfig {
         }
     }
 
+    public int getEstimatedHeadersLength() {
+        return estimatedHeadersLength;
+    }
 
     public int getHeadersLength() {
         return headersLength;

@@ -10,7 +10,6 @@ import org.greencheek.web.filter.memcached.domain.Duration;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +50,7 @@ public class MemcachedStorageConfigBuilder {
     private Set<String> responseHeadersToIgnore = DEFAULT_RESPONSE_HEADERS_TO_IGNORE;
     private int defaultExpiryInSeconds = DEFAULT_EXPIRY_IN_SECONDS;
     private Set<String> additionalHeaders  = DEFAULT_ADDITIONAL_HEADERS;
-    private int defaultMaxHeadersLengthToStore = CacheConfigGlobals.DEFAULT_MAX_HEADERS_LENGTH_TO_STORE;
+    private int defaultMaxHeadersLengthToStore = CacheConfigGlobals.DEFAULT_RESPONSE_MAX_HEADERS_LENGTH_TO_STORE;
     private boolean storePrivate = DEFAULT_STORE_PRIVATE;
     private boolean forceCache = DEFAULT_FORCE_CACHE;
     private int forceCacheDuration = DEFAULT_FORCE_CACHE_DURATION;
@@ -61,7 +60,7 @@ public class MemcachedStorageConfigBuilder {
     private CacheControlResponseDecider cacheResponseDecider = DEFAULT_CACHE_RESPONSE_DECIDER;
     private TIntSet cacheableResponseCodes = CacheConfigGlobals.CACHEABLE_RESPONSE_CODES;
     private String cacheStatusHeaderName = CacheConfigGlobals.DEFAULT_CACHE_STATUS_HEADER_NAME;
-
+    private int estimatedResponseHeaderSize = CacheConfigGlobals.DEFAULT_RESPONSE_ESTIMATED_HEADER_SIZE;
 
 
 
@@ -70,7 +69,7 @@ public class MemcachedStorageConfigBuilder {
     }
 
     public MemcachedStorageConfig build() {
-        return new MemcachedStorageConfig(defaultMaxHeadersLengthToStore,defaultExpiryInSeconds,
+        return new MemcachedStorageConfig(estimatedResponseHeaderSize,defaultMaxHeadersLengthToStore,defaultExpiryInSeconds,
                 additionalHeaders,responseHeadersToIgnore,cacheResponseDecider,forceCache,
                 forceCacheDuration,httpStatusLinePrefix,maxAgeParser,canCacheWithNoCacheControl,
                 cacheableResponseCodes,cacheStatusHeaderName);
@@ -238,4 +237,8 @@ public class MemcachedStorageConfigBuilder {
         return this;
     }
 
+    public MemcachedStorageConfigBuilder setEstimatedHeaderSize(int estimatedHeaderSize) {
+        this.estimatedResponseHeaderSize = estimatedHeaderSize;
+        return this;
+    }
 }

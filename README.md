@@ -560,7 +560,14 @@ edit `${catalina.home}/conf/web.xml`
 
 ### Configure logback.xml ###
 
-Create `${catalina.home}/lib/logback.xml`, and insert the following contents:
+Create `${catalina.home}/lib/logback.xml`, and insert the following contents.  The content of this `logback.xml`
+is entirely up to you.  The below gives a guide on an example configuration that:
+
+- Uses Sync logging
+- Uses day based logging (rotates daily)
+- Uses size based logging so that only max 3 files exist, 100MB each.
+
+
 
     <configuration scan="true" scanPeriod="120 seconds" >
         <contextListener class="org.greencheek.ch.qos.logback.classic.jul.LevelChangePropagator">
@@ -590,8 +597,8 @@ Create `${catalina.home}/lib/logback.xml`, and insert the following contents:
         </appender>
 
         <logger name="org.greencheek.net.spy" level="WARN"/>
-        <logger name="org.greencheek.web.filter.memcached.client.spy.extensions" level="WARN"/>
-        <logger name="org.greencheek.web.filter.memcached" level="INFO"/>
+        <logger name="org.greencheek.web.filter.memcached" level="WARN"/>
+        <logger name="org.greencheek.web.filter.memcached.util.CacheStatusLogger" level="INFO"/>
 
         <root level="ERROR">
             <appender-ref ref="ASYNC" />
