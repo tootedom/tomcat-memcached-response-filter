@@ -336,12 +336,62 @@ The following gives an example of configuring these:
 In short, the response body and the HTTP response headers are cached.  However, there are slight restrictions to this
 rather large sweeping statement.
 
-The below specifies that the response body can only be 8k in size, or less, in order for it to be considered cacheable
+The below specifies that the maximum response body can be 8k in size, or less, in order for it to be considered cacheable
 
     <init-param>
       <param-name>memcached-maxcacheable-bodysize</param-name>
       <param-value>8192</param-value>
     </init-param>
+
+As the response body, from the back end system, is stored in jvm memory as a `byte[]` array; while it is sent to memcached;
+there is a limit in the `max` size of the response that is considered cacheable.  The `byte[]` array used for caching
+the backend response grows in size from an initial size to that of the `memcached-maxcacheable-bodysize`.  This is much
+like the concept of a `StringBuilder` that has an initial `char[]`, that grows as you `append` strings and chars to it.
+The initial size of the byte[] buffer can be specified with the following: `memcached-initialcacheable-bodysize`:
+
+    <init-param>
+      <param-name>memcached-initialcacheable-bodysize</param-name>
+      <param-value>8192</param-value>
+    </init-param>
+
+The defaults are:
+
+- `memcached-initialcacheable-bodysize`=4096
+- `memcached-maxcacheable-bodysize`=16384
+
+
+It is not only the response body that is stored in memcached; but the entire HTTP response from the backend; this includes
+the HTTP headers set by the backend.  The headers that are not cached are:
+
+- "connection"
+- "keep-alive"
+- "proxy-authenticate"
+- "proxy-authorization"
+- "te"
+- "trailers"
+- "transfer-encoding"
+- "upgrade"
+- "set-cookie"
+- "date"
+
+As the response headers take up space in the content to be stored in memcached, and also the internal intermediate `byte[]`
+before it is stored in memcached.  You can specify an Initial estimated size of these combined backend http response headers,
+and the maximum they should be as follows.
+
+    <init-param>
+      <param-name>memcached-response-estimated-header-size</param-name>
+      <param-value>8192</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>memcached-response-max-header-size</param-name>
+      <param-value>8192</param-value>
+    </init-param>
+
+The defaults are:
+
+- `memcached-response-estimated-header-size`=1024
+- `memcached-response-max-header-size`=8192
 
 
 ----
@@ -531,6 +581,19 @@ considered a long time.  This timeout is configurable.  The filter parameter is:
       <param-name>memcached-get-timeout-millis</param-name>
       <param-value>500</param-value>
     </init-param>
+
+----
+
+## Disabling the Filter ##
+
+The filter can be disabled with the following parameter.  By default the filter is enabled
+
+
+    <init-param>
+      <param-name>memcached-filter-enabled</param-name>
+      <param-value>false</param-value>
+    </init-param>
+
 
 ----
 
