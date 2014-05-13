@@ -1,5 +1,36 @@
 
-# Synopsis #
+- [Memcached Filter Overview](#memcached-filter-overview)
+	- [Usage](#usage)
+	- [Dependencies](#dependencies)
+    - [Shaded Artifacts](#shaded-artifactss)
+    - [Where can it be used](#where-can-it-be-used)
+    - [Simple Usage](#simple-usage)
+    - [Configuration](#configuration)
+    - [Specifying the memcached hosts](#specifying-the-memcached-hosts)
+    - [Host Checking](#host-checking)
+    - [DNS Timeouts](#dns-timeouts)
+    - [Memcached Protocol](#memcached-protocol)
+    - [Specifying the cache key](#specifying-the-cache-key)
+        - [Available Key Items](#available-key-items)
+        - [Headers in Cache Key](#headers-in-cache-key)
+        - [Cookies](#cookies)
+        - [Cache Key Init Param](#cache-key-init-param)
+        - [Cache Key Size](#cache-key-size)
+        - [Cache Key](#cache-key)
+    - [What is Cached?](#what-is-cached?)
+    - [Caching Duration](#caching-duration)
+    - [Cacheable HTTP Methods](#cacheable-http-methods)
+    - [Cacheable HTTP status codes](#cacheable-http-status-codes)
+    - [Cache Size](#cache-size)
+    - [Caching POST or PUT](#caching-post-or-put)
+        - [Request Body Size](#request-body-size)
+    - [Memcached Get Timeout](#memcached-get-timeout)
+    - [Example Tomcat Setup](#example-tomcat-setup)
+
+
+----
+
+# Memcached Filter Overview #
 
 A Lazy man's servlet filter for caching responses in memcached.
 
@@ -28,7 +59,7 @@ And you can put in the depedendency as follows:
     <dependency>
        <groupId>org.greencheek.memcached</groupId>
        <artifactId>caching-filter</artifactId>
-       <version>0.0.6</version>
+       <version>0.0.8</version>
     </dependency>
 
 ----
@@ -113,16 +144,16 @@ using the memcached hosts `127.0.0.1:11211` and `127.0.0.1:11212`
 
 ## Availablity ##
 
-Currently a SNAPSHOT version is available in the sonatype repo:
+The library is available in maven central:
 
-`https://oss.sonatype.org/content/repositories/snapshots/org/greencheek/memcached`
+`http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22caching-filter%22`
 
 ----
 
 ## Configuration ##
 
-There's a few configuration (`init-param`) available for customisation of the filter.  Those that will most frequently
-be used is that of setting the memcached hosts and the cache key used.
+There's several configuration (`init-param`)'s available for customisation of the filter.  The one filter parameter
+that will most frequently be used, is that of setting the memcached hosts and the cache key used.
 
 Other param control when caching takes place, how long an item is cached for, should the cache expiry times use
 the `Cache-Control` `max-age` value; etc.
@@ -273,7 +304,7 @@ using the jessionid cookie
 
 ----
 
-## Cache Key Size ##
+### Cache Key Size ###
 
 The cache key is made up of a number of different headers and request parameters, and can also (as will be seen later) use
 the request body.  As a result a limit is put on the size of the cache key (as this is held in memory).  The byte buffer
@@ -501,7 +532,7 @@ considered a long time.  This timeout is configurable.  The filter parameter is:
       <param-value>500</param-value>
     </init-param>
 
-
+----
 
 ## Example Tomcat Setup ##
 
