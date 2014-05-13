@@ -226,4 +226,20 @@ public class CacheConfigGlobals {
             return defaultValue;
         }
     }
+
+    public static boolean parseBoolValue(String value, boolean defaultValue) {
+        if(value==null || value.length()==0) {
+            return defaultValue;
+        }
+        String val = value.toLowerCase();
+        if(val.equals("false")) {
+            return false;
+        }
+        else if (val.equals("true")) {
+            return true;
+        }
+        else {
+            return defaultValue;
+        }
+    }
 }

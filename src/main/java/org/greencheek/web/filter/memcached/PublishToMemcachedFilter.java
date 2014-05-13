@@ -77,6 +77,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_MAX_CACHE_KEY_SIZE = "memcached-max-cache-key-size";
     public final static String MEMCACHED_ESTIMATED_CACHE_KEY_SIZE = "memcached-estimated-cache-key-size";
     public final static String MEMCACHED_NODE_FAILURE_MODE = "memcached-failure-mode";
+    public final static String MEMCACHED_FILTER_ENABLED = "memcached-filter-enabled";
 
 
 	/**
@@ -109,6 +110,12 @@ public class PublishToMemcachedFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        boolean isEnabled = CacheConfigGlobals.parseBoolValue(filterConfig.getInitParameter(MEMCACHED_FILTER_ENABLED),true);
+        if(!isEnabled) {
+            this.isEnabled = false;
+            return;
+        }
+
         SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
         keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
@@ -194,7 +201,7 @@ public class PublishToMemcachedFilter implements Filter {
         filterMemcachedFetching = new SpyFilterMemcachedFetching(client,fetchingConfigBuilder.build());
         filterMemcachedStorage = new SpyFilterMemcachedStorage(client,storageConfigBuilder.build());
 
-        isEnabled = true;
+        this.isEnabled = true;
     }
 
     private int parseSize(FilterConfig filterConfig,String property, int defaultValue) {
