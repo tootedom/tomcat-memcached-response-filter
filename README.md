@@ -667,17 +667,17 @@ is entirely up to you.  The below gives a guide on an example configuration that
         <contextListener class="org.greencheek.ch.qos.logback.classic.jul.LevelChangePropagator">
             <resetJUL>true</resetJUL>
         </contextListener>
-        
-        <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.FileAppender">
+
+        <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.rolling.RollingFileAppender">
             <file>${catalina.base}/logs/memcachedfilter.log</file>
             <rollingPolicy class="org.greencheek.ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                 <!-- rollover daily -->
                 <fileNamePattern>memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxHistory>2</maxHistory>
                 <timeBasedFileNamingAndTriggeringPolicy
                     class="org.greencheek.ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                     <!-- or whenever the file size reaches 100MB -->
                     <maxFileSize>100MB</maxFileSize>
-                    <maxHistory>2</maxHistory>
                 </timeBasedFileNamingAndTriggeringPolicy>
             </rollingPolicy>
             <encoder>
