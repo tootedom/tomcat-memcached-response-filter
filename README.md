@@ -661,18 +661,24 @@ is entirely up to you.  The below gives a guide on an example configuration that
 - Uses day based logging (rotates daily)
 - Uses size based logging so that only max 3 files exist, 100MB each.
 
+What you will end up with is something similar to the following in your `$catalina.base/logs` directory:
 
+
+logs/memcachedfilter.log
+logs/memcachedfilter-2014-05-16.0.log
+
+
+The configuration is as follows:
 
     <configuration scan="true" scanPeriod="120 seconds" >
         <contextListener class="org.greencheek.ch.qos.logback.classic.jul.LevelChangePropagator">
             <resetJUL>true</resetJUL>
         </contextListener>
-
         <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.rolling.RollingFileAppender">
             <file>${catalina.base}/logs/memcachedfilter.log</file>
             <rollingPolicy class="org.greencheek.ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                 <!-- rollover daily -->
-                <fileNamePattern>memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <fileNamePattern>${catalina.base}/logs/memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
                 <maxHistory>2</maxHistory>
                 <timeBasedFileNamingAndTriggeringPolicy
                     class="org.greencheek.ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -681,10 +687,9 @@ is entirely up to you.  The below gives a guide on an example configuration that
                 </timeBasedFileNamingAndTriggeringPolicy>
             </rollingPolicy>
             <encoder>
-                <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                <pattern>%date{ISO8601} [%thread] %-5level %logger{56} - %msg%n</pattern>
             </encoder>
         </appender>
-
         <appender name="ASYNC" class="org.greencheek.ch.qos.logback.classic.AsyncAppender">
             <queueSize>2048</queueSize>
             <appender-ref ref="LOGFILE" />

@@ -146,6 +146,48 @@ public class TestFilterConfiguration {
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
     }
 
+
+    @Test
+    public void testSortedAcceptHeader() throws Exception {
+        Map<String,String> filterInitParamsForcedNoSorting = new HashMap<String,String>(3,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+            put(PublishToMemcachedFilter.MEMCACHED_FORCE_CACHE,"true");
+            put(PublishToMemcachedFilter.MEMCACHED_FORCE_EXPIRY,"3");
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"header_accept-encoding");
+        }};
+
+
+        Map<String,String> filterInitParamsForcedSorting = new HashMap<String,String>(3,1.0f) {{
+            put(PublishToMemcachedFilter.MEMCACHED_EXPIRY, "3");
+            put(PublishToMemcachedFilter.MEMCACHED_FORCE_CACHE,"true");
+            put(PublishToMemcachedFilter.MEMCACHED_FORCE_EXPIRY,"3");
+            put(PublishToMemcachedFilter.MEMCACHED_KEY_PARAM,"header_accept-encoding_s");
+        }};
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"notsorted","/notsorted",filterInitParamsForcedNoSorting);
+        String urlNoSorting = server.setupServlet("/notsorted/*","notsorted","org.greencheek.web.filter.memcached.servlets.NoCacheServlet",true);
+
+        server.setupServlet3Filter("localhost:" + memcached.getPort(),"sorted","/sorted",filterInitParamsForcedSorting);
+        String urlSorting = server.setupServlet("/sorted/*","sorted","org.greencheek.web.filter.memcached.servlets.NoCacheServlet",true);
+        assertTrue(server.startTomcat());
+
+        urlNoSorting = server.replacePort(urlNoSorting);
+        urlSorting = server.replacePort(urlSorting);
+
+        // Test No Sorting
+        Response response = executeGetRequestWithAcceptHeader(urlNoSorting,"gzip,deflate");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequestWithAcceptHeader(urlNoSorting,"deflate,gzip");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+
+        // Test Sorting
+        response = executeGetRequestWithAcceptHeader(urlSorting,"plain,deflate");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
+        response = executeGetRequestWithAcceptHeader(urlSorting,"deflate,plain");
+        assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
+    }
+
+
     @Test
     public void testPrivateCaching() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
@@ -241,19 +283,19 @@ public class TestFilterConfiguration {
 
         Thread.sleep(10);
         response = executeGetRequest(url);
-        assertNull("There is no cached header when the filter is disabled",getCacheHeader(response));
+        assertNull("There is no cached header when the filter is disabled", getCacheHeader(response));
         assertNotEquals("Time Headers Should not be the same",timeHeaderValue,getTime(response));
 
         Thread.sleep(10);
         response = executeGetRequest(url);
-        assertNull("There is no cached header when the filter is disabled",getCacheHeader(response));
-        assertNotEquals("Time Headers Should not be the same",timeHeaderValue,getTime(response));
+        assertNull("There is no cached header when the filter is disabled", getCacheHeader(response));
+        assertNotEquals("Time Headers Should not be the same", timeHeaderValue, getTime(response));
 
 
         Thread.sleep(10);
         response = executeGetRequest(url);
-        assertNull("There is no cached header when the filter is disabled",getCacheHeader(response));
-        assertNotEquals("Time Headers Should not be the same",timeHeaderValue,getTime(response));
+        assertNull("There is no cached header when the filter is disabled", getCacheHeader(response));
+        assertNotEquals("Time Headers Should not be the same", timeHeaderValue, getTime(response));
     }
 
     @Test
@@ -273,7 +315,7 @@ public class TestFilterConfiguration {
         Thread.sleep(10);
         response = executeGetRequest(url);
         assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE,getCacheHeader(response));
-        assertEquals("Time Headers Should be the same",timeHeaderValue,getTime(response));
+        assertEquals("Time Headers Should be the same", timeHeaderValue, getTime(response));
     }
 
     @Test
@@ -563,6 +605,13 @@ public class TestFilterConfiguration {
 
     private Response executeGetRequest(String url) throws Exception {
         Request r = server.getHttpClient().prepareGet(url).build();
+        return server.getHttpClient().executeRequest(r).get();
+    }
+
+    private Response executeGetRequestWithAcceptHeader(String url,String value) throws Exception {
+        AsyncHttpClient.BoundRequestBuilder builder = server.getHttpClient().prepareGet(url);
+        builder.addHeader("Accept-Encoding",value);
+        Request r = builder.build();
         return server.getHttpClient().executeRequest(r).get();
     }
 

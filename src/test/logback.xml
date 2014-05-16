@@ -1,27 +1,23 @@
 <configuration scan="true" scanPeriod="120 seconds" >
-
     <contextListener class="org.greencheek.ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>
     </contextListener>
-
-
-    <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.FileAppender">
+    <appender name="LOGFILE" class="org.greencheek.ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${catalina.base}/logs/memcachedfilter.log</file>
         <rollingPolicy class="org.greencheek.ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${catalina.base}/logs/memcachedfilter-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>2</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="org.greencheek.ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <!-- or whenever the file size reaches 100MB -->
                 <maxFileSize>100MB</maxFileSize>
-                <maxHistory>2</maxHistory>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
-            <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%date{ISO8601} [%thread] %-5level %logger{56} - %msg%n</pattern>
         </encoder>
     </appender>
-
     <appender name="ASYNC" class="org.greencheek.ch.qos.logback.classic.AsyncAppender">
         <queueSize>2048</queueSize>
         <appender-ref ref="LOGFILE" />
