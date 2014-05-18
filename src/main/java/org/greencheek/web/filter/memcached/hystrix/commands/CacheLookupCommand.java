@@ -14,17 +14,42 @@ public class CacheLookupCommand extends HystrixCollapser<Map<String,CachedRespon
 
     private final String cacheKey;
     private final FilterMemcachedFetching cacheLookupImpl;
-    private final CacheLookupConfig cacheLookupConfig;
+    private final HystrixCommand.Setter commandSettings;
 
     public CacheLookupCommand(String cacheKey,FilterMemcachedFetching memcachedFetching,
-                              CacheLookupConfig cacheLookupConfig) {
-        super(Setter.withCollapserKey(HystrixCollapserKey.Factory.asKey("CacheLookupCollapser")).andScope(Scope.GLOBAL).andCollapserPropertiesDefaults(
-                HystrixCollapserProperties.Setter().withMaxRequestsInBatch(cacheLookupConfig.getBatchingMaxSize())
-                        .withTimerDelayInMilliseconds(cacheLookupConfig.getBatchingTimeInMillis())
-        ));
+                              HystrixCollapser.Setter batchSettings, HystrixCommand.Setter commandSettings) {
+        super(batchSettings);
+        this.commandSettings = commandSettings;
         cacheLookupImpl = memcachedFetching;
         this.cacheKey = cacheKey;
-        this.cacheLookupConfig = cacheLookupConfig;
+    }
+
+    public static HystrixCollapser.Setter createCollapserSettings(CacheLookupConfig cacheLookupConfig) {
+        return Setter.withCollapserKey(HystrixCollapserKey.Factory.asKey("CacheLookupCollapser"))
+                .andScope(Scope.GLOBAL)
+                .andCollapserPropertiesDefaults(
+                        HystrixCollapserProperties.Setter()
+                                .withMaxRequestsInBatch(cacheLookupConfig.getBatchingMaxSize())
+                                .withTimerDelayInMilliseconds(cacheLookupConfig.getBatchingTimeInMillis())
+                );
+    }
+
+    public static HystrixCommand.Setter createCacheLookupCommandSettings(CacheLookupConfig cacheLookupConfig) {
+        HystrixCommand.Setter s = HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("CacheLookupGroup"));
+        if(cacheLookupConfig.isUseThreadPool()){
+            s.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.Setter().withCoreSize(cacheLookupConfig.getThreadPoolSize())
+                    .withMaxQueueSize(cacheLookupConfig.getThreadPoolQueueSize()));
+            s.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+                    .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD));
+            s.andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey("CacheLookup"));
+        } else {
+            s.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+                            .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE)
+                            .withExecutionIsolationSemaphoreMaxConcurrentRequests(cacheLookupConfig.getSemaphoreSize())
+            );
+        }
+        s.andCommandKey(HystrixCommandKey.Factory.asKey("CacheLookup"));
+        return s;
     }
 
     @Override
@@ -34,7 +59,7 @@ public class CacheLookupCommand extends HystrixCollapser<Map<String,CachedRespon
 
     @Override
     protected HystrixCommand<Map<String, CachedResponse>> createCommand(Collection<CollapsedRequest<CachedResponse, String>> collapsedRequests) {
-        return new BatchCommand(cacheLookupConfig,cacheLookupImpl,collapsedRequests);
+        return new BatchCommand(commandSettings,cacheLookupImpl,collapsedRequests);
     }
 
     @Override
@@ -55,30 +80,12 @@ public class CacheLookupCommand extends HystrixCollapser<Map<String,CachedRespon
         private final FilterMemcachedFetching cacheLookupImpl;
 
 
-        private BatchCommand(CacheLookupConfig cacheLookupConfig,FilterMemcachedFetching memcachedFetcher,
+        private BatchCommand(HystrixCommand.Setter commandSettings,FilterMemcachedFetching memcachedFetcher,
                              Collection<CollapsedRequest<CachedResponse, String>> requests) {
 
-            super(createSetter(cacheLookupConfig));
+            super(commandSettings);
             this.requests = requests;
             this.cacheLookupImpl = memcachedFetcher;
-        }
-
-        private static Setter createSetter(CacheLookupConfig cacheLookupConfig) {
-            Setter s = Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("CacheLookupGroup"));
-            if(cacheLookupConfig.isUseThreadPool()){
-                s.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.Setter().withCoreSize(cacheLookupConfig.getThreadPoolSize())
-                        .withMaxQueueSize(cacheLookupConfig.getThreadPoolQueueSize()));
-                s.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-                        .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD));
-                s.andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey("CacheLookup"));
-            } else {
-                s.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-                                .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE)
-                                .withExecutionIsolationSemaphoreMaxConcurrentRequests(cacheLookupConfig.getSemaphoreSize())
-                );
-            }
-            s.andCommandKey(HystrixCommandKey.Factory.asKey("CacheLookup"));
-            return s;
         }
 
         @Override

@@ -1,5 +1,7 @@
 package org.greencheek.web.filter.memcached;
 
+import com.netflix.hystrix.HystrixCollapser;
+import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.hystrix.commands.CacheLookupCommand;
@@ -30,6 +32,8 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
 
 
     private CacheLookupConfig cacheLookupConfig;
+    private HystrixCommand.Setter cacheLookupSettings;
+    private HystrixCollapser.Setter batchLookupSettings;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -45,6 +49,10 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
         lookupConfigBuilder.setThreadPoolQueueSize(filterConfig.getInitParameter(MEMCACHED_HYSTRIC_CACHE_LOOKUP_THREAD_POOL_QUEUESIZE));
 
         cacheLookupConfig = lookupConfigBuilder.build();
+
+        batchLookupSettings = CacheLookupCommand.createCollapserSettings(cacheLookupConfig);
+        cacheLookupSettings = CacheLookupCommand.createCacheLookupCommandSettings(cacheLookupConfig);
+
         super.init(filterConfig);
     }
 
@@ -64,7 +72,7 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
          */
     @Override
     public CachedResponse executeCacheLookup(String cacheKey) {
-        return new CacheLookupCommand(cacheKey,getMemcachedFetchingImpl(),cacheLookupConfig).execute();
+        return new CacheLookupCommand(cacheKey,getMemcachedFetchingImpl(),batchLookupSettings,cacheLookupSettings).execute();
     }
 
     /**
