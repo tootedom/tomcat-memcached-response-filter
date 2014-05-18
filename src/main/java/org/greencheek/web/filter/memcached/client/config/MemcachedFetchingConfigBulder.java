@@ -13,16 +13,12 @@ public class MemcachedFetchingConfigBulder {
 
     private long cacheGetTimeout = DEFAULT_CACHE_GET_TIMEOUT_IN_MILLIS;
 
-
-    private String[] noCacheClientValues = CacheConfigGlobals.NO_CACHE_CLIENT_VALUE;
-
-
     public MemcachedFetchingConfigBulder() {
 
     }
 
     public MemcachedFetchingConfig build() {
-        return new MemcachedFetchingConfig(cacheGetTimeout,noCacheClientValues);
+        return new MemcachedFetchingConfig(cacheGetTimeout);
     }
 
 
@@ -45,12 +41,5 @@ public class MemcachedFetchingConfigBulder {
         return this;
     }
 
-    public MemcachedFetchingConfigBulder noCacheClientValues(String values) {
-        if(values == null || values.trim().length() == 0) {
-            noCacheClientValues = new String[0];
-        } else {
-            noCacheClientValues = values.split(",");
-        }
-        return this;
-    }
+
 }
