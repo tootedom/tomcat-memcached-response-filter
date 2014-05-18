@@ -21,6 +21,6 @@ public class SplittingCharSeparatedValueSorter implements CharSeparatedValueSort
 
         List<String> valuesToSort = charSplitter.split(value,separator);
         Collections.sort(valuesToSort);
-        return charJoiner.join(valuesToSort,separator,length);
+        return charJoiner.join(valuesToSort,separator,length+valuesToSort.size());
     }
 }

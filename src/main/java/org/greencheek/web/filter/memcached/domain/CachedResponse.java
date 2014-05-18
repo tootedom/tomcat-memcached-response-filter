@@ -3,7 +3,6 @@ package org.greencheek.web.filter.memcached.domain;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by dominictootell on 14/04/2014.

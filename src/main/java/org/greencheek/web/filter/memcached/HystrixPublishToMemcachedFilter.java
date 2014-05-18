@@ -10,12 +10,15 @@ import org.greencheek.web.filter.memcached.response.BufferedResponseWrapper;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Uses Hystrix  Commands (https://github.com/Netflix/Hystrix), to monitor, and batch, request to memcached
  * Created by dominictootell on 17/05/2014.
  */
 public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
+
+    public static final AtomicInteger filterReferenceCount = new AtomicInteger(0);
 
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_EXECUTION_TYPE = "memcached-hystrix-cachelookup-exec-type";
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_SEMAPHORE_SIZE = "memcached-hystrix-cachelookup-semaphore-size";
@@ -30,6 +33,7 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        filterReferenceCount.incrementAndGet();
 
         CacheLookupConfigBuilder lookupConfigBuilder = new CacheLookupConfigBuilder();
         lookupConfigBuilder.setBatchingTime(filterConfig.getInitParameter(MEMCACHED_HYSTRIX_CACHE_LOOKUP_BATCHING_TIME_MILLIS));
@@ -71,5 +75,17 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
     @Override
     public void postFilter(HttpServletRequest servletRequest,BufferedResponseWrapper theResponse) {
         storeResponseInMemcached(servletRequest, theResponse);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        shutdown();
+    }
+
+    public void shutdown() {
+        if(filterReferenceCount.decrementAndGet()==0) {
+            com.netflix.hystrix.Hystrix.reset();
+        }
     }
 }

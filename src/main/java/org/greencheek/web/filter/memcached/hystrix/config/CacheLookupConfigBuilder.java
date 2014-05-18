@@ -29,7 +29,12 @@ public class CacheLookupConfigBuilder {
 
         if(executionType.equalsIgnoreCase("threadpool")) {
             useThreadPool = true;
-        } else if(executionType.equalsIgnoreCase("semaphore")) {
+        } else if(executionType.toLowerCase().contains("thread")) {
+            useThreadPool = true;
+        }
+        else if(executionType.equalsIgnoreCase("semaphore")) {
+            useThreadPool = false;
+        } else if(executionType.toLowerCase().contains("sema")) {
             useThreadPool = false;
         } else {
             useThreadPool = DEFAULT_USE_THREAD_POOL;

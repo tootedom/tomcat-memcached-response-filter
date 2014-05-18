@@ -70,6 +70,7 @@ public class CacheLookupCommand extends HystrixCollapser<Map<String,CachedRespon
                         .withMaxQueueSize(cacheLookupConfig.getThreadPoolQueueSize()));
                 s.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
                         .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD));
+                s.andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey("CacheLookup"));
             } else {
                 s.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
                                 .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE)

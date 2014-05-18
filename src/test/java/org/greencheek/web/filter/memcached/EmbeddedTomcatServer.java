@@ -26,6 +26,7 @@ public class EmbeddedTomcatServer {
     private final static String DEFAULT_FILTER_PATTER = "/*";
     private final static String DEFAULT_SERVLET2_FILTER = "org.greencheek.web.filter.memcached.PublishToMemcachedFilter";
     private final static String DEFAULT_SERVLET3_FILTER = "org.greencheek.web.filter.memcached.Servlet3PublishToMemcachedFilter";
+    private final static String DEFAULT_HYSTRIX_FILTER = "org.greencheek.web.filter.memcached.HystrixPublishToMemcachedFilter";
 
     private volatile Tomcat tomcat;
     private String contextName;
@@ -73,6 +74,15 @@ public class EmbeddedTomcatServer {
     public void setupServlet3Filter(String memcachedUrl,String url,Map<String,String> filterConfig) {
         setupFilter(memcachedUrl,"memcached-s3filter",DEFAULT_SERVLET3_FILTER,url,true, filterConfig);
     }
+
+    public void setupServletHystrixFilter(String memcachedUrl,String name,String url,Map<String,String> filterConfig) {
+        setupFilter(memcachedUrl,name,DEFAULT_HYSTRIX_FILTER,url,true, filterConfig);
+    }
+
+    public void setupServletHystrixFilter(String memcachedUrl,String url,Map<String,String> filterConfig) {
+        setupFilter(memcachedUrl,"memcached-hystrixfilter",DEFAULT_HYSTRIX_FILTER,url,true, filterConfig);
+    }
+
 
 
 
