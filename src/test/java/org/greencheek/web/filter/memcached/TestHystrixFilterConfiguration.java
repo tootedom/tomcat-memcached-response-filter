@@ -61,8 +61,8 @@ public class TestHystrixFilterConfiguration {
     public void testMultiRequestAreCollapsedWithThreadPools() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_EXECUTION_TYPE, "threadpool");
-            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIC_CACHE_LOOKUP_THREAD_POOL_SIZE, "10");
-            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIC_CACHE_LOOKUP_THREAD_POOL_QUEUESIZE,"2");
+            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_SIZE, "10");
+            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_QUEUESIZE,"2");
         }};
 
         testMultiRequestsAreCollapsed(filterInitParams);
@@ -72,8 +72,8 @@ public class TestHystrixFilterConfiguration {
     public void testMultiRequestAreCollapsedWithThreadPoolSmallBatchSize() throws Exception {
         Map<String,String> filterInitParams = new HashMap<String,String>(1,1.0f) {{
             put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_EXECUTION_TYPE, "threadpool");
-            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIC_CACHE_LOOKUP_THREAD_POOL_SIZE, "10");
-            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIC_CACHE_LOOKUP_THREAD_POOL_QUEUESIZE,"2");
+            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_SIZE, "10");
+            put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_QUEUESIZE,"2");
             put(HystrixPublishToMemcachedFilter.MEMCACHED_HYSTRIX_CACHE_LOOKUP_BATCHING_MAX_SIZE,"2");
         }};
 
