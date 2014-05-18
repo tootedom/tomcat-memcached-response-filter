@@ -242,4 +242,25 @@ public class CacheConfigGlobals {
             return defaultValue;
         }
     }
+
+
+    public static String[] parseCommaSeparatedList(String value, String[] defaultValues) {
+        if(value==null) {
+            return defaultValues;
+        }
+        else if(value.trim().length()==0) {
+            return new String[0];
+        }
+
+        List<String> values = DEFAULT_CHAR_SPLITTER.split(value,',');
+        return values.toArray(new String[values.size()]);
+    }
+
+    public static String parseStringValue(String value, String defaultValue) {
+        if(value==null || value.trim().length()==0) {
+            return defaultValue;
+        } else {
+            return value;
+        }
+    }
 }

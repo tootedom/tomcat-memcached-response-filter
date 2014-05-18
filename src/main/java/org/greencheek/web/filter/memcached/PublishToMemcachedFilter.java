@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 import net.spy.memcached.MemcachedClient;
 
 import org.greencheek.web.filter.memcached.client.*;
+import org.greencheek.web.filter.memcached.client.cachecontrol.CacheLookupAllowedRule;
+import org.greencheek.web.filter.memcached.client.cachecontrol.RequestHeaderBasedCacheLookupAllowedRule;
 import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.CacheControlWriteToCacheDecider;
 import org.greencheek.web.filter.memcached.client.cachecontrol.writeable.WriteToCacheDecider;
 import org.greencheek.web.filter.memcached.client.config.*;
@@ -78,6 +80,8 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_ESTIMATED_CACHE_KEY_SIZE = "memcached-estimated-cache-key-size";
     public final static String MEMCACHED_NODE_FAILURE_MODE = "memcached-failure-mode";
     public final static String MEMCACHED_FILTER_ENABLED = "memcached-filter-enabled";
+    public final static String MEMCACHED_NO_CACHE_REQUEST_HEADER = "memcached-nocache-request-header";
+    public final static String MEMCACHED_NO_CACHE_REQUEST_HEADER_VALUES = "memcached-nocache-request-header-values";
 
 
 	/**
@@ -95,6 +99,7 @@ public class PublishToMemcachedFilter implements Filter {
     private DateHeaderFormatter dateHeaderFormatter = new QueueBasedDateFormatter();
     private MemcachedClient client;
     private FilterMemcachedFetching filterMemcachedFetching;
+    private CacheLookupAllowedRule cacheLookupRuler;
     private FilterMemcachedStorage filterMemcachedStorage;
     private MemcachedKeyConfig keyConfig;
     private CacheableMethods cacheableMethods;
@@ -115,6 +120,11 @@ public class PublishToMemcachedFilter implements Filter {
             this.isEnabled = false;
             return;
         }
+
+        cacheLookupRuler = new RequestHeaderBasedCacheLookupAllowedRule(
+                CacheConfigGlobals.parseStringValue(filterConfig.getInitParameter(MEMCACHED_NO_CACHE_REQUEST_HEADER),CacheConfigGlobals.CACHE_CONTROL_HEADER),
+                CacheConfigGlobals.parseCommaSeparatedList(filterConfig.getInitParameter(MEMCACHED_NO_CACHE_REQUEST_HEADER_VALUES),CacheConfigGlobals.NO_CACHE_CLIENT_VALUE)
+        );
 
         SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
@@ -204,14 +214,8 @@ public class PublishToMemcachedFilter implements Filter {
         this.isEnabled = true;
     }
 
-    private int parseSize(FilterConfig filterConfig,String property, int defaultValue) {
-        int value;
-        try {
-            value = Integer.parseInt(filterConfig.getInitParameter(property));
-        } catch(NumberFormatException e) {
-            value = defaultValue;
-        }
-        return value;
+    public FilterMemcachedFetching getMemcachedFetchingImpl() {
+        return filterMemcachedFetching;
     }
 
     public void sendCachedResponse(CachedResponse cachedResponse,HttpServletResponse response) {
@@ -260,7 +264,13 @@ public class PublishToMemcachedFilter implements Filter {
                 }
 
                 if(cacheKey!=null && cacheKey.length()>0) {
-                    CachedResponse cacheResponse = filterMemcachedFetching.getCachedContent(servletRequest,cacheKey);
+                    CachedResponse cacheResponse;
+                    if(cacheLookupAllowed(servletRequest, cacheKey)) {
+                        cacheResponse = executeCacheLookup(cacheKey);
+                    } else {
+                        cacheResponse = CachedResponse.MISS;
+                    }
+
                     if (cacheResponse.isCacheHit()) {
                         cacheStatusLogger.logCacheHit(cacheKey);
                         sendCachedResponse(cacheResponse, servletResponse);
@@ -279,7 +289,7 @@ public class PublishToMemcachedFilter implements Filter {
                     chain.doFilter(request, response);
                 } else {
                     BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(servletRequest, wrappedRes);
-                    chain.doFilter(requestWrapper, wrappedRes);
+                    doBackEndRequest(chain,cacheKey,requestWrapper,wrappedRes);
                 }
             } finally {
                 if (wrappedRes != null) {
@@ -289,6 +299,38 @@ public class PublishToMemcachedFilter implements Filter {
         }
     }
 
+    protected boolean cacheLookupAllowed(HttpServletRequest request,String cacheKey) {
+        return cacheLookupRuler.isAllowed(request,cacheKey);
+    }
+
+    /**
+     * Execute cache lookup
+     * @param cacheKey
+     */
+    public CachedResponse executeCacheLookup(String cacheKey) {
+        return filterMemcachedFetching.getCachedContent(cacheKey);
+    }
+
+    /**
+     * Performs the backend request.
+     *
+     * @param chain
+     * @param request
+     * @param response
+     * @throws IOException
+     * @throws ServletException
+     */
+    public void doBackEndRequest(FilterChain chain,String cacheKey,HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException
+    {
+        chain.doFilter(request, response);
+    }
+
+    /**
+     * Post the backend request's completion
+     * @param servletRequest
+     * @param theResponse
+     */
     public void postFilter(HttpServletRequest servletRequest,BufferedResponseWrapper theResponse) {
         storeResponseInMemcached(servletRequest, theResponse);
     }

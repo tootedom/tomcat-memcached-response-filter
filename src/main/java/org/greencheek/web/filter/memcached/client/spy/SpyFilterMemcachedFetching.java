@@ -1,6 +1,7 @@
 package org.greencheek.web.filter.memcached.client.spy;
 
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import org.greencheek.web.filter.memcached.client.FilterMemcachedFetching;
 import org.greencheek.web.filter.memcached.client.config.MemcachedFetchingConfig;
@@ -9,12 +10,8 @@ import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,38 +35,60 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
     }
 
     @Override
-    public CachedResponse getCachedContent(HttpServletRequest theRequest, String key) {
-        if(key==null) return CachedResponse.MISS;
-
-        String cacheControlHeader = theRequest.getHeader(CacheConfigGlobals.CACHE_CONTROL_HEADER);
-        if(cacheControlHeader != null && hasClientCacheBuster(config.getNoCacheHeaders(),cacheControlHeader)) {
-            return CachedResponse.MISS;
-        } else {
-            byte[] content = get(key);
-            if(content == null) {
-                return CachedResponse.MISS;
-            } else {
-                return parseCachedResponse(content);
-            }
-        }
+    public CachedResponse getCachedContent(String key) {
+        return parseBytes(get(key));
     }
 
-    private boolean hasClientCacheBuster(String[] values,String headerValues) {
-        if(values.length == 0) return false;
-        for(String val : values) {
-            if(headerValues.contains(val)) return true;
+    @Override
+    public Map<String, CachedResponse> getCachedContent(Collection<String> keys) {
+        Map<String,Object> responses = multiGet(keys);
+        if(responses == null || responses.size()==0) return allMissing(keys);
+
+        Map<String,CachedResponse> parsedResponses = new HashMap<String,CachedResponse>(responses.size(),1.0f);
+
+        for(String key : keys) {
+            Object o = responses.get(key);
+            parsedResponses.put(key,parseBytes(o));
         }
-        return false;
+        return parsedResponses;
     }
 
-    private byte[] get(String key) {
-        GetFuture<Object> future = client.asyncGet(key);
+    public Map<String,CachedResponse> allMissing(Collection<String> keys) {
+        Map<String,CachedResponse> missingMap = new HashMap<String,CachedResponse>(keys.size(),1.0f);
+
+        for(String key : keys) {
+            missingMap.put(key,CachedResponse.MISS);
+        }
+        return missingMap;
+    }
+
+    private CachedResponse parseBytes(Object o) {
+        if(o==null) return CachedResponse.MISS;
 
         try {
-            Object o = future.get(config.getCacheGetTimeoutInMillis(), TimeUnit.MILLISECONDS);
-            return (byte[])o;
+            byte[] content = (byte[])o;
+            return parseCachedResponse(content);
+        } catch (ClassCastException e) {
+            return CachedResponse.MISS;
+        }
+    }
+
+    private Object get(String key) {
+        GetFuture<Object> future = client.asyncGet(key);
+        try {
+            return future.get(config.getCacheGetTimeoutInMillis(), TimeUnit.MILLISECONDS);
         } catch(Exception e) {
             log.warn("{\"method\":\"get\",\"exception\":\"{}\",\"message\":\"Exception whilst attempting get from memcached for key\",\"key\":\"{}\"}",e.getMessage(),key);
+            return null;
+        }
+    }
+
+    private Map<String,Object> multiGet(Collection<String> keys) {
+        BulkFuture<Map<String,Object>> future = client.asyncGetBulk(keys);
+        try {
+            return future.get(config.getCacheGetTimeoutInMillis(), TimeUnit.MILLISECONDS);
+        } catch(Exception e) {
+            log.warn("{\"method\":\"multiGet\",\"exception\":\"{}\",\"message\":\"Exception whilst attempting get from memcached for keys\",\"keys\":\"{}\"}",e.getMessage(),keys);
             return null;
         }
     }
