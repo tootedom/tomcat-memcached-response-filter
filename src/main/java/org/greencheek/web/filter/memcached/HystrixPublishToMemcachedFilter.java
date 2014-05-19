@@ -6,6 +6,7 @@ import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 import org.greencheek.web.filter.memcached.domain.CachedResponse;
 import org.greencheek.web.filter.memcached.hystrix.commands.BackEndCommand;
+import org.greencheek.web.filter.memcached.hystrix.commands.BatchingCacheLookupCommand;
 import org.greencheek.web.filter.memcached.hystrix.commands.CacheLookupCommand;
 import org.greencheek.web.filter.memcached.hystrix.config.BackendConfig;
 import org.greencheek.web.filter.memcached.hystrix.config.BackendConfigBuilder;
@@ -30,6 +31,7 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_EXECUTION_TYPE = "memcached-hystrix-cachelookup-exec-type";
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_SEMAPHORE_SIZE = "memcached-hystrix-cachelookup-semaphore-size";
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_TIMEOUT_MILLIS = "memcached-hystrix-cachelookup-timeout-millis";
+    public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_BATCHING_ENABLED = "memcached-hystrix-cachelookup-batching-enabled";
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_BATCHING_TIME_MILLIS = "memcached-hystrix-cachelookup-batchingtime-millis";
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_BATCHING_MAX_SIZE = "memcached-hystrix-cachelookup-batching-maxsize";
     public static final String MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_SIZE = "memcached-hystrix-cachelookup-threadpool-size";
@@ -57,6 +59,7 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
         lookupConfigBuilder.setLookupTimeout(filterConfig.getInitParameter(MEMCACHED_HYSTRIX_CACHE_LOOKUP_TIMEOUT_MILLIS));
         lookupConfigBuilder.setThreadPoolSize(filterConfig.getInitParameter(MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_SIZE));
         lookupConfigBuilder.setThreadPoolQueueSize(filterConfig.getInitParameter(MEMCACHED_HYSTRIX_CACHE_LOOKUP_THREAD_POOL_QUEUESIZE));
+        lookupConfigBuilder.setBatchingEnabled(filterConfig.getInitParameter(MEMCACHED_HYSTRIX_CACHE_LOOKUP_BATCHING_ENABLED));
 
         BackendConfigBuilder backendConfigBuilder = new BackendConfigBuilder();
         backendConfigBuilder.setBackendHystrixEnabled(CacheConfigGlobals.parseBoolValue(filterConfig.getInitParameter(MEMCACHED_HYSTRIX_BACKEND_TRACKING_ENABLED),true));
@@ -67,8 +70,8 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
         cacheLookupConfig = lookupConfigBuilder.build();
         backendConfig = backendConfigBuilder.build();
 
-        batchLookupSettings = CacheLookupCommand.createCollapserSettings(cacheLookupConfig);
-        cacheLookupSettings = CacheLookupCommand.createCacheLookupCommandSettings(cacheLookupConfig);
+        batchLookupSettings = cacheLookupConfig.createCollapserSettings(cacheLookupConfig);
+        cacheLookupSettings = cacheLookupConfig.createCacheLookupCommandSettings(cacheLookupConfig);
         backendSettings = BackEndCommand.createBackendSettring(backendConfig);
         super.init(filterConfig);
     }
@@ -89,7 +92,11 @@ public class HystrixPublishToMemcachedFilter extends PublishToMemcachedFilter {
          */
     @Override
     public CachedResponse executeCacheLookup(String cacheKey) {
-        return new CacheLookupCommand(cacheKey,getMemcachedFetchingImpl(),batchLookupSettings,cacheLookupSettings).execute();
+        if(cacheLookupConfig.isBatchingEnabled()) {
+            return new BatchingCacheLookupCommand(cacheKey, getMemcachedFetchingImpl(), batchLookupSettings, cacheLookupSettings).execute();
+        } else {
+            return new CacheLookupCommand(cacheLookupSettings,getMemcachedFetchingImpl(),cacheKey).execute();
+        }
     }
 
     /**

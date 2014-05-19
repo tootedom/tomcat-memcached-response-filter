@@ -8,6 +8,7 @@ import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
 public class CacheLookupConfigBuilder {
 
     public static final boolean DEFAULT_USE_THREAD_POOL = false;
+    public static final boolean DEFAULT_BATCHING_ENABLED = true;
     public static final int DEFAULT_SEMAPHORE_SIZE = 1024;
     public static final int DEFAULT_LOOKUP_TIMEOUT = 200;
     public static final int DEFAULT_BATCHING_TIME = 20;
@@ -22,6 +23,7 @@ public class CacheLookupConfigBuilder {
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private int threadPoolQueueSize = DEFAULT_THREAD_POOL_QUEUESIZE;
     private int batchingMaxSize = DEFAULT_BATCHING_MAX_SIZE;
+    private boolean enableBatching = DEFAULT_BATCHING_ENABLED;
 
 
     public CacheLookupConfigBuilder useThreadPool(String executionType) {
@@ -73,8 +75,13 @@ public class CacheLookupConfigBuilder {
         return this;
     }
 
+    public CacheLookupConfigBuilder setBatchingEnabled(String enabled) {
+        enableBatching = CacheConfigGlobals.parseBoolValue(enabled,DEFAULT_BATCHING_ENABLED);
+        return this;
+    }
+
     public CacheLookupConfig build() {
         return new CacheLookupConfig(useThreadPool,semaphoreSize ,lookupTimeout,
-                batchingTime,batchingMaxSize,threadPoolSize,threadPoolQueueSize);
+                enableBatching,batchingTime,batchingMaxSize,threadPoolSize,threadPoolQueueSize);
     }
 }
