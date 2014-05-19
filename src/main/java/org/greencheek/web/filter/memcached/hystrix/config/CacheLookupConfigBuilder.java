@@ -11,7 +11,7 @@ public class CacheLookupConfigBuilder {
     public static final boolean DEFAULT_BATCHING_ENABLED = true;
     public static final int DEFAULT_SEMAPHORE_SIZE = 1024;
     public static final int DEFAULT_LOOKUP_TIMEOUT = 200;
-    public static final int DEFAULT_BATCHING_TIME = 20;
+    public static final int DEFAULT_BATCHING_TIME = 10;
     public static final int DEFAULT_THREAD_POOL_SIZE = 10;
     public static final int DEFAULT_THREAD_POOL_QUEUESIZE = 1024;
     public static final int DEFAULT_BATCHING_MAX_SIZE = 100;
