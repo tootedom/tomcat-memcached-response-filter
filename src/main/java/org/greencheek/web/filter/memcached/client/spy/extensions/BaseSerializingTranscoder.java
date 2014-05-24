@@ -148,7 +148,7 @@ public abstract class BaseSerializingTranscoder extends SpyObject {
     if (in == null) {
       throw new NullPointerException("Can't compress null");
     }
-    ResizableByteBufferNoBoundsCheckingBackedOutputStream bos = new ResizableByteBufferNoBoundsCheckingBackedOutputStream(1024);
+    ResizableByteBufferNoBoundsCheckingBackedOutputStream bos = new ResizableByteBufferNoBoundsCheckingBackedOutputStream(compressionThreshold);
     GZIPOutputStream gz = null;
     try {
       gz = new GZIPOutputStream(bos,1024);
@@ -173,7 +173,7 @@ public abstract class BaseSerializingTranscoder extends SpyObject {
     ResizableByteBufferNoBoundsCheckingBackedOutputStream bos = null;
     if(in != null) {
       InputStream bis = new ThreadUnsafeByteArrayInputStream(in);
-      bos = new ResizableByteBufferNoBoundsCheckingBackedOutputStream(4096);
+      bos = new ResizableByteBufferNoBoundsCheckingBackedOutputStream(compressionThreshold);
       GZIPInputStream gis = null;
       try {
         gis = new GZIPInputStream(bis,4096);

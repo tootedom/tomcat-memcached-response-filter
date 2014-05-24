@@ -4,6 +4,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import org.greencheek.web.filter.memcached.client.config.CacheConfigGlobals;
+import org.greencheek.web.filter.memcached.servlets.LargeContentServlet;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonFactory;
 import org.greencheek.web.filter.memcached.util.MemcachedDaemonWrapper;
 import org.junit.After;
@@ -136,6 +137,10 @@ public class TestResponseIsNotCachedForContentLargerThanBuffer {
             response = getResponse(url,false);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_HIT_HEADER_VALUE, getCacheHeader(response));
             assertEquals(time,getHeaderTime(response));
+
+            assertTrue(LargeContentServlet.CONTENT.length>0);
+
+            assertArrayEquals(LargeContentServlet.CONTENT,response.getResponseBody().getBytes("UTF-8"));
 
             // The cache is for 3 seconds.  Wait for 5 and issue the request again.
             Thread.sleep(5000);

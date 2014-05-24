@@ -10,6 +10,7 @@ import org.greencheek.web.filter.memcached.domain.CachedResponse;
  */
 public class CacheLookupCommand extends HystrixCommand<CachedResponse> {
 
+    private static final Exception lookupTimeoutException = new RuntimeException("Timeout on cachelookup");
     private final String cacheKey;
     private final FilterMemcachedFetching cacheLookupImpl;
 
@@ -21,7 +22,8 @@ public class CacheLookupCommand extends HystrixCommand<CachedResponse> {
 
     @Override
     protected CachedResponse run() throws Exception {
-        return cacheLookupImpl.getCachedContent(cacheKey);
+        throw lookupTimeoutException;
+//        return cacheLookupImpl.getCachedContent(cacheKey);
     }
 
     @Override

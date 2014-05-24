@@ -9,6 +9,7 @@ import java.util.Map;
  */
 public class CachedResponse {
     public static final CachedResponse MISS = new CachedResponse(false, 404,Collections.EMPTY_MAP,new byte[0],0);
+    public static final CachedResponse TIMEDOUT = new CachedResponse(false,504,Collections.EMPTY_MAP,new byte[0],0);
 
     private final boolean hit;
     private final int statusCode;

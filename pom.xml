@@ -60,6 +60,7 @@
         <logback.version>1.1.2</logback.version>
         <slf4j.version>1.7.7</slf4j.version>
         <hystrix.version>1.4.0-RC4</hystrix.version>
+        <snappy.version>1.1.1-M1</snappy.version>
     </properties>
 
 	<dependencies>
@@ -91,13 +92,21 @@
         <dependency>
             <groupId>com.netflix.hystrix</groupId>
             <artifactId>hystrix-core</artifactId>
-            <version>${hystrix.version}</version>
+            <version>1.4.0-RC5-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.netflix.hystrix</groupId>
             <artifactId>hystrix-metrics-event-stream</artifactId>
             <version>${hystrix.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>${snappy.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -474,6 +483,7 @@
                                     <include>net.spy:spymemcached</include>
                                     <include>net.jpountz.lz4:*</include>
                                     <include>net.sf.trove4j:*</include>
+                                    <include>org.xerial.snappy:snappy-java</include>
                                 </includes>
                                 <excludes>
                                     <exclude>com.netflix.hystrix:*</exclude>
@@ -535,6 +545,14 @@
                                     <pattern>org.apache</pattern>
                                     <shadedPattern>org.greencheek.org.apache</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus</pattern>
+                                    <shadedPattern>org.greencheek.org.codehaus</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.xerial</pattern>
+                                    <shadedPattern>org.greencheek.org.xerial</shadedPattern>
+                                </relocation>
                             </relocations>
                             <artifactSet>
                                 <includes>
@@ -550,6 +568,7 @@
                                     <include>commons-configuration:*</include>
                                     <include>commons-lang:*</include>
                                     <include>commons-logging:*</include>
+                                    <include>org.xerial.snappy:snappy-java</include>
                                 </includes>
                             </artifactSet>
                             <shadedArtifactAttached>true</shadedArtifactAttached>

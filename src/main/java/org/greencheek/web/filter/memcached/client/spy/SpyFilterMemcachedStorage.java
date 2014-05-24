@@ -162,7 +162,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
 
 
         if(memcachedContent.canWrite()) {
-            writeToMemcached(theResponse.getCacheKey(), expiryInSeconds, memcachedContent.trim().getBuf());
+            writeToMemcached(theResponse.getCacheKey(), expiryInSeconds, memcachedContent);
         } else {
             log.debug("{\"method\":\"writeToCache\",\"message\":\"Response body and headers combined are too large to cache\"}");
         }
@@ -182,7 +182,7 @@ public class SpyFilterMemcachedStorage implements FilterMemcachedStorage {
         }
     }
 
-    private void writeToMemcached(String key, int expiryInSeconds, byte[] content) {
+    private void writeToMemcached(String key, int expiryInSeconds, ResizeableByteBuffer content) {
         try {
             client.set(key, expiryInSeconds, content);
         } catch (Exception e) {
