@@ -63,7 +63,7 @@ public class SpyFilterMemcachedFetching implements FilterMemcachedFetching {
     }
 
     private CachedResponse parseBytes(Object o) {
-        if(o==null) return CachedResponse.MISS;
+        if(o==null) return CachedResponse.TIMED_OUT;
 
         try {
             byte[] content = (byte[])o;

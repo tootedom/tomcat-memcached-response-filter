@@ -15,15 +15,26 @@ import java.io.InputStream;
  */
 public class LargeContentServlet extends HttpServlet {
 
+    public static final byte[] CONTENT;
+    static {
+        File is = new File(Thread.currentThread().getContextClassLoader().getResource("relatedcontent.txt").getFile());
+        byte[] content;
+        try {
+            content = FileUtils.readFileToByteArray(is);
+        } catch (IOException e) {
+            content = new byte[0];
+        }
+        CONTENT = content;
+    }
 
 
-    public static final int DEFAULT_MAX_AGE = 1;
+
+    public static final int DEFAULT_MAX_AGE = 3;
 
     protected void doGet( HttpServletRequest request,
                           HttpServletResponse response)
             throws ServletException, IOException {
-        File is = new File(Thread.currentThread().getContextClassLoader().getResource("relatedcontent.txt").getFile());
-        byte[] content = FileUtils.readFileToByteArray(is);
+
         int age = DEFAULT_MAX_AGE;
         try {
             age = Integer.parseInt(request.getParameter("maxage"));
@@ -33,6 +44,6 @@ public class LargeContentServlet extends HttpServlet {
 
         response.addHeader("X-LastTime","" + System.currentTimeMillis());
         response.addHeader("Cache-Control","max-age="+age);
-        response.getOutputStream().write(content);
+        response.getOutputStream().write(CONTENT);
     }
 }

@@ -60,10 +60,16 @@
         <logback.version>1.1.2</logback.version>
         <slf4j.version>1.7.7</slf4j.version>
         <hystrix.version>1.4.0-RC4</hystrix.version>
+        <snappy.version>1.1.1-M1</snappy.version>
+        <jsnappy.version>0.3</jsnappy.version>
     </properties>
 
 	<dependencies>
-
+        <dependency>
+            <groupId>org.iq80.snappy</groupId>
+            <artifactId>snappy</artifactId>
+            <version>${jsnappy.version}</version>
+        </dependency>
         <dependency>
             <groupId>net.spy</groupId>
             <artifactId>spymemcached</artifactId>
@@ -91,7 +97,7 @@
         <dependency>
             <groupId>com.netflix.hystrix</groupId>
             <artifactId>hystrix-core</artifactId>
-            <version>${hystrix.version}</version>
+            <version>1.4.0-RC5-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -99,6 +105,14 @@
             <artifactId>hystrix-metrics-event-stream</artifactId>
             <version>${hystrix.version}</version>
         </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.xerial.snappy</groupId>-->
+            <!--<artifactId>snappy-java</artifactId>-->
+            <!--<version>${snappy.version}</version>-->
+            <!--<type>jar</type>-->
+            <!--<scope>compile</scope>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -464,9 +478,6 @@
                                     <shadedPattern>org.greencheek.net.jpountz</shadedPattern>
                                 </relocation>
                             </relocations>
-                            com.netflix.hystrix:hystrix-core:jar:1.4.0-RC4 in the shaded jar.
-                            [INFO] Including com.netflix.rxjava:rxjava-core:jar:0.18.2 in the shaded jar.
-                            [INFO] Including com.netflix.archaius:archaius-core:jar:0.4.1 in the shaded jar.
                             <artifactSet>
                                 <includes>
                                     <include>ch.qos.logback:*</include>
@@ -474,6 +485,7 @@
                                     <include>net.spy:spymemcached</include>
                                     <include>net.jpountz.lz4:*</include>
                                     <include>net.sf.trove4j:*</include>
+                                    <include>org.iq80.snappy:snappy</include>
                                 </includes>
                                 <excludes>
                                     <exclude>com.netflix.hystrix:*</exclude>
@@ -535,6 +547,18 @@
                                     <pattern>org.apache</pattern>
                                     <shadedPattern>org.greencheek.org.apache</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus</pattern>
+                                    <shadedPattern>org.greencheek.org.codehaus</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.iq80.snappy</pattern>
+                                    <shadedPattern>org.greencheek.org.iq80.snappy</shadedPattern>
+                                </relocation>
+                                <!--<relocation>-->
+                                    <!--<pattern>org.xerial</pattern>-->
+                                    <!--<shadedPattern>org.greencheek.org.xerial</shadedPattern>-->
+                                <!--</relocation>-->
                             </relocations>
                             <artifactSet>
                                 <includes>
@@ -550,6 +574,7 @@
                                     <include>commons-configuration:*</include>
                                     <include>commons-lang:*</include>
                                     <include>commons-logging:*</include>
+                                    <include>org.iq80.snappy:snappy</include>
                                 </includes>
                             </artifactSet>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
