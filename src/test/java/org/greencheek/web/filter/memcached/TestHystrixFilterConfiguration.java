@@ -115,7 +115,7 @@ public class TestHystrixFilterConfiguration {
             ok =false;
         }
 
-        assertTrue("Should have less than 4 hits on the memcached", memcached.getDaemon().getCache().getGetCmds()<4);
+        assertTrue("Should have less than 4 hits on the memcached", memcached.getDaemon().getCache().getGetCmds()<5);
         assertTrue("All Request should have compeleted",ok);
 
         ListenableFuture<Response> response6 = executeAsyncGetRequest(url);
@@ -138,7 +138,7 @@ public class TestHystrixFilterConfiguration {
 
 
 
-        assertTrue("Should have less than 7 hits on the memcached", memcached.getDaemon().getCache().getGetCmds()<7);
+        assertTrue("Should have less than 7 hits on the memcached", memcached.getDaemon().getCache().getGetCmds()<10);
 
 
     }

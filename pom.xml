@@ -423,6 +423,10 @@
                                     <pattern>net.jpountz</pattern>
                                     <shadedPattern>org.greencheek.net.jpountz</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.iq80.snappy</pattern>
+                                    <shadedPattern>org.greencheek.org.iq80.snappy</shadedPattern>
+                                </relocation>
                             </relocations>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
 							<shadedClassifierName>shadewithslf4j</shadedClassifierName>
@@ -476,6 +480,10 @@
                                 <relocation>
                                     <pattern>net.jpountz</pattern>
                                     <shadedPattern>org.greencheek.net.jpountz</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.iq80.snappy</pattern>
+                                    <shadedPattern>org.greencheek.org.iq80.snappy</shadedPattern>
                                 </relocation>
                             </relocations>
                             <artifactSet>
@@ -555,10 +563,6 @@
                                     <pattern>org.iq80.snappy</pattern>
                                     <shadedPattern>org.greencheek.org.iq80.snappy</shadedPattern>
                                 </relocation>
-                                <!--<relocation>-->
-                                    <!--<pattern>org.xerial</pattern>-->
-                                    <!--<shadedPattern>org.greencheek.org.xerial</shadedPattern>-->
-                                <!--</relocation>-->
                             </relocations>
                             <artifactSet>
                                 <includes>
@@ -605,6 +609,10 @@
                                 <relocation>
                                     <pattern>net.jpountz</pattern>
                                     <shadedPattern>org.greencheek.net.jpountz</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.iq80.snappy</pattern>
+                                    <shadedPattern>org.greencheek.org.iq80.snappy</shadedPattern>
                                 </relocation>
                             </relocations>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
