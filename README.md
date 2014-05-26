@@ -25,6 +25,9 @@
     - [Caching POST or PUT](#caching-post-or-put)
         - [Request Body Size](#request-body-size)
     - [Memcached Get Timeout](#memcached-get-timeout)
+    - [Disabling the Filter](#disabling-the-filter)
+    - [Logging](#logging)
+    - [Hystrix](#hystrix)
     - [Example Tomcat Setup](#example-tomcat-setup)
 
 
@@ -59,7 +62,7 @@ And you can put in the depedendency as follows:
     <dependency>
        <groupId>org.greencheek.memcached</groupId>
        <artifactId>caching-filter</artifactId>
-       <version>0.0.8</version>
+       <version>0.0.11</version>
     </dependency>
 
 ----
@@ -92,10 +95,21 @@ This shaded artifact compiles together all the dependencies, but also a the logg
     <dependency>
        <groupId>org.greencheek.memcached</groupId>
        <artifactId>caching-filter</artifactId>
-       <version>0.0.6</version>
+       <version>0.0.11</version>
        <classifier>shadewithlogback</classifier>
     </dependency>
 
+
+- Hystrix
+
+This shaded artifact compiles together all the dependencies, include `logback`, but also Hystrix.
+
+    <dependency>
+       <groupId>org.greencheek.memcached</groupId>
+       <artifactId>caching-filter</artifactId>
+       <version>0.0.11</version>
+       <classifier>shadewithlogbackandhystrix</classifier>
+    </dependency>
 
 
 ## Where can it be used ##
@@ -596,6 +610,127 @@ The filter can be disabled with the following parameter.  By default the filter 
 
 
 ----
+
+## Cache Hit StatusLogging ##
+
+The filter will emit cache hit status in a header named `X-Cache:` which will have either the value `HIT` or `MISS`.
+The filter will also emit at `INFO` level the cached status, which will look as follows
+
+    2014-05-25 20:31:16,586 [http-8080-17] INFO  o.greencheek.web.filter.memcached.util.CacheStatusLogger - {"cachestatus":"HIT","key":"-1163498384"}
+    2014-05-25 20:31:16,794 [http-8080-17] INFO  o.greencheek.web.filter.memcached.util.CacheStatusLogger - {"cachestatus":"MISS","key":"-1163498384"}
+
+----
+
+## Hystrix ##
+
+
+The library includes (as of version `0.0.11`), a Hystrix version of the Servlet2 filter.  The Hystrix filter is in no way
+used to it's full potential.  I.e.  There is no primary and fallback options, there is no thread pooling, the hystrix filter
+is mainly provided as a means to give you the ability to visualize the effectiveness of the cache in front of memcached.
+
+The memcached GET, and the backend request to your application code, are wrapped in Hystrix Command objects.  By doing this,
+you can add to the web.xml definition the Hystrix stream and obtain a visualisation of the effectiveness of the cache.
+
+To use the Hystrix filter, you need the hystrix shaded artifact (http://search.maven.org/remotecontent?filepath=org/greencheek/memcached/caching-filter/0.0.11/caching-filter-0.0.11-shadewithlogbackandhystrix.jar):
+
+    <dependency>
+       <groupId>org.greencheek.memcached</groupId>
+       <artifactId>caching-filter</artifactId>
+       <version>0.0.11</version>
+       <classifier>shadewithlogbackandhystrix</classifier>
+    </dependency>
+
+
+With the above jar in your tomcat `${catalina.home}/lib` folder, you can enable the Hystrix servlet that will provide you metrics,
+as follows:
+
+    <servlet>
+        <description></description>
+        <display-name>HystrixMetricsStreamServlet</display-name>
+        <servlet-name>HystrixMetricsStreamServlet</servlet-name>
+        <servlet-class>org.greencheek.com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsStreamServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>HystrixMetricsStreamServlet</servlet-name>
+        <url-pattern>/hystrix.stream</url-pattern>
+    </servlet-mapping>
+
+
+And use the Hystrix filter, the Hystrix filter inherits all the properties mentioned previous, so you configure it exactly the same.
+
+    <filter>
+        <filter-name>writeToMemcached</filter-name>
+        <filter-class>org.greencheek.web.filter.memcached.HystrixPublishToMemcachedFilter</filter-class>
+        <init-param>
+           <param-name>memcached-use-binary-protocol</param-name>
+           <param-value>true</param-value>
+		</init-param>
+		<init-param>
+		  <param-name>memcached-cacheable-methods</param-name>
+		  <param-value>get,post</param-value>
+		</init-param>
+		<init-param>
+		  <param-name>memcached-hystrix-cachelookup-batchingtime-millis</param-name>
+		  <param-value>10</param-value>
+		</init-param>
+		<init-param>
+		  <param-name>memcached-hystrix-cachelookup-batching-maxsize</param-name>
+		  <param-value>100</param-value>
+		</init-param>
+		<init-param>
+		  <param-name>memcached-key</param-name>
+		  <param-value>$scheme$request_method$uri$args?$header_accept?$header_accept-encoding_s?$body</param-value>
+		</init-param>
+		<init-param>
+		 <param-name>memcached-failure-mode</param-name>
+		 <param-value>cancel</param-value>
+		</init-param>
+		<init-param>
+		  <param-name>memcached-maxcacheable-bodysize</param-name>
+		  <param-value>262144</param-value>
+		</init-param>
+		<!-- Hsytrix Specific properties below -->
+		<init-param>
+		  <param-name>memcached-hystrix-cachelookup-batching-enabled</param-name>
+		  <param-value>false</param-value>
+		</init-param>
+    </filter>
+
+
+The Hystrix filter `DOES NOT` currently support servlet 3, it has only been created for servlet 2 at the moment.
+
+By default with the Hystrix filter in place (`org.greencheek.web.filter.memcached.HystrixPublishToMemcachedFilter`), it
+will delay for 10ms cache lookups in order to batch them into a memcached MULTI_GET request.  By doing this, it will also
+perform `de-duping` of requests.  So that requests for the same cache item are performed only once.  As this batching will
+introduce an artifical bit of latency into your application, it can be turned off.  Also the batching, can make it difficult
+to see the effectiveness of your cache (requests are batched into a single execution), rather than 1 request == 1 cache lookup.
+
+To turn off request batching, use the following init parameter:
+
+    <init-param>
+      <param-name>memcached-hystrix-cachelookup-batching-enabled</param-name>
+      <param-value>false</param-value>
+    </init-param>
+
+If you do not want to monitor the request to your application (`the back end`), you can disable that:
+
+    <init-param>
+      <param-name>memcached-hystrix-backend-tracking-enabled</param-name>
+      <param-value>false</param-value>
+    </init-param>
+
+With the Hystrix filter enabled, and the Hystrix stream servlet in place, you can install a Hystrix dashboard
+(https://github.com/Netflix/Hystrix/wiki/Dashboard), and monitor the filter in your webapp context. The below shows an
+example sceenshot of the a dashboard.  This is taken from a system that is running SOLR as the backend; for which memcached
+has been installed infront of it:
+
+!(./exampledashboard.png)
+
+
+
+----
+
 
 ## Example Tomcat Setup ##
 
