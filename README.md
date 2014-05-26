@@ -1,5 +1,5 @@
 
-    - [Memcached Filter Overview](#memcached-filter-overview)
+ - [Memcached Filter](#memcached-filter)
 	- [Usage](#usage)
 	- [Dependencies](#dependencies)
     - [Shaded Artifacts](#shaded-artifactss)
@@ -33,7 +33,7 @@
 
 ----
 
-# Memcached Filter Overview #
+# Memcached Filter #
 
 A Lazy man's servlet filter for caching responses in memcached.
 
