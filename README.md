@@ -26,7 +26,7 @@
         - [Request Body Size](#request-body-size)
     - [Memcached Get Timeout](#memcached-get-timeout)
     - [Disabling the Filter](#disabling-the-filter)
-    - [Logging](#logging)
+    - [Cache Hit Status Logging](#cache-hit-status-logging)
     - [Hystrix](#hystrix)
     - [Example Tomcat Setup](#example-tomcat-setup)
 
@@ -611,7 +611,7 @@ The filter can be disabled with the following parameter.  By default the filter 
 
 ----
 
-## Cache Hit StatusLogging ##
+## Cache Hit Status Logging ##
 
 The filter will emit cache hit status in a header named `X-Cache:` which will have either the value `HIT` or `MISS`.
 The filter will also emit at `INFO` level the cached status, which will look as follows
@@ -725,7 +725,7 @@ With the Hystrix filter enabled, and the Hystrix stream servlet in place, you ca
 example sceenshot of the a dashboard.  This is taken from a system that is running SOLR as the backend; for which memcached
 has been installed infront of it:
 
-!(./exampledashboard.png)
+![Hystrix Dashboard](./exampledashboard.png)
 
 
 
