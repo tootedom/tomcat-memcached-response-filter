@@ -30,6 +30,18 @@ public class ResizeableByteBufferOutputStream extends ServletOutputStream {
         this.wrappedStream.write(b);
     }
 
+    @Override
+    public void write(byte[] b) throws IOException {
+        this.buffer.write(b);
+        this.wrappedStream.write(b);
+    }
+
+    @Override
+    public void write(byte b[], int off, int len) throws IOException {
+        this.buffer.write(b,off,len);
+        this.wrappedStream.write(b,off,len);
+    }
+
     public void close() throws IOException {
         wrappedStream.close();
     }

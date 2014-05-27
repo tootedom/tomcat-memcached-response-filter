@@ -157,10 +157,16 @@ public class ResizeableByteBuffer {
             if(newSize<requiredCapacity) {
                 newSize = requiredCapacity;
             }
+
+            if(requiredCapacity>maxCapacity) {
+                canWrite = false;
+            }
         }
 
-        byte[] newBuf = new byte[newSize];
-        System.arraycopy(buf, 0, newBuf, 0, position);
-        buf = newBuf;
+        if(canWrite) {
+            byte[] newBuf = new byte[newSize];
+            System.arraycopy(buf, 0, newBuf, 0, position);
+            buf = newBuf;
+        }
     }
 }

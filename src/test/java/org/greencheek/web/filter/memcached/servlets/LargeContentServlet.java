@@ -37,7 +37,10 @@ public class LargeContentServlet extends HttpServlet {
 
         int age = DEFAULT_MAX_AGE;
         try {
-            age = Integer.parseInt(request.getParameter("maxage"));
+            String ageParam = request.getParameter("maxage");
+            if(ageParam==null || ageParam.trim().length()==0) {
+                age = Integer.parseInt(ageParam);
+            }
         } catch (NumberFormatException e) {
 
         }

@@ -13,9 +13,7 @@ import org.greencheek.web.filter.memcached.keyhashing.XXHashKeyHashing;
 import org.greencheek.web.filter.memcached.util.*;
 
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by dominictootell on 16/04/2014.
@@ -62,7 +60,20 @@ public class CacheConfigGlobals {
 
     public static final char CHAR_ZERO = '0';
 
+    public static final Map<String,byte[]> SCHEME_TO_BYTES;
     public static final Set<String> METHODS_WITH_CONTENT;
+
+    static {
+        Map<String,byte[]> schemes = new HashMap<String,byte[]>();
+        Set<String> http = permutate("http");
+        byte[] httpBytes = getASCIIBytes("http");
+        Set<String> https = permutate("https");
+        byte[] httpsBytes = getASCIIBytes("https");
+        addValuesToMap(schemes,http,httpBytes);
+        addValuesToMap(schemes,https,httpsBytes);
+
+        SCHEME_TO_BYTES = schemes;
+    }
 
     static {
         Set<String> putAndPost = new HashSet<String>(24,1.0f);
@@ -129,6 +140,21 @@ public class CacheConfigGlobals {
     }
 
 
+
+    private static void addValuesToMap(Map map, Set<String> keys, Object value) {
+        for(String key : keys) {
+            map.put(key,value);
+        }
+    }
+
+    public static byte[] getScheme(String schemeName) {
+        byte[] schemeAsBytes = SCHEME_TO_BYTES.get(schemeName);
+        if(schemeAsBytes == null) {
+            return getASCIIBytes(schemeName);
+        } else {
+            return schemeAsBytes;
+        }
+    }
 
     public static byte[] getStatusCodeText(int code) {
         return STATUS_CODES.get(code);
@@ -263,4 +289,5 @@ public class CacheConfigGlobals {
             return value;
         }
     }
+
 }

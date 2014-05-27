@@ -13,6 +13,6 @@ public class SchemeAttributeExtractor implements KeyAttributeExtractor {
 
     @Override
     public CacheKeyElement getAttribute(HttpServletRequest request) {
-        return new CacheKeyElement(CacheConfigGlobals.getASCIIBytes(request.getScheme()),true);
+        return new CacheKeyElement(CacheConfigGlobals.getScheme(request.getScheme()),true);
     }
 }

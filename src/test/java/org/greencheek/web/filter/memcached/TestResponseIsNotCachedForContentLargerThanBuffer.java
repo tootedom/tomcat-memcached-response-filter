@@ -74,14 +74,14 @@ public class TestResponseIsNotCachedForContentLargerThanBuffer {
     private void testNotCachedContent() {
         String url = server.setupServlet("/maxage/*","maxageservlet","org.greencheek.web.filter.memcached.servlets.LargeContentServlet",false);
         assertTrue(server.startTomcat());
-        url = server.replacePort(url) + "?maxage=3";
+        url = server.replacePort(url) + "?maxage=1";
         System.out.println(url);
         try {
             Response response = getResponse(url,false);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
             String time = getHeaderTime(response);
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
             response = getResponse(url,false);
             assertEquals(CacheConfigGlobals.DEFAULT_CACHE_MISS_HEADER_VALUE, getCacheHeader(response));
             assertNotEquals(time,getHeaderTime(response));

@@ -234,7 +234,7 @@ public class PublishToMemcachedFilter implements Filter {
         try {
             response.getOutputStream().write(content,cachedResponse.getContentOffset(),content.length-cachedResponse.getContentOffset());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Unable to send cached response to client",e);
         }
     }
 
