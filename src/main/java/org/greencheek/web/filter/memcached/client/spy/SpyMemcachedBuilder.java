@@ -1,14 +1,12 @@
 package org.greencheek.web.filter.memcached.client.spy;
 
-import net.spy.memcached.ConnectionFactoryBuilder;
-import net.spy.memcached.DefaultConnectionFactory;
-import net.spy.memcached.DefaultHashAlgorithm;
-import net.spy.memcached.FailureMode;
+import net.spy.memcached.*;
 import org.greencheek.web.filter.memcached.client.config.MemcachedFactoryUtils;
 import org.greencheek.web.filter.memcached.client.spy.extensions.SerializingTranscoder;
 import org.greencheek.web.filter.memcached.client.spy.extensions.connection.CustomConnectionFactoryBuilder;
 import org.greencheek.web.filter.memcached.client.spy.extensions.connection.NoValidationConnectionFactory;
 import org.greencheek.web.filter.memcached.client.spy.extensions.hashing.JenkinsHash;
+import org.greencheek.web.filter.memcached.client.spy.extensions.hashing.XXHashAlogrithm;
 import org.greencheek.web.filter.memcached.domain.Duration;
 
 import java.net.InetAddress;
@@ -22,11 +20,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class SpyMemcachedBuilder {
 
+    private static final HashAlgorithm XXHASH_ALGORITHM = new XXHashAlogrithm();
+    private static final HashAlgorithm JENKINS_ALGORITHM = new JenkinsHash();
+    private static final HashAlgorithm DEFAULT_ALGORITHM = XXHASH_ALGORITHM;
     private final ConnectionFactoryBuilder builder = new CustomConnectionFactoryBuilder();
 
     public SpyMemcachedBuilder() {
         // Jenkins Hash is the same one used by php
-        builder.setHashAlg(new JenkinsHash());
+        builder.setHashAlg(DEFAULT_ALGORITHM);
         builder.setProtocol(ConnectionFactoryBuilder.Protocol.TEXT);
         builder.setReadBufferSize(DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE);
         builder.setFailureMode(FailureMode.Cancel);
@@ -61,6 +62,23 @@ public class SpyMemcachedBuilder {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public SpyMemcachedBuilder setHashAlgorithm(String algo) {
+        if(algo == null || algo.trim().length() == 0) {
+            builder.setHashAlg(DEFAULT_ALGORITHM);
+            return this;
+        }
+        if(algo.equalsIgnoreCase("jenkins")) {
+            builder.setHashAlg(JENKINS_ALGORITHM);
+        } else if(algo.equalsIgnoreCase("xxhash")) {
+            builder.setHashAlg(XXHASH_ALGORITHM);
+        } else if(algo.equalsIgnoreCase("ketama")) {
+            builder.setHashAlg(DefaultHashAlgorithm.KETAMA_HASH);
+        } else {
+            builder.setHashAlg(DEFAULT_ALGORITHM);
+        }
+        return this;
     }
 
     public SpyMemcachedBuilder setDNSTimeoutInSeconds(String expiryInSeconds) {

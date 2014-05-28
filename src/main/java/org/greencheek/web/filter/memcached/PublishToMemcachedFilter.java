@@ -82,6 +82,7 @@ public class PublishToMemcachedFilter implements Filter {
     public final static String MEMCACHED_FILTER_ENABLED = "memcached-filter-enabled";
     public final static String MEMCACHED_NO_CACHE_REQUEST_HEADER = "memcached-nocache-request-header";
     public final static String MEMCACHED_NO_CACHE_REQUEST_HEADER_VALUES = "memcached-nocache-request-header-values";
+    public final static String MEMCACHED_HASH_ALGORITHM = "memcached-hash-algorithm";
 
 
 	/**
@@ -128,6 +129,7 @@ public class PublishToMemcachedFilter implements Filter {
 
         SpyMemcachedBuilder builder = new SpyMemcachedBuilder();
         MemcachedKeyConfigBuilder keyConfigBuilder = new MemcachedKeyConfigBuilder();
+        builder.setHashAlgorithm(filterConfig.getInitParameter(MEMCACHED_HASH_ALGORITHM));
         keyConfigBuilder.setKeyHashingFunction(filterConfig.getInitParameter(MEMCACHED_KEY_HASHING_PARAM));
         keyConfigBuilder.setMaxCacheKeySize(CacheConfigGlobals.parseIntValue(filterConfig.getInitParameter(MEMCACHED_MAX_CACHE_KEY_SIZE),
                 CacheConfigGlobals.DEFAULT_MAX_CACHE_KEY_SIZE));
