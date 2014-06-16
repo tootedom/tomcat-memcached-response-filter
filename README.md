@@ -62,7 +62,7 @@ And you can put in the depedendency as follows:
     <dependency>
        <groupId>org.greencheek.memcached</groupId>
        <artifactId>caching-filter</artifactId>
-       <version>0.0.11</version>
+       <version>0.0.12</version>
     </dependency>
 
 ----
